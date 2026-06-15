@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 
 
 VERSION = '0.18.0'
-APP_TITLE = 'RaySession'
-DEFAULT_SESSION_ROOT = Path.home() / 'Ray Sessions'
+APP_TITLE = 'NexSession'
+DEFAULT_SESSION_ROOT = Path.home() / 'Nex Sessions'
 SCRIPTS_DIR = 'ray-scripts'
 NOTES_PATH = 'ray-notes'
 FACTORY_SESSION_TEMPLATES = (

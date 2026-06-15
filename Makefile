@@ -1,11 +1,12 @@
 #!/usr/bin/make -f
-# Makefile for RaySession #
-# ---------------------- #
-# Created by houston4444
+# Makefile for NexSession #
+# ----------------------- #
+# Originally created by houston4444 as RaySession
+# Rebranded as NexSession
 #
 PREFIX ?= /usr/local
 DESTDIR =
-DEST_RAY := $(DESTDIR)$(PREFIX)/share/raysession
+DEST_RAY := $(DESTDIR)$(PREFIX)/share/nexsession
 
 LINK = ln -s -f
 LRELEASE ?= lrelease
@@ -98,8 +99,8 @@ src/gui/ui/%.py: resources/ui/%.ui
 
 LOCALE: locale
 
-locale: locale/raysession_en.qm \
-		locale/raysession_fr.qm \
+locale: locale/nexsession_en.qm \
+		locale/nexsession_fr.qm \
 
 locale/%.qm: locale/%.ts
 	-$(LRELEASE) $< -qm $@
@@ -122,7 +123,7 @@ debug:
 # -------------------------
 
 uninstall:
-	rm -f $(DESTDIR)$(PREFIX)/bin/raysession
+	rm -f $(DESTDIR)$(PREFIX)/bin/nexsession
 	rm -f $(DESTDIR)$(PREFIX)/bin/ray-daemon
 	rm -f $(DESTDIR)$(PREFIX)/bin/ray-proxy
 	rm -f $(DESTDIR)$(PREFIX)/bin/ray-jack_checker_daemon
@@ -130,12 +131,12 @@ uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/ray-pulse2jack
 	rm -f $(DESTDIR)$(PREFIX)/bin/ray_control
 	rm -f $(DESTDIR)$(PREFIX)/bin/ray_git
-	
-	rm -f $(DESTDIR)$(PREFIX)/share/applications/raysession.desktop
-	rm -f $(DESTDIR)$(PREFIX)/share/icons/hicolor/*/apps/raysession.png
-	rm -f $(DESTDIR)$(PREFIX)/share/icons/hicolor/scalable/apps/raysession.svg
-	rm -rf $(DESTDIR)/etc/xdg/raysession/client_templates/40_ray_nsm
-	rm -rf $(DESTDIR)/etc/xdg/raysession/client_templates/60_ray_lash
+
+	rm -f $(DESTDIR)$(PREFIX)/share/applications/nexsession.desktop
+	rm -f $(DESTDIR)$(PREFIX)/share/icons/hicolor/*/apps/nexsession.png
+	rm -f $(DESTDIR)$(PREFIX)/share/icons/hicolor/scalable/apps/nexsession.svg
+	rm -rf $(DESTDIR)/etc/xdg/nexsession/client_templates/40_ray_nsm
+	rm -rf $(DESTDIR)/etc/xdg/nexsession/client_templates/60_ray_lash
 	rm -f $(DESTDIR)/etc/bash_completion.d/ray_completion.sh
 	rm -f $(DESTDIR)$(PREFIX)/share/bash-completion/completions/ray_control
 	rm -rf $(DEST_RAY)
@@ -149,19 +150,19 @@ install:
 	install -d $(DEST_RAY)/locale/
 	install -d $(DEST_RAY)/$(_DIR)/
 	install -d $(DEST_RAY)/$(PATCHBAY_DIR)/locale/
-	install -d $(DESTDIR)/etc/xdg/raysession/client_templates/
+	install -d $(DESTDIR)/etc/xdg/nexsession/client_templates/
 	install -d $(DESTDIR)$(PREFIX)/share/bash-completion/completions/
 	
 	# Install icons
 	for sz in $(ICON_SIZES);do \
 		install -d $(DESTDIR)$(PREFIX)/share/icons/hicolor/$${sz}x$${sz}/apps/ ;\
-		install -m 644 resources/main_icon/$${sz}x$${sz}/raysession.png \
+		install -m 644 resources/main_icon/$${sz}x$${sz}/nexsession.png \
 			$(DESTDIR)$(PREFIX)/share/icons/hicolor/$${sz}x$${sz}/apps/ ;\
 	done
 
 	# Copy Templates Factory
-	cp -r client_templates/40_ray_nsm  $(DESTDIR)/etc/xdg/raysession/client_templates/
-	cp -r client_templates/60_ray_lash $(DESTDIR)/etc/xdg/raysession/client_templates/
+	cp -r client_templates/40_ray_nsm  $(DESTDIR)/etc/xdg/nexsession/client_templates/
+	cp -r client_templates/60_ray_lash $(DESTDIR)/etc/xdg/nexsession/client_templates/
 	cp -r client_templates  $(DEST_RAY)/
 	cp -r session_templates $(DEST_RAY)/
 	cp -r session_scripts   $(DEST_RAY)/
@@ -169,7 +170,7 @@ install:
 
 	# Copy completion script
 	cp src/completion/ray_completion.sh $(DESTDIR)$(PREFIX)/share/bash-completion/completions/ray_control
-	sed -i "s|XXX_PYCOMPLETION_XXX|$(PREFIX)/share/raysession/src/completion|" \
+	sed -i "s|XXX_PYCOMPLETION_XXX|$(PREFIX)/share/nexsession/src/completion|" \
 		$(DESTDIR)$(PREFIX)/share/bash-completion/completions/ray_control
 
 	# Copy patchbay themes, manual and lib
@@ -182,7 +183,7 @@ install:
 		$(DESTDIR)$(PREFIX)/share/applications/
 
 	# Install icons, scalable
-	install -m 644 resources/main_icon/scalable/raysession.svg \
+	install -m 644 resources/main_icon/scalable/nexsession.svg \
 		$(DESTDIR)$(PREFIX)/share/icons/hicolor/scalable/apps/
 
 	# Install main code
@@ -204,7 +205,7 @@ install:
 	cp -r utility-scripts $(DEST_RAY)/
 	
 	# install main bash scripts to bin
-	install -m 755 data/bin/raysession  $(DESTDIR)$(PREFIX)/bin/
+	install -m 755 data/bin/nexsession  $(DESTDIR)$(PREFIX)/bin/
 	install -m 755 data/bin/ray-daemon  $(DESTDIR)$(PREFIX)/bin/
 	install -m 755 data/bin/ray_control $(DESTDIR)$(PREFIX)/bin/
 	

@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 sys.path[0] = str(Path(__file__).parents[1]
-                  / 'share' / 'raysession' / 'src' / 'daemon')
+                  / 'share' / 'nexsession' / 'src' / 'daemon')
 
 if TYPE_CHECKING:
     import src.daemon.ray_daemon

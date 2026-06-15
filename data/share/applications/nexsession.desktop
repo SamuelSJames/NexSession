@@ -1,10 +1,10 @@
 [Desktop Entry]
-Name=RaySession
-GenericName=RaySession
+Name=NexSession
+GenericName=NexSession
 Comment=Audio Session Manager
 Comment[fr]=Gestionnaire de sessions audios
-Exec=raysession
-Icon=raysession
+Exec=nexsession
+Icon=nexsession
 Terminal=false
 Type=Application
 Categories=AudioVideo;Audio;Qt;

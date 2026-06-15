@@ -1,23 +1,15 @@
-# ![RaySession Logo](https://raw.githubusercontent.com/Houston4444/RaySession/master/resources/main_icon/128x128/raysession.png) RaySession
+# NexSession
 
-What is RaySession ?
----------------------
+A GNU/Linux audio session manager — fork of [RaySession](https://github.com/Houston4444/RaySession) by Mathieu Picot (houston4444).
 
-![Screenshot](https://raw.githubusercontent.com/Houston4444/RaySession/master/resources/screenshots/Screenshot_20211203_173011.png)
-
-RaySession is a GNU/Linux session manager for audio programs such as Ardour, Carla, QTractor, Guitarix, Patroneo, Jack Mixer, etc...<br>
+NexSession is a GNU/Linux session manager for audio programs such as Ardour, Carla, QTractor, Guitarix, Patroneo, Jack Mixer, etc.<br>
 The principle is to load together audio programs, then be able to save or close all documents together.<br>
 Its main purpose is to manage NSM compatible programs, but it also helps for other programs.<br>
-<br>
-it benefits from a nice patchbay, a [complete manual](https://raysession.tuxfamily.org/en/manual) and a [web site](https://raysession.tuxfamily.org) .<br>
-
-An integrated client can save and restore JACK connections.<br>
-Except this, RaySession doesn't deals with JACK, the recommended user behavior is to use it when JACK is already started.<br>
 
 Features
 ---------------------
 
-* Load many programs together and remember their documents and jack connections in an unified folder
+* Load many programs together and remember their documents and JACK connections in a unified folder
 * Nice patchbay with stereo connections, wrappable boxes and a search tool
 * Snapshot at each save (optional), then you can go back to the snapshot (it uses `git`)
 * Save client as template, and then restore it easily
@@ -26,23 +18,31 @@ Features
 * Script sessions and clients actions with shell scripts
 * Remember and recall JACK configuration with the jack_config session scripts
 * Having sub-sessions working through the network with the "Network Session" template
-* Remember the virtual desktop of the programs (requires `wmctrl`, doesn't works with Wayland)
+* Remember the virtual desktop of the programs (requires `wmctrl`, doesn't work with Wayland)
 * Bookmark the current session folder in your file manager and file pickers (gtk, kde, qt, fltk)
 * Many others...
-
-
-![Screenshot](https://raw.githubusercontent.com/Houston4444/RaySession/master/resources/screenshots/Screenshot_20211203_162333.png)
 
 
 Install
 ---------------------
 
-read [INSTALL.md](INSTALL.md)
+Read [INSTALL.md](INSTALL.md)
+
+
+Credits
+---------------------
+
+NexSession is a fork of **RaySession**, originally developed by **Mathieu Picot (houston4444)**.
+
+- Original project: https://github.com/Houston4444/RaySession
+- Original author's support page: https://liberapay.com/Houston4444
+
+NexSession is built on top of the excellent work done by Mathieu and the RaySession community of translators and contributors. Full translator credits are listed in [TRANSLATORS](TRANSLATORS).
+
+License: GNU General Public License v2 — see [COPYING](COPYING).
 
 
 Infos
 ---------------------
 
 You can see documentation on NSM protocol at: https://new-session-manager.jackaudio.org/api/index.html
-
-RaySession is being developed by Mathieu Picot (houston4444), using Python3 and qtpy.
