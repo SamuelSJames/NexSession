@@ -1,0 +1,123 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:44
+
+    steps:
+      - name: Install build and runtime dependencies
+        run: |
+          dnf install -y \
+            gcc \
+            git \
+            make \
+            which \
+            desktop-file-utils \
+            findutils \
+            python3-pyqt6-devel \
+            python3-pyqt6 \
+            python3-pyqt6-base \
+            qt6-linguist \
+            qt6-qttools-devel \
+            qt6-qtbase-devel \
+            qt6-qtsvg \
+            python3-QtPy \
+            python-jack-client \
+            python3-pyliblo3 \
+            python3-alsa \
+            pipewire-jack-audio-connection-kit \
+            pipewire-jack-audio-connection-kit-devel \
+            google-roboto-fonts
+
+      # actions/checkout requires git >= 2.18 and is not compatible with
+      # the fedora container's default git ownership; mark the workspace
+      # safe before checking out.
+      - name: Mark workspace as a safe git directory
+        run: git config --global --add safe.directory '*'
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build (Qt 6)
+        run: make LRELEASE=lrelease-qt6
+
+      - name: Verify generated Qt resources are non-empty
+        run: |
+          test -s src/gui/resources_rc.py
+          test -s HoustonPatchbay/source/patchbay/resources_rc.py
+
+      - name: Python compile check
+        run: python3 -m compileall -q src HoustonPatchbay/source/patchbay
+
+      - name: Check every tracked symlink resolves
+        run: |
+          find . -path ./.git -prune -o -type l -print > symlinks.txt
+          broken=0
+          while read -r link; do
+            test -e "$link" || { echo "BROKEN SYMLINK: $link"; broken=1; }
+          done < symlinks.txt
+          exit "$broken"
+
+      - name: Staged install (PREFIX=/usr, DESTDIR)
+        run: |
+          make install PREFIX=/usr DESTDIR="$PWD/stage"
+
+      - name: Validate desktop files
+        run: desktop-file-validate stage/usr/share/applications/*.desktop
+
+      - name: Check installed command links resolve
+        run: |
+          find stage/usr/bin -maxdepth 1 -type l | while read -r link; do
+            target=$(readlink -f "$link")
+            test -e "$target" || { echo "BROKEN COMMAND LINK: $link -> $target"; exit 1; }
+          done
+
+      - name: Check staged package excludes tests, debug launchers, and bytecode
+        run: |
+          found=$(find stage \( -name '__pycache__' -o -name '*.pyc' -o -name '*.pyo' \
+            -o -path '*/src/tests' -o -name 'conf_testou.py' -o -name 'qt6_app.py' \))
+          if [ -n "$found" ]; then
+            echo "Staged package contains excluded paths:"
+            echo "$found"
+            exit 1
+          fi
+
+      - name: Staged uninstall leaves nothing behind
+        run: |
+          make uninstall PREFIX=/usr DESTDIR="$PWD/stage"
+          remaining=$(find stage -type f -o -type l)
+          if [ -n "$remaining" ]; then
+            echo "Files remained after uninstall:"
+            echo "$remaining"
+            exit 1
+          fi
+
+      - name: Offscreen startup smoke test
+        run: |
+          export QT_QPA_PLATFORM=offscreen
+          set +e
+          timeout --signal=INT 5s ./src/bin/nexsession > smoke.log 2>&1
+          code=$?
+          set -e
+          cat smoke.log
+          if [ "$code" -ne 124 ]; then
+            echo "Unexpected exit code: $code (expected 124 from the timeout)"
+            exit 1
+          fi
+          if ! grep -q "GUI connected" smoke.log || ! grep -q "Bye Bye" smoke.log; then
+            echo "Smoke test output missing healthy startup/shutdown markers"
+            exit 1
+          fi
+          # CI containers have no /dev/snd/seq, which throws a non-fatal
+          # background-thread alsaseq.SequencerError; that's expected here
+          # and does not stop the GUI from connecting and shutting down
+          # cleanly, so it is not treated as a failure.
