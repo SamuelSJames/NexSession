@@ -136,10 +136,17 @@ uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/nex-jack_checker_daemon
 	rm -f $(DESTDIR)$(PREFIX)/bin/nex-jack_config_script
 	rm -f $(DESTDIR)$(PREFIX)/bin/nex-pulse2jack
+	rm -f $(DESTDIR)$(PREFIX)/bin/nex-alsapatch
+	rm -f $(DESTDIR)$(PREFIX)/bin/nex-jackpatch
+	rm -f $(DESTDIR)$(PREFIX)/bin/nex-network
 	rm -f $(DESTDIR)$(PREFIX)/bin/nex_control
 	rm -f $(DESTDIR)$(PREFIX)/bin/nex_git
 
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/nexsession.desktop
+	rm -f $(DESTDIR)$(PREFIX)/share/applications/nex-alsapatch.desktop
+	rm -f $(DESTDIR)$(PREFIX)/share/applications/nex-jack_checker.desktop
+	rm -f $(DESTDIR)$(PREFIX)/share/applications/nex-jackpatch.desktop
+	rm -f $(DESTDIR)$(PREFIX)/share/applications/nex-network.desktop
 	rm -f $(DESTDIR)$(PREFIX)/share/icons/hicolor/*/apps/nexsession.png
 	rm -f $(DESTDIR)$(PREFIX)/share/icons/hicolor/scalable/apps/nexsession.svg
 	rm -rf $(DESTDIR)/etc/xdg/nexsession/client_templates/40_nex_nsm
@@ -195,15 +202,21 @@ install:
 
 	# Install main code
 	cp -r src $(DEST_NEX)/
+	rm -rf $(DEST_NEX)/src/tests
+	rm -f $(DEST_NEX)/src/bin/conf_testou.py
+	rm -f $(DEST_NEX)/src/bin/qt6_app.py
+	find $(DEST_NEX)/src $(DEST_NEX)/$(PATCHBAY_DIR)/source \
+		-type d -name __pycache__ -prune -exec rm -rf {} +
+	find $(DEST_NEX)/src $(DEST_NEX)/$(PATCHBAY_DIR)/source \
+		-type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
 
-	$(LINK) $(DEST_NEX)/src/bin/nex-jack_checker_daemon $(DESTDIR)$(PREFIX)/bin/
-	$(LINK) $(DEST_NEX)/src/bin/nex-jack_config_script  $(DESTDIR)$(PREFIX)/bin/
-	$(LINK) $(DEST_NEX)/src/bin/nex-pulse2jack          $(DESTDIR)$(PREFIX)/bin/
-	$(LINK) $(DEST_NEX)/src/bin/nex_git                 $(DESTDIR)$(PREFIX)/bin/
-	
-	# compile python files
-	$(PYTHON) -m compileall $(DEST_NEX)/HoustonPatchbay/source/
-	$(PYTHON) -m compileall $(DEST_NEX)/src/
+	$(LINK) ../share/nexsession/src/bin/nex-jack_checker_daemon $(DESTDIR)$(PREFIX)/bin/
+	$(LINK) ../share/nexsession/src/bin/nex-jack_config_script  $(DESTDIR)$(PREFIX)/bin/
+	$(LINK) ../share/nexsession/src/bin/nex-pulse2jack          $(DESTDIR)$(PREFIX)/bin/
+	$(LINK) ../share/nexsession/src/bin/nex-alsapatch           $(DESTDIR)$(PREFIX)/bin/
+	$(LINK) ../share/nexsession/src/bin/nex-jackpatch           $(DESTDIR)$(PREFIX)/bin/
+	$(LINK) ../share/nexsession/src/bin/nex-network             $(DESTDIR)$(PREFIX)/bin/
+	$(LINK) ../share/nexsession/src/bin/nex_git                 $(DESTDIR)$(PREFIX)/bin/
 	
 	# install local manual
 	cp -r manual $(DEST_NEX)/
@@ -219,4 +232,3 @@ install:
 	# Install Translations
 	install -m 644 locale/*.qm $(DEST_NEX)/locale/
 	install -m 644 $(PATCHBAY_DIR)/locale/*.qm $(DEST_NEX)/$(PATCHBAY_DIR)/locale
-
