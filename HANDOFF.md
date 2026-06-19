@@ -6,14 +6,15 @@ This file is the operational starting point for another developer or AI agent. R
 
 ## Current state
 
-NexSession is an in-progress rebrand and Fedora/PipeWire-focused modernization of RaySession. The rebrand, application icon, Qt 6 build, `/usr/local` installation, GUI startup repair, and empty patchbay-theme repair are complete in the source tree.
+NexSession is a Fedora/PipeWire-focused modernization of RaySession. The rebrand, application icon, Qt 6 build, `/usr/local` installation, GUI startup repair, patchbay theme repair, session-script symlink repair, and staged-install cleanup are complete in the source tree.
 
-The next planned engineering milestone is Phase 1 in `NEXSESSION_ROADMAP.md`: design and implement a PipeWire-native engine without regressing the current JACK compatibility path.
+The next engineering task is automated CI coverage. Complete CI and a real-client acceptance test before starting the PipeWire-native engine described in `NEXSESSION_ROADMAP.md`.
 
 Important repository state:
 
-- The worktree contains a large, intentional, uncommitted rebrand. Do not reset, restore, or delete unfamiliar changes.
-- `HoustonPatchbay` is a Git submodule with intentional local modifications. Its Makefile and patchcanvas code are part of the fixes described below.
+- The worktree was clean at the end of 2026-06-19. `master` was four commits ahead of `origin/master`; those commits had not yet been pushed.
+- The `HoustonPatchbay` directory remains the submodule path for build compatibility, but its remote is now the independently maintained `NexPatchbay` repository.
+- NexPatchbay `main` contains the preserved HoustonPatchbay history, NexSession adaptations, GPLv2 license, and explicit upstream attribution. The pinned commit is `b522e897`.
 - No credential file is required or expected. Never put passwords, tokens, or other credentials in this repository or its documentation.
 - Source path: `~/Documents/NexSession`
 - Installed prefix used during testing: `/usr/local`
@@ -75,6 +76,22 @@ Implemented fix in `HoustonPatchbay/source/patchbay/patchcanvas/patchcanvas.py`:
 
 The current `/usr/local` launcher is warning-free because the repaired setting is persisted. The source behavior fix must be installed with the command below after any future source update.
 
+### Session scripts and staged installation
+
+- Two rebranded session-script symlinks were repaired to target `nex-scripts` instead of removed `ray-scripts` directories.
+- Installed command links are relative, so they work with `/usr`, `/usr/local`, alternate prefixes, and package-manager `DESTDIR` staging.
+- `nex-alsapatch`, `nex-jackpatch`, and `nex-network` are installed on `PATH`, matching their desktop files.
+- Uninstall removes every installed command and desktop file.
+- Staged packages exclude `src/tests`, debug launchers, `__pycache__`, `.pyc`, and `.pyo` files.
+- Install-time `compileall` was removed; distribution packaging can manage bytecode independently.
+
+### NexPatchbay repository
+
+- Independent repository: <https://github.com/SamuelSJames/NexPatchbay>
+- Original upstream retained in history and README: <https://github.com/Houston4444/HoustonPatchbay>
+- NexSession `.gitmodules` now fetches NexPatchbay over public HTTPS.
+- A fresh public clone and detached checkout of pinned commit `b522e897` succeeded.
+
 ## Build and install
 
 Fedora's translation executable is named `lrelease-qt6`:
@@ -134,6 +151,16 @@ For both timeout smoke tests, exit code `124` is expected because `timeout` ends
 
 A live source-tree launch was also performed in the GNOME Wayland desktop. The GUI stayed open, connected to `nex-daemon`, and loaded the patchbay resources. The repaired build was installed to `/usr/local`, and installed/source resource module sizes matched.
 
+Additional repository checks passed on 2026-06-19:
+
+- every tracked symlink resolves;
+- staged install works with `PREFIX=/usr` and `DESTDIR`;
+- every installed desktop command resolves to an executable;
+- staged command links remain valid with alternate prefixes;
+- staged uninstall leaves no files behind;
+- staged packages contain no tests, debug launchers, caches, or bytecode; and
+- NexPatchbay can be cloned publicly at the exact pinned commit.
+
 ## Not yet verified
 
 - No complete end-to-end session was exercised with Ardour or Carla after these repairs.
@@ -144,11 +171,12 @@ A live source-tree launch was also performed in the GNOME Wayland desktop. The G
 
 ## Recommended next steps
 
-1. Commit the rebrand/foundation work in reviewable groups before starting a large architecture change.
-2. Run the real-client acceptance test: create a session, launch Ardour or Carla, make connections, save, close, reopen, and confirm restoration.
-3. Write a short PipeWire engine design that maps current JACK engine responsibilities to PipeWire nodes, ports, links, metadata, and event monitoring.
-4. Preserve the JACK engine as a fallback while introducing PipeWire-native discovery incrementally.
-5. Add automated tests around resource generation and theme fallback so these startup regressions cannot recur.
+1. Add GitHub Actions CI for submodule checkout, Qt 6 build, Python compilation, tracked symlinks, staged install/uninstall, package exclusions, desktop-file validation, and offscreen startup.
+2. Commit the CI workflow, push the local commits to `origin/master`, and confirm the workflow passes from a fresh GitHub runner.
+3. Run the real-client acceptance test: create a session, launch Ardour or Carla, make connections, save, close, reopen, and confirm client state and routing restoration.
+4. Add formal dependency metadata and begin an RPM/COPR package only after the staged-install checks run in CI.
+5. Decide and document migration behavior for existing RaySession configuration and session directories.
+6. Write a PipeWire backend design that maps the current JACK responsibilities to PipeWire nodes, ports, links, metadata, and registry events while preserving JACK as a fallback.
 
 ## Useful files
 
