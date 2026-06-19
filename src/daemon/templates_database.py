@@ -11,7 +11,7 @@ import xml.etree.ElementTree as ET
 from qtpy.QtCore import QProcess, QCoreApplication
 
 # Imports from src/shared
-import ray
+import nex
 import xdg
 from xml_tools import XmlElement
 import osc_paths.nsm as nsm
@@ -43,7 +43,7 @@ class NsmDesktopExec(TypedDict):
 
 def _get_search_template_dirs(factory: bool) -> list[Path]:
     if factory:
-        # search templates in /etc/xdg (RaySession installed)
+        # search templates in /etc/xdg (NexSession installed)
         templates_root = TemplateRoots.factory_clients_xdg
 
         # search templates in source code
@@ -158,13 +158,13 @@ def _should_rewrite_user_templates_file(
     xroot = XmlElement(root)
     file_version = xroot.string('VERSION')
 
-    if (ray.version_to_tuple(file_version)
-            >= ray.version_to_tuple(ray.VERSION)):
+    if (nex.version_to_tuple(file_version)
+            >= nex.version_to_tuple(nex.VERSION)):
         return False
 
-    xroot.set_str('VERSION', ray.VERSION)
-    root.attrib['VERSION'] = ray.VERSION
-    if ray.version_to_tuple(file_version) >= (0, 8, 0):
+    xroot.set_str('VERSION', nex.VERSION)
+    root.attrib['VERSION'] = nex.VERSION
+    if nex.version_to_tuple(file_version) >= (0, 8, 0):
         return True
 
     for child in root:
@@ -206,10 +206,10 @@ def _list_xml_elements(base: str) -> Iterator[tuple[Path, XmlElement]]:
             continue
 
         root = tree.getroot()
-        if root.tag != 'RAY-CLIENT-TEMPLATES':
+        if root.tag != 'NEX-CLIENT-TEMPLATES':
             continue
         
-        if not factory and root.attrib.get('VERSION') != ray.VERSION:
+        if not factory and root.attrib.get('VERSION') != nex.VERSION:
             # we may rewrite user client templates file
             file_rewritten = _should_rewrite_user_templates_file(
                 root, templates_file)
@@ -260,7 +260,7 @@ def rebuild_templates_database(session: 'OperatingSession', base: str):
             continue
 
         executable = c.string('executable')
-        protocol = ray.Protocol.from_string(c.string('protocol'))
+        protocol = nex.Protocol.from_string(c.string('protocol'))
 
         # check if we wan't this template to be erased by a .desktop file
         # with X-NSM-Capable=true
@@ -297,7 +297,7 @@ def rebuild_templates_database(session: 'OperatingSession', base: str):
             continue
 
         # check if needed executables are present
-        if protocol is not ray.Protocol.RAY_NET:
+        if protocol is not nex.Protocol.NEX_NET:
             if not executable:
                 continue
             
@@ -442,8 +442,8 @@ def rebuild_templates_database(session: 'OperatingSession', base: str):
         
         # this client has probably not been tested in RS
         # let it behaves as in NSM
-        template_client.prefix_mode = ray.PrefixMode.CLIENT_NAME
-        template_client.jack_naming = ray.JackNaming.LONG
+        template_client.prefix_mode = nex.PrefixMode.CLIENT_NAME
+        template_client.jack_naming = nex.JackNaming.LONG
         template_client.update_infos_from_desktop_file()
         
         template_names.add(template_name)

@@ -1,17 +1,30 @@
 # NexSession — Feature Roadmap
 
-> Fork of [RaySession](https://github.com/Houston4444/RaySession) by Mathieu Picot (houston4444).  
+> NexSession modernization roadmap for a Fedora + PipeWire focused audio session manager.
 > Goal: Native Linux audio session manager — kernel-aware, standalone, Flatpak-distributable.
+
+---
+
+## Completed foundation baseline — 2026-06-19
+
+- [x] NexSession rebrand across launchers, UI, templates, translations, manuals, and internal paths
+- [x] New scalable application icon and standard hicolor PNG sizes
+- [x] Fedora Qt 6 resource compiler discovery and failure-safe resource generation
+- [x] GUI startup repair with safe bundled-font fallback
+- [x] Empty patchbay-theme normalization and persistence
+- [x] Source and installed startup smoke tests on Fedora 44 GNOME Wayland
+
+Before beginning the PipeWire-native engine, complete the outstanding real-client acceptance test documented in `HANDOFF.md`.
 
 ---
 
 ## Community Research Summary
 
-### What users love about RaySession (keep and build on)
+### What users love about NexSession (keep and build on)
 - Integrated patchbay with stereo port detection (unique in the NSM ecosystem)
 - Git-based snapshot history — save states, instant rollback
-- Ray-Hack protocol — wraps non-NSM apps without an extra process
-- `ray_control` CLI — scriptable, keyboard-bindable
+- Nex-Hack protocol — wraps non-NSM apps without an extra process
+- `nex_control` CLI — scriptable, keyboard-bindable
 - Session scripts — shell hooks on load/save/close
 - Network sessions — master-slave across networked machines
 - Active, reliable, production-ready
@@ -156,21 +169,21 @@ sudo dnf install -y \
   git
 
 # Initialize git submodule (HoustonPatchbay)
-cd ~/Documents/RaySession
+cd ~/Documents/NexSession
 git submodule update --init
 ```
 
 ### Build
 
 ```bash
-cd ~/Documents/RaySession
+cd ~/Documents/NexSession
 make
 ```
 
 ### Run without installing
 
 ```bash
-./src/bin/raysession
+./src/bin/nexsession
 ```
 
 ### Install system-wide
@@ -183,6 +196,6 @@ sudo make install PREFIX=/usr
 
 ## Notes
 
-- Internal tool names (`ray-daemon`, `ray_control`, `ray-jackpatch`, etc.) are intentionally kept as-is — renaming them would break NSM protocol compatibility with existing client apps.
-- The main executable and all user-facing paths use the `nexsession`/`NexSession` name.
-- The `COPYING` (GPLv2) and `TRANSLATORS` files are preserved from the original RaySession project.
+- Internal tool names now use the `nex-*` / `nex_*` naming family.
+- The main executable and all user-facing paths use the `nexsession` / `NexSession` name.
+- The `COPYING` (GPLv2) and `TRANSLATORS` files are preserved from the original project lineage.

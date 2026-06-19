@@ -370,7 +370,7 @@
        <item>
         <widget class="QCheckBox" name="checkBoxShutdown">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Never ask what to do and close GUI process&lt;br/&gt;if you close RaySession while a session is running. &lt;/p&gt;&lt;p&gt;The session will still running and you just have&lt;br/&gt;to restart RaySession to manage it.&lt;/p&gt;&lt;p&gt;This method uses less RAM than&lt;br/&gt;keeping window in system tray.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Never ask what to do and close GUI process&lt;br/&gt;if you close NexSession while a session is running. &lt;/p&gt;&lt;p&gt;The session will still running and you just have&lt;br/&gt;to restart NexSession to manage it.&lt;/p&gt;&lt;p&gt;This method uses less RAM than&lt;br/&gt;keeping window in system tray.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="text">
           <string>Quit shutdowns the GUI</string>

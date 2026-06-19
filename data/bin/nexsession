@@ -8,6 +8,6 @@ sys.path[0] = str(Path(__file__).parents[1]
                   / 'share' / 'nexsession' / 'src' / 'gui')
 
 if TYPE_CHECKING:
-    import src.gui.raysession
+    import src.gui.nexsession
 else:
-    import raysession
+    import nexsession

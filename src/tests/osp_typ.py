@@ -1,7 +1,7 @@
 
 from osclib import OscPack, Address
 
-osp = OscPack('/ray/gui/nanana',
+osp = OscPack('/nex/gui/nanana',
               ['shamopo', 47, 'suvam', 12.84],
               'sisf',
               Address(1984))

@@ -8,7 +8,7 @@ import logging
 import sys
 
 # Imports from src/shared
-import ray
+import nex
 from jack_renaming_tools import (
     port_belongs_to_client, port_name_client_replaced)
 
@@ -22,7 +22,7 @@ def rewrite_jack_patch_files(
         old_client_id: str, new_client_id: str,
         old_jack_name: str, new_jack_name: str):
     for client in session.clients + session.trashed_clients:
-        if client.protocol not in (ray.Protocol.NSM, ray.Protocol.INTERNAL):
+        if client.protocol not in (nex.Protocol.NSM, nex.Protocol.INTERNAL):
             continue
 
         patch_path = Path(str(client.get_project_path()) + '.xml')
@@ -37,7 +37,7 @@ def rewrite_jack_patch_files(
             with open(patch_path, 'r') as f:
                 tree = ET.parse(f)
             root = tree.getroot()
-            assert root.tag in ('RAY-JACKPATCH', 'RAY-ALSAPATCH')
+            assert root.tag in ('NEX-JACKPATCH', 'NEX-ALSAPATCH')
         except:
             continue
 

@@ -1,12 +1,12 @@
 #!/usr/bin/make -f
 # Makefile for NexSession #
 # ----------------------- #
-# Originally created by houston4444 as RaySession
+# Originally created by houston4444 as NexSession
 # Rebranded as NexSession
 #
 PREFIX ?= /usr/local
 DESTDIR =
-DEST_RAY := $(DESTDIR)$(PREFIX)/share/nexsession
+DEST_NEX := $(DESTDIR)$(PREFIX)/share/nexsession
 
 LINK = ln -s -f
 LRELEASE ?= lrelease
@@ -20,15 +20,18 @@ ifeq ($(QT_VERSION), 6)
 	QT_API ?= PyQt6
 	PYUIC ?= pyuic6
 	PYLUPDATE ?= pylupdate6
-	RCC_EXEC := $(shell which $(RCC))
-	RCC_QT6_DEB := /usr/lib/qt6/libexec/rcc
+	RCC_EXEC := $(shell command -v $(RCC) 2>/dev/null)
+	RCC_QT6 := $(shell qtpaths6 --query QT_HOST_LIBEXECS 2>/dev/null)/rcc
+	ifeq (/rcc, $(RCC_QT6))
+		RCC_QT6 := /usr/lib/qt6/libexec/rcc
+	endif
 
 	ifeq (, ${RCC_EXEC})
-		RCC := ${RCC_QT6_DEB}
+		RCC := ${RCC_QT6}
 	else
 		ifeq ($(shell readlink ${RCC_EXEC}), qtchooser)
-			ifeq ($(shell test -x ${RCC_QT6_DEB} | echo $$?), 0)
-				RCC := ${RCC_QT6_DEB}
+			ifneq (, $(wildcard ${RCC_QT6}))
+				RCC := ${RCC_QT6}
 			endif
 		endif
 	endif
@@ -80,10 +83,14 @@ QT_PREPARE:
 # ---------------------
 # Resources
 
+RESOURCE_FILES := $(shell sed -n 's|.*<file>\(.*\)</file>.*|resources/\1|p' resources/resources.qrc)
+
 RES: src/gui/resources_rc.py
 
-src/gui/resources_rc.py: resources/resources.qrc
-	${RCC} -g python $< |sed 's/ PySide. / qtpy /' > $@
+src/gui/resources_rc.py: resources/resources.qrc $(RESOURCE_FILES)
+	${RCC} -g python $< -o $@.tmp
+	sed 's/ PySide. / qtpy /' $@.tmp > $@
+	rm -f $@.tmp
 
 # ---------------------
 # UI code
@@ -124,32 +131,32 @@ debug:
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/nexsession
-	rm -f $(DESTDIR)$(PREFIX)/bin/ray-daemon
-	rm -f $(DESTDIR)$(PREFIX)/bin/ray-proxy
-	rm -f $(DESTDIR)$(PREFIX)/bin/ray-jack_checker_daemon
-	rm -f $(DESTDIR)$(PREFIX)/bin/ray-jack_config_script
-	rm -f $(DESTDIR)$(PREFIX)/bin/ray-pulse2jack
-	rm -f $(DESTDIR)$(PREFIX)/bin/ray_control
-	rm -f $(DESTDIR)$(PREFIX)/bin/ray_git
+	rm -f $(DESTDIR)$(PREFIX)/bin/nex-daemon
+	rm -f $(DESTDIR)$(PREFIX)/bin/nex-proxy
+	rm -f $(DESTDIR)$(PREFIX)/bin/nex-jack_checker_daemon
+	rm -f $(DESTDIR)$(PREFIX)/bin/nex-jack_config_script
+	rm -f $(DESTDIR)$(PREFIX)/bin/nex-pulse2jack
+	rm -f $(DESTDIR)$(PREFIX)/bin/nex_control
+	rm -f $(DESTDIR)$(PREFIX)/bin/nex_git
 
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/nexsession.desktop
 	rm -f $(DESTDIR)$(PREFIX)/share/icons/hicolor/*/apps/nexsession.png
 	rm -f $(DESTDIR)$(PREFIX)/share/icons/hicolor/scalable/apps/nexsession.svg
-	rm -rf $(DESTDIR)/etc/xdg/nexsession/client_templates/40_ray_nsm
-	rm -rf $(DESTDIR)/etc/xdg/nexsession/client_templates/60_ray_lash
-	rm -f $(DESTDIR)/etc/bash_completion.d/ray_completion.sh
-	rm -f $(DESTDIR)$(PREFIX)/share/bash-completion/completions/ray_control
-	rm -rf $(DEST_RAY)
+	rm -rf $(DESTDIR)/etc/xdg/nexsession/client_templates/40_nex_nsm
+	rm -rf $(DESTDIR)/etc/xdg/nexsession/client_templates/60_nex_lash
+	rm -f $(DESTDIR)/etc/bash_completion.d/nex_completion.sh
+	rm -f $(DESTDIR)$(PREFIX)/share/bash-completion/completions/nex_control
+	rm -rf $(DEST_NEX)
 
 install:
 	# Create directories
 	install -d $(DESTDIR)$(PREFIX)/bin/
 	install -d $(DESTDIR)$(PREFIX)/share/applications/
 	install -d $(DESTDIR)$(PREFIX)/share/icons/hicolor/scalable/apps/
-	install -d $(DEST_RAY)/
-	install -d $(DEST_RAY)/locale/
-	install -d $(DEST_RAY)/$(_DIR)/
-	install -d $(DEST_RAY)/$(PATCHBAY_DIR)/locale/
+	install -d $(DEST_NEX)/
+	install -d $(DEST_NEX)/locale/
+	install -d $(DEST_NEX)/$(_DIR)/
+	install -d $(DEST_NEX)/$(PATCHBAY_DIR)/locale/
 	install -d $(DESTDIR)/etc/xdg/nexsession/client_templates/
 	install -d $(DESTDIR)$(PREFIX)/share/bash-completion/completions/
 	
@@ -161,22 +168,22 @@ install:
 	done
 
 	# Copy Templates Factory
-	cp -r client_templates/40_ray_nsm  $(DESTDIR)/etc/xdg/nexsession/client_templates/
-	cp -r client_templates/60_ray_lash $(DESTDIR)/etc/xdg/nexsession/client_templates/
-	cp -r client_templates  $(DEST_RAY)/
-	cp -r session_templates $(DEST_RAY)/
-	cp -r session_scripts   $(DEST_RAY)/
-	cp -r data              $(DEST_RAY)/
+	cp -r client_templates/40_nex_nsm  $(DESTDIR)/etc/xdg/nexsession/client_templates/
+	cp -r client_templates/60_nex_lash $(DESTDIR)/etc/xdg/nexsession/client_templates/
+	cp -r client_templates  $(DEST_NEX)/
+	cp -r session_templates $(DEST_NEX)/
+	cp -r session_scripts   $(DEST_NEX)/
+	cp -r data              $(DEST_NEX)/
 
 	# Copy completion script
-	cp src/completion/ray_completion.sh $(DESTDIR)$(PREFIX)/share/bash-completion/completions/ray_control
+	cp src/completion/nex_completion.sh $(DESTDIR)$(PREFIX)/share/bash-completion/completions/nex_control
 	sed -i "s|XXX_PYCOMPLETION_XXX|$(PREFIX)/share/nexsession/src/completion|" \
-		$(DESTDIR)$(PREFIX)/share/bash-completion/completions/ray_control
+		$(DESTDIR)$(PREFIX)/share/bash-completion/completions/nex_control
 
 	# Copy patchbay themes, manual and lib
-	cp -r HoustonPatchbay/themes $(DEST_RAY)/$(PATCHBAY_DIR)/
-	cp -r HoustonPatchbay/manual $(DEST_RAY)/$(PATCHBAY_DIR)/
-	cp -r HoustonPatchbay/source $(DEST_RAY)/$(PATCHBAY_DIR)/
+	cp -r HoustonPatchbay/themes $(DEST_NEX)/$(PATCHBAY_DIR)/
+	cp -r HoustonPatchbay/manual $(DEST_NEX)/$(PATCHBAY_DIR)/
+	cp -r HoustonPatchbay/source $(DEST_NEX)/$(PATCHBAY_DIR)/
 
 	# Copy Desktop Files
 	install -m 644 data/share/applications/*.desktop \
@@ -187,30 +194,29 @@ install:
 		$(DESTDIR)$(PREFIX)/share/icons/hicolor/scalable/apps/
 
 	# Install main code
-	cp -r src $(DEST_RAY)/
+	cp -r src $(DEST_NEX)/
 
-	$(LINK) $(DEST_RAY)/src/bin/ray-jack_checker_daemon $(DESTDIR)$(PREFIX)/bin/
-	$(LINK) $(DEST_RAY)/src/bin/ray-jack_config_script  $(DESTDIR)$(PREFIX)/bin/
-	$(LINK) $(DEST_RAY)/src/bin/ray-pulse2jack          $(DESTDIR)$(PREFIX)/bin/
-	$(LINK) $(DEST_RAY)/src/bin/ray_git                 $(DESTDIR)$(PREFIX)/bin/
+	$(LINK) $(DEST_NEX)/src/bin/nex-jack_checker_daemon $(DESTDIR)$(PREFIX)/bin/
+	$(LINK) $(DEST_NEX)/src/bin/nex-jack_config_script  $(DESTDIR)$(PREFIX)/bin/
+	$(LINK) $(DEST_NEX)/src/bin/nex-pulse2jack          $(DESTDIR)$(PREFIX)/bin/
+	$(LINK) $(DEST_NEX)/src/bin/nex_git                 $(DESTDIR)$(PREFIX)/bin/
 	
 	# compile python files
-	$(PYTHON) -m compileall $(DEST_RAY)/HoustonPatchbay/source/
-	$(PYTHON) -m compileall $(DEST_RAY)/src/
+	$(PYTHON) -m compileall $(DEST_NEX)/HoustonPatchbay/source/
+	$(PYTHON) -m compileall $(DEST_NEX)/src/
 	
 	# install local manual
-	cp -r manual $(DEST_RAY)/
+	cp -r manual $(DEST_NEX)/
 	
 	# install utility-scripts
-	cp -r utility-scripts $(DEST_RAY)/
+	cp -r utility-scripts $(DEST_NEX)/
 	
 	# install main bash scripts to bin
 	install -m 755 data/bin/nexsession  $(DESTDIR)$(PREFIX)/bin/
-	install -m 755 data/bin/ray-daemon  $(DESTDIR)$(PREFIX)/bin/
-	install -m 755 data/bin/ray_control $(DESTDIR)$(PREFIX)/bin/
+	install -m 755 data/bin/nex-daemon  $(DESTDIR)$(PREFIX)/bin/
+	install -m 755 data/bin/nex_control $(DESTDIR)$(PREFIX)/bin/
 	
 	# Install Translations
-	install -m 644 locale/*.qm $(DEST_RAY)/locale/
-	install -m 644 $(PATCHBAY_DIR)/locale/*.qm $(DEST_RAY)/$(PATCHBAY_DIR)/locale
-
+	install -m 644 locale/*.qm $(DEST_NEX)/locale/
+	install -m 644 $(PATCHBAY_DIR)/locale/*.qm $(DEST_NEX)/$(PATCHBAY_DIR)/locale
 

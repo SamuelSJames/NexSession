@@ -245,7 +245,7 @@ QToolButton {border: none}</string>
         </widget>
        </item>
        <item>
-        <widget class="RayHackButton" name="toolButtonHack">
+        <widget class="NexHackButton" name="toolButtonHack">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -265,7 +265,7 @@ QToolButton {border: none}</string>
           </size>
          </property>
          <property name="toolTip">
-          <string>Display client Ray-Hack properties</string>
+          <string>Display client Nex-Hack properties</string>
          </property>
          <property name="autoFillBackground">
           <bool>false</bool>
@@ -621,7 +621,7 @@ QToolButton {border: none}</string>
    <header>surclassed_widgets</header>
   </customwidget>
   <customwidget>
-   <class>RayHackButton</class>
+   <class>NexHackButton</class>
    <extends>QToolButton</extends>
    <header location="global">surclassed_widgets</header>
   </customwidget>

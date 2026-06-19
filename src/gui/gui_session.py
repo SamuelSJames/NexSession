@@ -12,10 +12,10 @@ from patshared import GroupPos, Naming, TransportPosition, PortType
 
 # Imports from src/shared
 from osclib import OscMulTypes, OscPack
-import ray
-import osc_paths.ray as r
-import osc_paths.ray.gui as rg
-import osc_paths.ray.patchbay.monitor as rpm
+import nex
+import osc_paths.nex as r
+import osc_paths.nex.gui as rg
+import osc_paths.nex.patchbay.monitor as rpm
 
 # Local imports
 from daemon_manager import DaemonManager
@@ -25,7 +25,7 @@ from gui_server_thread import GuiServerThread
 from gui_tools import CommandLineArgs, RS, error_text
 from main_window import MainWindow
 from nsm_child import NsmChild, NsmChildOutside
-from ray_patchbay_manager import RayPatchbayManager
+from nex_patchbay_manager import NexPatchbayManager
 
 
 _logger = logging.getLogger(__name__)
@@ -53,23 +53,23 @@ class Session:
     def __init__(self):
         self.client_list = list[Client]()
         self.trashed_clients = list[TrashedClient]()
-        self.favorite_list = list[ray.Favorite]()
+        self.favorite_list = list[nex.Favorite]()
         self.recent_sessions = list[str]()
         self.name = ''
         self.path = ''
         self.notes = ''
         self.terminal_command = ''
-        self.server_status = ray.ServerStatus.OFF
+        self.server_status = nex.ServerStatus.OFF
 
         self.is_renameable = True
 
         self.signaler = Signaler()
-        self.patchbay_manager = RayPatchbayManager(self)
+        self.patchbay_manager = NexPatchbayManager(self)
 
     def is_running(self) -> bool:
-        return self.server_status is not ray.ServerStatus.OFF
+        return self.server_status is not nex.ServerStatus.OFF
 
-    def update_server_status(self, server_status: ray.ServerStatus):
+    def update_server_status(self, server_status: nex.ServerStatus):
         self.server_status = server_status
 
     def _set_name(self, session_name: str):
@@ -122,7 +122,7 @@ class SignaledSession(Session):
         self.signaler.osc_receive.connect(self._osc_receive)
         
         self.preview_notes = ''
-        self.preview_client_list = list[ray.ClientData]()
+        self.preview_client_list = list[nex.ClientData]()
         self.preview_started_clients = set()
         self.preview_snapshots = list[str]()
         self.preview_size = -1
@@ -177,7 +177,7 @@ class SignaledSession(Session):
         self.main_win.hide()
         del self.main_win
 
-    def set_daemon_options(self, options: ray.Option):
+    def set_daemon_options(self, options: nex.Option):
         self.main_win.set_daemon_options(options)
         for client in self.client_list:
             client.widget.set_daemon_options(options)
@@ -198,7 +198,7 @@ class SignaledSession(Session):
 
             for client in self.client_list:
                 if (client.client_id == client_id
-                        and client.protocol is ray.Protocol.RAY_HACK):
+                        and client.protocol is nex.Protocol.NEX_HACK):
                     client.show_properties_dialog(second_tab=True)
                     break
 
@@ -209,8 +209,8 @@ class SignaledSession(Session):
 
         # don't shows a window error if error is OK
         # or related to an abort made by user
-        if err_code in (ray.Err.OK, ray.Err.ABORT_ORDERED,
-                        ray.Err.COPY_ABORTED):
+        if err_code in (nex.Err.OK, nex.Err.ABORT_ORDERED,
+                        nex.Err.COPY_ABORTED):
             return
 
         message = error_text(err_code)
@@ -226,7 +226,7 @@ class SignaledSession(Session):
 
         # don't shows a window error if error is OK
         # or if it comes from just an unknown (and untreated) message
-        if err_code in (ray.Err.OK, ray.Err.UNKNOWN_MESSAGE):
+        if err_code in (nex.Err.OK, nex.Err.UNKNOWN_MESSAGE):
             return
 
         self.main_win.error_message(err_message)
@@ -257,7 +257,7 @@ class SignaledSession(Session):
     @manage(rg.server.OPTIONS, 'i')
     def _server_options(self, osp: OscPack):
         options_int = osp.args[0] # type:ignore
-        self.set_daemon_options(ray.Option(options_int))
+        self.set_daemon_options(nex.Option(options_int))
 
     @manage(rg.server.RECENT_SESSIONS, 's*')
     def _server_recent_sessions(self, osp: OscPack):
@@ -295,7 +295,7 @@ class SignaledSession(Session):
 
         bool_set_edit = bool(
             self.is_renameable
-            and self.server_status is ray.ServerStatus.READY
+            and self.server_status is nex.ServerStatus.READY
             and not CommandLineArgs.out_daemon)
 
         self.main_win.set_session_name_editable(bool_set_edit)
@@ -340,32 +340,32 @@ class SignaledSession(Session):
             client.re_create_widget()
             client.widget.update_status(client.status)
 
-    @manage(rg.client.NEW, ray.ClientData.ARG_TYPES)
+    @manage(rg.client.NEW, nex.ClientData.ARG_TYPES)
     def _client_new(self, osp: OscPack):
         client = Client(self, *osp.args[:2]) # type:ignore
         client.update_properties(*osp.args)
         self.client_list.append(client)
 
-    @manage(rg.client.UPDATE, ray.ClientData.ARG_TYPES)
+    @manage(rg.client.UPDATE, nex.ClientData.ARG_TYPES)
     def _client_update(self, osp: OscPack):
         client_id: str = osp.args[0] # type:ignore
         client = self.get_client(client_id)
         if client:
             client.update_properties(*osp.args)
 
-    @manage(rg.client.RAY_HACK_UPDATE, 's' + ray.RayHack.ARG_TYPES)
-    def _client_ray_hack_update(self, osp: OscPack):
+    @manage(rg.client.NEX_HACK_UPDATE, 's' + nex.NexHack.ARG_TYPES)
+    def _client_nex_hack_update(self, osp: OscPack):
         client_id: str = osp.args.pop(0) # type:ignore
         client = self.get_client(client_id)
-        if client and client.protocol is ray.Protocol.RAY_HACK:
-            client.update_ray_hack(*osp.args)
+        if client and client.protocol is nex.Protocol.NEX_HACK:
+            client.update_nex_hack(*osp.args)
 
-    @manage(rg.client.RAY_NET_UPDATE, 'is' + ray.RayNet.ARG_TYPES)
-    def _client_ray_net_update(self, osp: OscPack):
+    @manage(rg.client.NEX_NET_UPDATE, 'is' + nex.NexNet.ARG_TYPES)
+    def _client_nex_net_update(self, osp: OscPack):
         client_id: str = osp.args[0] # type:ignore
         client = self.get_client(client_id)
-        if client and client.is_ray_net:
-            client.update_ray_net(*osp.args[1:])
+        if client and client.is_nex_net:
+            client.update_nex_net(*osp.args[1:])
 
     @manage(rg.client.SWITCH, 'ss')
     def _client_switch(self, osp: OscPack):
@@ -380,7 +380,7 @@ class SignaledSession(Session):
     def _client_status(self, osp: OscPack):
         args: tuple[str, int] = osp.args # type:ignore
         client_id: str = args[0]
-        status = ray.ClientStatus(args[1])
+        status = nex.ClientStatus(args[1])
         
         client = self.get_client(client_id)
         if client is None:
@@ -388,7 +388,7 @@ class SignaledSession(Session):
         
         client.set_status(status)
 
-        if client.status is ray.ClientStatus.REMOVED:
+        if client.status is nex.ClientStatus.REMOVED:
             self.main_win.remove_client(client_id)
             client.close_properties_dialog()
             self.client_list.remove(client)
@@ -432,7 +432,7 @@ class SignaledSession(Session):
         if client:
             client.allow_kill()
 
-    @manage(rg.trash.ADD, ray.ClientData.ARG_TYPES)
+    @manage(rg.trash.ADD, nex.ClientData.ARG_TYPES)
     def _trash_add(self, osp: OscPack):
         trashed_client = TrashedClient(self)
         trashed_client.update(*osp.args) # type:ignore
@@ -440,20 +440,20 @@ class SignaledSession(Session):
         trashed_client.set_menu_action(trash_action)
         self.trashed_clients.append(trashed_client)
 
-    @manage(rg.trash.RAY_HACK_UPDATE, 's' + ray.RayHack.ARG_TYPES)
-    def _trash_ray_hack_update(self, osp: OscPack):
+    @manage(rg.trash.NEX_HACK_UPDATE, 's' + nex.NexHack.ARG_TYPES)
+    def _trash_nex_hack_update(self, osp: OscPack):
         client_id: str = osp.args[0] # type:ignore
         for trashed_client in self.trashed_clients:
             if trashed_client.client_id == client_id:
-                trashed_client.ray_hack = ray.RayHack.new_from(*osp.args[1:])
+                trashed_client.nex_hack = nex.NexHack.new_from(*osp.args[1:])
                 break
 
-    @manage(rg.trash.RAY_NET_UPDATE, 's' + ray.RayNet.ARG_TYPES)
-    def _trash_ray_net_update(self, osp: OscPack):
+    @manage(rg.trash.NEX_NET_UPDATE, 's' + nex.NexNet.ARG_TYPES)
+    def _trash_nex_net_update(self, osp: OscPack):
         client_id: str = osp.args[0] # type:ignore
         for trashed_client in self.trashed_clients:
             if trashed_client.client_id == client_id:
-                trashed_client.ray_net = ray.RayNet.new_from(*osp.args[1:])
+                trashed_client.nex_net = nex.NexNet.new_from(*osp.args[1:])
                 break
 
     @manage(rg.trash.REMOVE, 's')
@@ -487,7 +487,7 @@ class SignaledSession(Session):
                 favorite.display_name = display_name
                 break
         else:
-            self.favorite_list.append(ray.Favorite(
+            self.favorite_list.append(nex.Favorite(
                 template_name, icon_name, bool(int_factory), display_name))
             self.signaler.favorite_added.emit(
                 template_name, icon_name, bool(int_factory), display_name)
@@ -522,9 +522,9 @@ class SignaledSession(Session):
         preview_notes: str = osp.args[0] # type:ignore
         self.preview_notes = preview_notes
     
-    @manage(rg.preview.client.UPDATE, ray.ClientData.ARG_TYPES)
+    @manage(rg.preview.client.UPDATE, nex.ClientData.ARG_TYPES)
     def _preview_client_update(self, osp: OscPack):
-        client = ray.ClientData.new_from(*osp.args)
+        client = nex.ClientData.new_from(*osp.args)
         for pv_client in self.preview_client_list:
             if pv_client.client_id == client.client_id:
                 pv_client.update(*osp.args) # type:ignore
@@ -532,20 +532,20 @@ class SignaledSession(Session):
         else:
             self.preview_client_list.append(client)
 
-    @manage(rg.preview.client.RAY_HACK_UPDATE, 's' + ray.RayHack.ARG_TYPES)
-    def _preview_client_ray_hack_update(self, osp: OscPack):
+    @manage(rg.preview.client.NEX_HACK_UPDATE, 's' + nex.NexHack.ARG_TYPES)
+    def _preview_client_nex_hack_update(self, osp: OscPack):
         client_id = osp.args[0] # type:ignore
         for pv_client in self.preview_client_list:
             if pv_client.client_id == client_id:
-                pv_client.set_ray_hack(ray.RayHack.new_from(*osp.args[1:]))
+                pv_client.set_nex_hack(nex.NexHack.new_from(*osp.args[1:]))
                 break
     
-    @manage(rg.preview.client.RAY_NET_UPDATE, 's' + ray.RayNet.ARG_TYPES)
-    def _preview_client_ray_net_update(self, osp: OscPack):
+    @manage(rg.preview.client.NEX_NET_UPDATE, 's' + nex.NexNet.ARG_TYPES)
+    def _preview_client_nex_net_update(self, osp: OscPack):
         client_id: str = osp.args[0] # type:ignore
         for pv_client in self.preview_client_list:
             if pv_client.client_id == client_id:
-                pv_client.set_ray_net(ray.RayNet.new_from(*osp.args[1:]))
+                pv_client.set_nex_net(nex.NexNet.new_from(*osp.args[1:]))
                 break
 
     @manage(rg.preview.client.IS_STARTED, 'si')

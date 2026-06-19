@@ -10,7 +10,7 @@ shared = '/' + '/'.join(__file__.split('/')[:-2]) + '/shared'
 sys.path.insert(1, shared)
 
 from proc_name import set_proc_name
-set_proc_name('ray-footmem')
+set_proc_name('nex-footmem')
 
 falap = set(sys.modules.keys())
 

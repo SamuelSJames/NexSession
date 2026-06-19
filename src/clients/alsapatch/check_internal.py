@@ -13,5 +13,5 @@ def _is_patchbay_internal() -> bool:
         
     return patchbay_dmn_mng.is_internal()
 
-IS_INTERNAL = not Path(sys.argv[0]).name == 'ray-alsapatch'
+IS_INTERNAL = not Path(sys.argv[0]).name == 'nex-alsapatch'
 IS_PATCHBAY_INTERNAL = _is_patchbay_internal()

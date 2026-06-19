@@ -7,13 +7,13 @@ from qtpy.QtCore import QObject, Signal # type:ignore
 
 # Imports from src/shared
 from osclib import Address
-import ray
+import nex
 
 
 class Signaler(QObject):
     osc_receive = Signal(object)
     daemon_announce = Signal(
-        Address, str, ray.ServerStatus, ray.Option, str, int)
+        Address, str, nex.ServerStatus, nex.Option, str, int)
     daemon_announce_ok = Signal()
     daemon_nsm_locked = Signal(bool)
     server_copying = Signal(bool)
@@ -33,8 +33,8 @@ class Signaler(QObject):
     daemon_url_changed = Signal(str)
 
     client_template_update = Signal(list)
-    client_template_ray_hack_update = Signal(list)
-    client_template_ray_net_update = Signal(list)
+    client_template_nex_hack_update = Signal(list)
+    client_template_nex_net_update = Signal(list)
 
     root_changed = Signal(str)
 

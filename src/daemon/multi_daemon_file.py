@@ -7,7 +7,7 @@ from pathlib import Path
 import json
 
 # Imports from src/shared
-import ray
+import nex
 
 if TYPE_CHECKING:
     from session import Session
@@ -34,7 +34,7 @@ class Daemon:
 
 _logger = logging.getLogger(__name__)
 _main = _Main()
-FILE_PATH = Path('/tmp/RaySession/multi-daemon.json')
+FILE_PATH = Path('/tmp/NexSession/multi-daemon.json')
 
 
 def _pid_exists(pid: int) -> bool:
@@ -103,7 +103,7 @@ def _get_dict_for_this() -> dict[str, str | int | bool]:
         'user': os.getenv('USER', ''),
         'not_default': _main.server.is_nsm_locked or _main.server.not_default,
         'has_gui': _main.server.has_gui(),
-        'version': ray.VERSION,
+        'version': nex.VERSION,
         'local_gui_pids': _main.server.get_local_gui_pid_list()
     }
     

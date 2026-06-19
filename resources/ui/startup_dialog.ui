@@ -35,14 +35,14 @@
         <string/>
        </property>
        <property name="pixmap">
-        <pixmap resource="../resources.qrc">:/main_icon/48x48/raysession.png</pixmap>
+        <pixmap resource="../resources.qrc">:/main_icon/48x48/nexsession.png</pixmap>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Welcome to &lt;span style=&quot; font-weight:600;&quot;&gt;RaySession&lt;/span&gt; !&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Welcome to &lt;span style=&quot; font-weight:600;&quot;&gt;NexSession&lt;/span&gt; !&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </item>

@@ -25,7 +25,7 @@ from qtpy.QtWidgets import QApplication
 from qtpy.QtCore import QLocale, QTranslator, QTimer, QLibraryInfo
 
 # Imports from src/shared
-import ray
+import nex
 
 # # Local imports
 from gui_tools import (ArgParser, CommandLineArgs,
@@ -55,14 +55,14 @@ import resources_rc
 # import nsm_child
 # import open_session_dialog
 # import preferences_dialog
-# import ray_patchbay_manager
-# # import raysession
+# import nex_patchbay_manager
+# # import nexsession
 # import resources_rc
 # import snapshots_dialog
 # import surclassed_widgets
 # import utility_scripts
 
-set_proc_name('ray_foot_mem')
+set_proc_name('nex_foot_mem')
 
 def signal_handler(sig, frame):
     QApplication.quit()
@@ -74,13 +74,13 @@ if __name__ == '__main__':
 
     # set Qt Application
     app = QApplication(sys.argv)
-    # app.setApplicationName(ray.APP_TITLE)
-    # app.setApplicationVersion(ray.VERSION)
-    # app.setOrganizationName(ray.APP_TITLE)
+    # app.setApplicationName(nex.APP_TITLE)
+    # app.setApplicationVersion(nex.VERSION)
+    # app.setOrganizationName(nex.APP_TITLE)
     # app.setWindowIcon(QIcon(
-    #     f':main_icon/scalable/{ray.APP_TITLE.lower()}.svg'))
+    #     f':main_icon/scalable/{nex.APP_TITLE.lower()}.svg'))
     # app.setQuitOnLastWindowClosed(False)
-    # app.setDesktopFileName(ray.APP_TITLE.lower())
+    # app.setDesktopFileName(nex.APP_TITLE.lower())
 
     # # with some themes (GNOME fedora 34)
     # # QGroupBox are not really visible
@@ -90,7 +90,7 @@ if __name__ == '__main__':
     # locale = QLocale.system().name()
 
     # # app_translator = QTranslator()
-    # # if app_translator.load(QLocale(), ray.APP_TITLE.lower(),
+    # # if app_translator.load(QLocale(), nex.APP_TITLE.lower(),
     # #                        '_', str(get_code_root() / 'locale')):
     # #     app.installTranslator(app_translator)
 
@@ -114,16 +114,16 @@ if __name__ == '__main__':
 
     # # init_gui_tools()
 
-    # # Add raysession/src/bin to $PATH
-    # # to can use raysession after make, without install
-    # # ray.add_self_bin_to_path()
+    # # Add nexsession/src/bin to $PATH
+    # # to can use nexsession after make, without install
+    # # nex.add_self_bin_to_path()
 
     # # Translation process
     # locale = QLocale.system().name()
     # # appTranslator = QTranslator()
 
     # # if appTranslator.load(
-    # #     str(Path(__file__).parents[2] / 'locale' / f'raysession_{locale}')):
+    # #     str(Path(__file__).parents[2] / 'locale' / f'nexsession_{locale}')):
     # #     app.installTranslator(appTranslator)
 
     # _translate = app.translate

@@ -6,13 +6,13 @@ import re
 sys.path.insert(1, str(Path(__file__).parents[1] / 'shared'))
 
 import osc_paths
-import osc_paths.ray as r
-import osc_paths.ray.gui as rg
+import osc_paths.nex as r
+import osc_paths.nex.gui as rg
 import osc_paths.nsm as nsm
 
 
-subs = {'rg': '/ray/gui/',
-        'r': '/ray/',
+subs = {'rg': '/nex/gui/',
+        'r': '/nex/',
         'nsm': '/nsm/'}
 
 full_dict = dict[str, str]()

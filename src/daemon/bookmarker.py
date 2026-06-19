@@ -14,7 +14,7 @@ if not QT5:
 from qtpy.QtXml  import QDomDocument, QDomNode
 
 # Imports from src/shared
-import ray
+import nex
 
 # Local imports
 from daemon_tools import get_app_config_path
@@ -368,7 +368,7 @@ class PickerTypeQt5(PickerType):
         if not settings_qt5.isWritable():
             return
 
-        shortcuts = ray.get_list_in_settings(settings_qt5,
+        shortcuts = nex.get_list_in_settings(settings_qt5,
                                              'FileDialog/shortcuts')
 
         for sc in shortcuts:
@@ -392,7 +392,7 @@ class PickerTypeQt5(PickerType):
 
         settings_qt5 = QSettings(
             str(self._config_path), QSettings.Format.IniFormat)
-        shortcuts = ray.get_list_in_settings(
+        shortcuts = nex.get_list_in_settings(
             settings_qt5, 'FileDialog/shortcuts')
 
         for sc in shortcuts:

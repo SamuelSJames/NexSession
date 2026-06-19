@@ -1,4 +1,4 @@
-contrôle les démons de RaySession
+contrôle les démons de NexSession
     --help
         Afficher un court message d'aide
     --help-all
@@ -14,7 +14,7 @@ contrôle les démons de RaySession
     --port
         Specifier le port OSC du démon.
         Ce port peut également être spécifié
-        avec la variable d'environnement RAY_CONTROL_PORT
+        avec la variable d'environnement NEX_CONTROL_PORT
     --detach
         Envoyer seulement le message OSC et ne pas attendre de réponse
 
@@ -25,7 +25,7 @@ contrôle les démons de RaySession
         Démarre un nouveau démon, renvoie son numéro de port OSC
     start_new_hidden
         Démarre un nouveau démon, renvoie son numéro de port OSC.
-        Ce démon ne sera pas vu par ray_control
+        Ce démon ne sera pas vu par nex_control
         sauf si son port est spécifié.
         Ce démon sera démarré sans aucune option,
         et l'état des options ne sera pas sauvegardé quand il s'arrêtera.
@@ -90,15 +90,15 @@ contrôle les démons de RaySession
             session_scripts
             gui_states
         Précédez l'option de 'not_' pour désactiver cette option
-        Exemple: ray_control set_options bookmark_session_folder not_snapshots
+        Exemple: nex_control set_options bookmark_session_folder not_snapshots
     has_option OPTION
         Retourne un code d'erreur si OPTION n'est pas enclenchée
     script_info TEXTE
-        Affiche une fenêtre de dialogue d'information sur l'IGU de RaySession
+        Affiche une fenêtre de dialogue d'information sur l'IGU de NexSession
     hide_script_info
-        Cache la fenêtre de dialogue d'information de l'IGU de RaySession
+        Cache la fenêtre de dialogue d'information de l'IGU de NexSession
     script_user_action TEXTE
-        Affiche une fenêtre de dialogue de question sur l'IGU de RaySession
+        Affiche une fenêtre de dialogue de question sur l'IGU de NexSession
         Retourne quand l'utilisateur l'a acceptée ou refusée.
     has_attached_gui
         Retourne un code d'erreur si aucune IGU n'est attachée à ce démon
@@ -120,7 +120,7 @@ contrôle les démons de RaySession
     
     save
         Sauvegarde la session en cours.
-        ASTUCE: affectez la commande 'ray_control save' à un raccourci clavier global
+        ASTUCE: affectez la commande 'nex_control save' à un raccourci clavier global
     save_as_template NOM_DU_MODÈLE_DE_SESSION
         Sauvegarde la session en cours comme modèle de session
     take_snapshot NOM_DU_CLICHÉ
@@ -142,7 +142,7 @@ contrôle les démons de RaySession
     add_exec EXÉCUTABLE [OPTION1] [OPTION2]...
         Ajoute EXÉCUTABLE à la session en cours.
         Les options disponibles sont
-            ray_hack    lancer l'exécutable avec le protocole Ray-Hack (pas NSM) 
+            nex_hack    lancer l'exécutable avec le protocole Nex-Hack (pas NSM)
             not_start   preparer le client mais ne pas le démarrer
             prefix_mode:client_name
                         Mettre le mode de préfixe sur "Nom du client"
@@ -171,7 +171,7 @@ contrôle les démons de RaySession
             auto_start
             no_save_level
         Précédez le filtre avec 'not_' pour inverser le filtre
-        Exemple: ray_control list_clients auto_start not_started
+        Exemple: nex_control list_clients auto_start not_started
         Affichera tous les clients arrêtés qui doivent être démarrés à l'ouverture de la session
     clear_clients [CLIENT_ID1] [CLIENT_ID2]...
         Utilisable seulement dans le script de session load.sh, avant run_step.
@@ -187,8 +187,8 @@ contrôle les démons de RaySession
 
 * COMMANDES DE CLIENT:
     Les commandes de client doivent être écrites de cette manière:
-    ray_control client CLIENT_ID commande [*ARGUMENTS]
-    example: ray_control client carla stop
+    nex_control client CLIENT_ID commande [*ARGUMENTS]
+    example: nex_control client carla stop
 
     stop
         Arrête le client poliment.
@@ -217,7 +217,7 @@ contrôle les démons de RaySession
         Renvoie les propriétés du client
     set_properties PROPRIÉTÉ1 [PROPRIÉTÉ2] [PROPRIÉTÉ3]...
         Définit les les propriétés du client.
-        Le client doit être Ray Proxy et non démarré.
+        Le client doit être Nex Proxy et non démarré.
         PROPRIÉTÉ doit contenir propriété:valeur
         exemple: client carla set_properties icon:carla "label:Mon rack Carla"
     set_custom_data PROPERTY VALUE
@@ -246,8 +246,8 @@ contrôle les démons de RaySession
         
 * COMMANDES DE CLIENT MIS À LA CORBEILLE:
     Les commandes de client mis à la corbeille doivent être écrites de cette manière:
-    ray_control trashed_client CLIENT_ID command [*ARGUMENTS]
-    exemple: ray_control trashed_client carla restore
+    nex_control trashed_client CLIENT_ID command [*ARGUMENTS]
+    exemple: nex_control trashed_client carla restore
 
     restore
         Restaure le client dans la session.

@@ -136,7 +136,7 @@ if True:
     # print('bien bien')
     for path, types in nw_path_types.items():
         # print(path, ':', types)
-        func_name = '_ray_gui_' + path[3:].lower().replace('.', '_')
+        func_name = '_nex_gui_' + path[3:].lower().replace('.', '_')
         # print(func_name)
         func_paths[func_name] = path
 
@@ -178,9 +178,9 @@ with open(gui_sess2, 'w') as f:
     #     #     case 'nsm':
     #     #         prefix = '/nsm/'
     #     #     case 'r':
-    #     #         prefix = '/ray/'
+    #     #         prefix = '/nex/'
     #     #     case 'rg':
-    #     #         prefix = '/ray/gui/'
+    #     #         prefix = '/nex/gui/'
     #     #     case _:
     #     #         print('nonnonon pas bon', const_path)
         
@@ -218,7 +218,7 @@ with open(gui_sess2, 'w') as f:
     #         case 'osc_paths':
     #             split_path[0] = ''
     #         case 'r':
-    #             split_path[0] = '_ray'
+    #             split_path[0] = '_nex'
     #         case 'nsm':
     #             split_path[0] = '_nsm'
     #     split_path[-1] = split_path[-1].lower()

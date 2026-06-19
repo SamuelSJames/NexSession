@@ -9,17 +9,19 @@ from typing import TYPE_CHECKING
 # third party imports
 from qtpy.QtWidgets import (
     QDialog, QDialogButtonBox, QCompleter, QMessageBox,
-    QFileDialog, QApplication, QListWidgetItem)
+    QFileDialog, QApplication, QListWidgetItem, QLabel, QPlainTextEdit,
+    QPushButton, QHBoxLayout, QVBoxLayout)
 from qtpy.QtGui import (
     QIcon, QPixmap, QGuiApplication, QKeyEvent, QDesktopServices)
 from qtpy.QtCore import Qt, QTimer, QUrl
 
 # Imports from src/shared
 from osclib import Address, verified_address
-import ray
+import nex
 import osc_paths
-import osc_paths.ray as r
-import osc_paths.ray.gui as rg
+import osc_paths.nex as r
+import osc_paths.nex.gui as rg
+from system_health import get_system_health, fedora_pipewire_repair_commands
 
 # Local imports
 import client_properties_dialog
@@ -36,7 +38,7 @@ import ui.abort_copy
 import ui.session_notes
 import ui.nsm_open_info
 import ui.quit_app
-import ui.about_raysession
+import ui.about_nexsession
 import ui.new_executable
 import ui.stop_client
 import ui.stop_client_no_save
@@ -87,7 +89,7 @@ class ChildDialog(QDialog):
         else:
             _logger.error(f'No GUI OSC Server, can not send {args}.')
 
-    def _server_status_changed(self, server_status: ray.ServerStatus):
+    def _server_status_changed(self, server_status: nex.ServerStatus):
         ...
 
     def _server_copying(self, copying: bool):
@@ -212,19 +214,19 @@ class NewSessionDialog(ChildDialog):
         
         self._text_was_empty = True
 
-    def _server_status_changed(self, server_status: ray.ServerStatus):
+    def _server_status_changed(self, server_status: nex.ServerStatus):
         self.ui.toolButtonFolder.setEnabled(
-            bool(server_status is ray.ServerStatus.OFF))
+            bool(server_status is nex.ServerStatus.OFF))
 
         self._server_will_accept = bool(
             server_status in (
-                ray.ServerStatus.OFF,
-                ray.ServerStatus.READY) and not self.server_copying)
+                nex.ServerStatus.OFF,
+                nex.ServerStatus.READY) and not self.server_copying)
         if self._is_duplicate:
             self._server_will_accept = bool(
-                server_status is ray.ServerStatus.READY and not self.server_copying)
+                server_status is nex.ServerStatus.READY and not self.server_copying)
 
-        if server_status is not ray.ServerStatus.OFF:
+        if server_status is not nex.ServerStatus.OFF:
             if self._root_folder_file_dialog is not None:
                 self._root_folder_file_dialog.reject()
             self._root_folder_message_box.reject()
@@ -249,14 +251,14 @@ class NewSessionDialog(ChildDialog):
             _translate('session_template', "with basic scripts"))
 
         misscount = self.ui.comboBoxTemplate.count() \
-                    - 1 - len(ray.FACTORY_SESSION_TEMPLATES)
+                    - 1 - len(nex.FACTORY_SESSION_TEMPLATES)
 
         for i in range(misscount):
             self.ui.comboBoxTemplate.addItem(
-                ray.FACTORY_SESSION_TEMPLATES[-i])
+                nex.FACTORY_SESSION_TEMPLATES[-i])
 
         self.ui.comboBoxTemplate.insertSeparator(
-                                    len(ray.FACTORY_SESSION_TEMPLATES) + 1)
+                                    len(nex.FACTORY_SESSION_TEMPLATES) + 1)
 
     def _set_last_template_selected(self):
         last_used_template: str = RS.settings.value('last_used_template', type=str)
@@ -264,8 +266,8 @@ class NewSessionDialog(ChildDialog):
         if last_used_template.startswith('///'):
             last_factory_template = last_used_template.replace('///', '', 1)
 
-            for i in range(len(ray.FACTORY_SESSION_TEMPLATES)):
-                factory_template = ray.FACTORY_SESSION_TEMPLATES[i]
+            for i in range(len(nex.FACTORY_SESSION_TEMPLATES)):
+                factory_template = nex.FACTORY_SESSION_TEMPLATES[i]
                 if factory_template == last_factory_template:
                     self.ui.comboBoxTemplate.setCurrentIndex(i+1)
                     break
@@ -370,8 +372,8 @@ class NewSessionDialog(ChildDialog):
         if index == 0:
             return ""
 
-        if index <= len(ray.FACTORY_SESSION_TEMPLATES):
-            return '///' + ray.FACTORY_SESSION_TEMPLATES[index-1]
+        if index <= len(nex.FACTORY_SESSION_TEMPLATES):
+            return '///' + nex.FACTORY_SESSION_TEMPLATES[index-1]
 
         return self.ui.comboBoxTemplate.currentText()
 
@@ -453,10 +455,10 @@ class SaveTemplateSessionDialog(AbstractSaveTemplateDialog):
 
         self._server_status_changed(self.session.server_status)
 
-    def _server_status_changed(self, server_status: ray.ServerStatus):
-        self._server_will_accept = bool(server_status is ray.ServerStatus.READY)
+    def _server_status_changed(self, server_status: nex.ServerStatus):
+        self._server_will_accept = bool(server_status is nex.ServerStatus.READY)
 
-        if server_status is ray.ServerStatus.OFF:
+        if server_status is nex.ServerStatus.OFF:
             self._overwrite_message_box.reject()
             self.reject()
 
@@ -487,13 +489,13 @@ class SaveTemplateClientDialog(AbstractSaveTemplateDialog):
         self.ui.lineEdit.setFocus()
         self._server_status_changed(self.session.server_status)
 
-    def _server_status_changed(self, server_status: ray.ServerStatus):
+    def _server_status_changed(self, server_status: nex.ServerStatus):
         self._server_will_accept = bool(
             server_status not in (
-                ray.ServerStatus.OFF,
-                ray.ServerStatus.CLOSE) and not self.server_copying)
+                nex.ServerStatus.OFF,
+                nex.ServerStatus.CLOSE) and not self.server_copying)
 
-        if server_status in (ray.ServerStatus.OFF, ray.ServerStatus.CLOSE):
+        if server_status in (nex.ServerStatus.OFF, nex.ServerStatus.CLOSE):
             self._overwrite_message_box.reject()
             self.reject()
 
@@ -501,7 +503,7 @@ class SaveTemplateClientDialog(AbstractSaveTemplateDialog):
 
 
 class ClientTrashDialog(ChildDialog):
-    def __init__(self, parent, client_data: ray.ClientData):
+    def __init__(self, parent, client_data: nex.ClientData):
         ChildDialog.__init__(self, parent)
         self.ui = ui.client_trash.Ui_Dialog()
         self.ui.setupUi(self)
@@ -529,12 +531,12 @@ class ClientTrashDialog(ChildDialog):
         self._remove_client_message_box.setDefaultButton(
             QMessageBox.StandardButton.Cancel)
 
-    def _server_status_changed(self, server_status: ray.ServerStatus):
-        if server_status in (ray.ServerStatus.CLOSE,
-                             ray.ServerStatus.OFF,
-                             ray.ServerStatus.OUT_SAVE,
-                             ray.ServerStatus.OUT_SNAPSHOT,
-                             ray.ServerStatus.WAIT_USER):
+    def _server_status_changed(self, server_status: nex.ServerStatus):
+        if server_status in (nex.ServerStatus.CLOSE,
+                             nex.ServerStatus.OFF,
+                             nex.ServerStatus.OUT_SAVE,
+                             nex.ServerStatus.OUT_SNAPSHOT,
+                             nex.ServerStatus.WAIT_USER):
             self._remove_client_message_box.reject()
             self.reject()
 
@@ -571,14 +573,14 @@ class AbortSessionDialog(ChildDialog):
 
         self._server_status_changed(self.session.server_status)
 
-    def _server_status_changed(self, server_status: ray.ServerStatus):
+    def _server_status_changed(self, server_status: nex.ServerStatus):
         self.ui.pushButtonAbort.setEnabled(
             not bool(
                 server_status in (
-                    ray.ServerStatus.CLOSE,
-                    ray.ServerStatus.OFF,
-                    ray.ServerStatus.COPY)))
-        if server_status == ray.ServerStatus.OFF:
+                    nex.ServerStatus.CLOSE,
+                    nex.ServerStatus.OFF,
+                    nex.ServerStatus.COPY)))
+        if server_status == nex.ServerStatus.OFF:
             self.reject()
 
 
@@ -592,10 +594,10 @@ class AbortServerCopyDialog(ChildDialog):
 
         self._server_status_changed(self.session.server_status)
 
-    def _server_status_changed(self, server_status: ray.ServerStatus):
+    def _server_status_changed(self, server_status: nex.ServerStatus):
         if server_status not in (
-                ray.ServerStatus.PRECOPY,
-                ray.ServerStatus.COPY):
+                nex.ServerStatus.PRECOPY,
+                nex.ServerStatus.COPY):
             self.reject()
 
     def _set_progress(self, progress: float):
@@ -618,7 +620,7 @@ class AbortClientCopyDialog(ChildDialog):
 
         self.ui.progressBar.setValue(int(progress * 100))
 
-    def _server_status_changed(self, server_status: ray.ServerStatus):
+    def _server_status_changed(self, server_status: nex.ServerStatus):
         if not self.server_copying:
             self.reject()
 
@@ -650,8 +652,8 @@ class SessionNotesDialog(ChildDialog):
         self._anti_timer = False
         self.notes_updated()
 
-    def _server_status_changed(self, server_status: ray.ServerStatus):
-        if server_status is ray.ServerStatus.OFF:
+    def _server_status_changed(self, server_status: nex.ServerStatus):
+        if server_status is nex.ServerStatus.OFF:
             self.server_off = True
             if self._message_box is not None:
                 self._message_box.close()
@@ -684,7 +686,7 @@ class SessionNotesDialog(ChildDialog):
 
     def update_session(self):
         self.setWindowTitle(_translate('notes_dialog', "%s Notes - %s")
-                            % (ray.APP_TITLE, self.session.name))
+                            % (nex.APP_TITLE, self.session.name))
         self.ui.labelSessionName.setText(self.session.name)
 
     def notes_updated(self):
@@ -730,15 +732,15 @@ class QuitAppDialog(ChildDialog):
             self.ui.pushButtonDaemon.setVisible(False)
         self._server_status_changed(self.session.server_status)
 
-    def _server_status_changed(self, server_status: ray.ServerStatus):
-        if server_status == ray.ServerStatus.OFF:
+    def _server_status_changed(self, server_status: nex.ServerStatus):
+        if server_status == nex.ServerStatus.OFF:
             self.accept()
             return
 
         self.ui.pushButtonSaveQuit.setEnabled(
-            bool(server_status is ray.ServerStatus.READY))
+            bool(server_status is nex.ServerStatus.READY))
         self.ui.pushButtonQuitNoSave.setEnabled(
-            bool(server_status is not ray.ServerStatus.CLOSE))
+            bool(server_status is not nex.ServerStatus.CLOSE))
 
     def _close_session(self):
         self.to_daemon(r.session.CLOSE)
@@ -768,32 +770,109 @@ class WrongVersionLocalDialog(ChildDialog):
             _translate(
                 'wrong_version',
                 "The running daemon has not the same version than the interface\n"
-                "RaySession will quit now.\n\n"
+                "NexSession will quit now.\n\n"
                 "What do you want to do with the current session ?"))
 
     def _close_session(self):
         # can make the GUI freeze a little
         # but the GUI will quit just after
         # and this case is rare enough to be acceptable
-        subprocess.run(['ray_control', 'close'])
+        subprocess.run(['nex_control', 'close'])
         self.accept()
 
     def _abort_session(self):
         # see _close_session
-        subprocess.run(['ray_control', 'abort'])
+        subprocess.run(['nex_control', 'abort'])
         self.accept()
 
     def _leave_daemon_running(self):
         QTimer.singleShot(10, QGuiApplication.quit)
 
 
-class AboutRaySessionDialog(ChildDialog):
+class AboutNexSessionDialog(ChildDialog):
     def __init__(self, parent):
         ChildDialog.__init__(self, parent)
-        self.ui = ui.about_raysession.Ui_DialogAboutRaysession()
+        self.ui = ui.about_nexsession.Ui_DialogAboutNexSession()
         self.ui.setupUi(self)
-        all_text = self.ui.labelRayAndVersion.text()
-        self.ui.labelRayAndVersion.setText(all_text % ray.VERSION)
+        all_text = self.ui.labelNexAndVersion.text()
+        self.ui.labelNexAndVersion.setText(all_text % nex.VERSION)
+
+
+class FedoraPipeWireDialog(ChildDialog):
+    def __init__(self, parent):
+        ChildDialog.__init__(self, parent)
+        self.setWindowTitle(_translate('fedora_pipewire', 'Fedora / PipeWire Setup'))
+        self.setWindowIcon(get_app_icon('nexsession', self))
+        self.resize(640, 520)
+
+        self._health = get_system_health()
+        self._commands = fedora_pipewire_repair_commands()
+
+        main_layout = QVBoxLayout(self)
+
+        title = QLabel(self._health.summary(), self)
+        title.setWordWrap(True)
+        title.setStyleSheet(
+            'QLabel {'
+            'font-weight: 600;'
+            'padding: 6px 8px;'
+            'border: 1px solid palette(mid);'
+            'border-radius: 4px;'
+            '}')
+        if not self._health.ok:
+            title.setStyleSheet(title.styleSheet() + 'QLabel { color: #8a4b00; }')
+        main_layout.addWidget(title)
+
+        status_label = QLabel(_translate('fedora_pipewire', 'Current status'), self)
+        main_layout.addWidget(status_label)
+
+        self._status_text = QPlainTextEdit(self)
+        self._status_text.setReadOnly(True)
+        self._status_text.setPlainText(self._health.report())
+        main_layout.addWidget(self._status_text)
+
+        commands_label = QLabel(
+            _translate('fedora_pipewire', 'Repair and verification commands'),
+            self)
+        main_layout.addWidget(commands_label)
+
+        self._commands_text = QPlainTextEdit(self)
+        self._commands_text.setReadOnly(True)
+        self._commands_text.setPlainText(self._commands)
+        main_layout.addWidget(self._commands_text)
+
+        copy_layout = QHBoxLayout()
+        self._copy_status_button = QPushButton(
+            QIcon.fromTheme('edit-copy'),
+            _translate('fedora_pipewire', 'Copy Status'),
+            self)
+        self._copy_commands_button = QPushButton(
+            QIcon.fromTheme('edit-copy'),
+            _translate('fedora_pipewire', 'Copy Commands'),
+            self)
+        copy_layout.addWidget(self._copy_status_button)
+        copy_layout.addWidget(self._copy_commands_button)
+        copy_layout.addStretch()
+        main_layout.addLayout(copy_layout)
+
+        self._button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Close,
+            self)
+        main_layout.addWidget(self._button_box)
+
+        self._copy_status_button.clicked.connect(self._copy_status)
+        self._copy_commands_button.clicked.connect(self._copy_commands)
+        self._button_box.rejected.connect(self.reject)
+
+    def _copy_status(self):
+        clipboard = QApplication.clipboard()
+        if clipboard is not None:
+            clipboard.setText(self._health.report())
+
+    def _copy_commands(self):
+        clipboard = QApplication.clipboard()
+        if clipboard is not None:
+            clipboard.setText(self._commands)
 
 
 class NewExecutableDialog(ChildDialog):
@@ -840,12 +919,12 @@ class NewExecutableDialog(ChildDialog):
 
         self._server_status_changed(self.session.server_status)
 
-    def _server_status_changed(self, server_status: ray.ServerStatus):
-        if server_status in (ray.ServerStatus.OUT_SAVE,
-                             ray.ServerStatus.OUT_SNAPSHOT,
-                             ray.ServerStatus.WAIT_USER,
-                             ray.ServerStatus.CLOSE,
-                             ray.ServerStatus.OFF):
+    def _server_status_changed(self, server_status: nex.ServerStatus):
+        if server_status in (nex.ServerStatus.OUT_SAVE,
+                             nex.ServerStatus.OUT_SNAPSHOT,
+                             nex.ServerStatus.WAIT_USER,
+                             nex.ServerStatus.CLOSE,
+                             nex.ServerStatus.OFF):
             self.reject()
 
     def _show_advanced(self):
@@ -925,11 +1004,11 @@ class StopClientDialog(ChildDialog):
         self.client.send_properties_to_daemon()
 
     def _server_updates_client_status(self, status: int):
-        if status in (ray.ClientStatus.STOPPED, ray.ClientStatus.REMOVED):
+        if status in (nex.ClientStatus.STOPPED, nex.ClientStatus.REMOVED):
             self.reject()
             return
 
-        if status is ray.ClientStatus.READY and self._wait_for_save:
+        if status is nex.ClientStatus.READY and self._wait_for_save:
             self._wait_for_save = False
             self.accept()
 
@@ -951,7 +1030,7 @@ class StopClientNoSaveDialog(ChildDialog):
         self.ui.pushButtonCancel.setFocus()
 
     def _server_updates_client_status(self, status: int):
-        if status in (ray.ClientStatus.STOPPED, ray.ClientStatus.REMOVED):
+        if status in (nex.ClientStatus.STOPPED, nex.ClientStatus.REMOVED):
             self.reject()
             return
 
@@ -978,22 +1057,22 @@ class ClientRenameDialog(ChildDialog):
         self.ui.checkBoxIdRename.stateChanged.connect(
             self._id_rename_state_changed)
 
-        if client.protocol not in (ray.Protocol.NSM,
-                                   ray.Protocol.RAY_HACK,
-                                   ray.Protocol.INTERNAL):
+        if client.protocol not in (nex.Protocol.NSM,
+                                   nex.Protocol.NEX_HACK,
+                                   nex.Protocol.INTERNAL):
             self.ui.checkBoxIdRename.setVisible(False)
 
         self._change_box_text_with_status(client.status)
         client.status_changed.connect(self._client_status_changed)
 
-    def _change_box_text_with_status(self, status: ray.ClientStatus):
+    def _change_box_text_with_status(self, status: nex.ClientStatus):
         can_switch = ':switch:' in self.client.capabilities
 
         if status in (
-                ray.ClientStatus.STOPPED, ray.ClientStatus.PRECOPY,
-                ray.ClientStatus.QUIT, ray.ClientStatus.LOSE):
+                nex.ClientStatus.STOPPED, nex.ClientStatus.PRECOPY,
+                nex.ClientStatus.QUIT, nex.ClientStatus.LOSE):
             text = ''
-        elif status is ray.ClientStatus.READY and can_switch:
+        elif status is nex.ClientStatus.READY and can_switch:
             text = _translate(
                 'id_renaming', 'The client project will be reload')
         else:
@@ -1006,8 +1085,8 @@ class ClientRenameDialog(ChildDialog):
         
         self.ui.checkBoxIdRename.setText(full_text)    
 
-    def _client_status_changed(self, status: ray.ClientStatus):
-        if status is ray.ClientStatus.REMOVED:
+    def _client_status_changed(self, status: nex.ClientStatus):
+        if status is nex.ClientStatus.REMOVED:
             self.reject()
             
         self._change_box_text_with_status(status)
@@ -1058,7 +1137,7 @@ class SnapShotProgressDialog(ChildDialog):
         self.ui.setupUi(self)
         self.signaler.server_progress.connect(self.server_progress)
 
-    def _server_status_changed(self, server_status: ray.ServerStatus):
+    def _server_status_changed(self, server_status: nex.ServerStatus):
         self.close()
 
     def server_progress(self, value: float):
@@ -1098,7 +1177,7 @@ class ScriptUserActionDialog(ChildDialog):
 
     def _abort(self):
         self.to_daemon(osc_paths.ERROR, rg.SCRIPT_USER_ACTION,
-                      ray.Err.ABORT_ORDERED, 'Script user action aborted!')
+                      nex.Err.ABORT_ORDERED, 'Script user action aborted!')
         self._is_terminated = True
         self.accept()
 
@@ -1123,9 +1202,9 @@ class SessionScriptsInfoDialog(ChildDialog):
         self.ui = ui.session_scripts_info.Ui_Dialog()
         self.ui.setupUi(self)
 
-        scripts_dir = "%s/%s" % (session_path, ray.SCRIPTS_DIR)
+        scripts_dir = "%s/%s" % (session_path, nex.SCRIPTS_DIR)
         parent_path = os.path.dirname(session_path)
-        parent_scripts = "%s/%s" % (parent_path, ray.SCRIPTS_DIR)
+        parent_scripts = "%s/%s" % (parent_path, nex.SCRIPTS_DIR)
 
         session_scripts_text = self.ui.textSessionScripts.toHtml()
 
@@ -1142,9 +1221,9 @@ class JackConfigInfoDialog(ChildDialog):
         self.ui = ui.jack_config_info.Ui_Dialog()
         self.ui.setupUi(self)
 
-        scripts_dir = "%s/%s" % (session_path, ray.SCRIPTS_DIR)
+        scripts_dir = "%s/%s" % (session_path, nex.SCRIPTS_DIR)
         parent_path = os.path.dirname(session_path)
-        parent_scripts = "%s/%s" % (parent_path, ray.SCRIPTS_DIR)
+        parent_scripts = "%s/%s" % (parent_path, nex.SCRIPTS_DIR)
 
         session_scripts_text = self.ui.textSessionScripts.toHtml()
 
@@ -1186,14 +1265,14 @@ class DaemonUrlWindow(ChildDialog):
         elif err_code == ErrDaemon.WRONG_VERSION:
             error_text = _translate(
                 "url_window",
-                "<p>daemon at<br><strong>%s</strong><br>uses another %s version.<.p>") % (ex_url, ray.APP_TITLE)
+                "<p>daemon at<br><strong>%s</strong><br>uses another %s version.<.p>") % (ex_url, nex.APP_TITLE)
         else:
-            error_text = _translate("url window", "<p align=\"left\">To run a network session,<br>open a terminal on another computer of this network.<br>Launch ray-daemon on port 1234 (for example)<br>by typing the command :</p><p align=\"left\"><code>ray-daemon -p 1234</code></p><p align=\"left\">Then paste below the first url<br>that ray-daemon gives you at startup.</p><p></p>")
+            error_text = _translate("url window", "<p align=\"left\">To run a network session,<br>open a terminal on another computer of this network.<br>Launch nex-daemon on port 1234 (for example)<br>by typing the command :</p><p align=\"left\"><code>nex-daemon -p 1234</code></p><p align=\"left\">Then paste below the first url<br>that nex-daemon gives you at startup.</p><p></p>")
 
         self.ui.labelError.setText(error_text)
         self.ui.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False) # type:ignore
 
-        self.tried_urls = ray.get_list_in_settings(RS.settings, 'network/tried_urls')
+        self.tried_urls = nex.get_list_in_settings(RS.settings, 'network/tried_urls')
         last_tried_url = RS.settings.value('network/last_tried_url', '', type=str)
 
         self._completer = QCompleter(self.tried_urls)
@@ -1241,8 +1320,8 @@ class WaitingCloseUserDialog(ChildDialog):
         self.ui.checkBox.setChecked(not RS.is_hidden(RS.HD_WaitCloseUser))
         self.ui.checkBox.clicked.connect(self._check_box_clicked)
 
-    def _server_status_changed(self, server_status: ray.ServerStatus):
-        if server_status is not ray.ServerStatus.WAIT_USER:
+    def _server_status_changed(self, server_status: nex.ServerStatus):
+        if server_status is not nex.ServerStatus.WAIT_USER:
             self.accept()
 
     def _undo_close(self):
@@ -1299,6 +1378,7 @@ class StartupDialog(ChildDialog):
         self.ui.setupUi(self)
 
         self._clicked_action = self.ACTION_NO
+        self._add_system_health_summary()
 
         self.ui.listWidgetRecentSessions.itemDoubleClicked.connect(
             self.accept)
@@ -1329,8 +1409,8 @@ class StartupDialog(ChildDialog):
         self.ui.listWidgetRecentSessions.setFocus(
             Qt.FocusReason.OtherFocusReason) # type:ignore
 
-    def _server_status_changed(self, server_status: ray.ServerStatus):
-        if server_status is not ray.ServerStatus.OFF:
+    def _server_status_changed(self, server_status: nex.ServerStatus):
+        if server_status is not nex.ServerStatus.OFF:
             self.reject()
 
     def _new_session_clicked(self):
@@ -1353,6 +1433,41 @@ class StartupDialog(ChildDialog):
 
     def not_again_value(self)->bool:
         return not self.ui.checkBox.isChecked()
+
+    def _add_system_health_summary(self):
+        health = get_system_health()
+        container = QHBoxLayout()
+        label = QLabel(health.summary(), self)
+        label.setWordWrap(True)
+        label.setToolTip('\n'.join(health.detail_lines()))
+        label.setStyleSheet(
+            'QLabel {'
+            'padding: 6px 8px;'
+            'border: 1px solid palette(mid);'
+            'border-radius: 4px;'
+            '}')
+
+        if not health.ok:
+            label.setStyleSheet(
+                label.styleSheet()
+                + 'QLabel { color: #8a4b00; }')
+
+        details_button = QPushButton(
+            QIcon.fromTheme('dialog-information'),
+            _translate('fedora_pipewire', 'Details'),
+            self)
+        details_button.clicked.connect(self._show_system_health_details)
+
+        container.addWidget(label, 1)
+        container.addWidget(details_button)
+
+        layout = self.layout()
+        if layout is not None:
+            layout.insertLayout(1, container)
+
+    def _show_system_health_details(self):
+        dialog = FedoraPipeWireDialog(self)
+        dialog.exec()
 
     def get_selected_session(self)->str:
         current_item = self.ui.listWidgetRecentSessions.currentItem()

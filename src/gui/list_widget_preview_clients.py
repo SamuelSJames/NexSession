@@ -5,7 +5,7 @@ from qtpy.QtGui import QIcon, QFontMetrics, QContextMenuEvent, QMouseEvent
 from qtpy.QtCore import QSize, Signal # type:ignore
 
 # Imports from src/shared
-import ray
+import nex
 
 # Local imports
 from gui_server_thread import GuiServerThread
@@ -17,7 +17,7 @@ import ui.preview_client_slot
 
 class ClientSlot(QFrame):
     def __init__(self, list_widget: 'ListWidgetPreviewClients',
-                 list_widget_item, client: ray.ClientData):
+                 list_widget_item, client: nex.ClientData):
         QFrame.__init__(self)
         self.ui = ui.preview_client_slot.Ui_ClientSlotWidget()
         self.ui.setupUi(self)
@@ -41,7 +41,7 @@ class ClientSlot(QFrame):
         self.ui.iconButton.setMenu(self._menu) # type:ignore
         self.update_client_data()
         
-        self._server_status = ray.ServerStatus.OFF
+        self._server_status = nex.ServerStatus.OFF
 
     @classmethod
     def to_daemon(cls, *args):
@@ -65,9 +65,9 @@ class ClientSlot(QFrame):
         self._gray_icon(not launched)
         self.ui.ClientName.setEnabled(launched)
 
-    def server_status_changed(self, server_status: ray.ServerStatus):
+    def server_status_changed(self, server_status: nex.ServerStatus):
         self.ui.actionAddToTheCurrentSession.setEnabled(
-            server_status is ray.ServerStatus.READY)
+            server_status is nex.ServerStatus.READY)
 
     def get_client_id(self):
         return self.client.client_id
@@ -177,7 +177,7 @@ class ListWidgetPreviewClients(QListWidget):
         QListWidget.__init__(self, parent)
         self._last_n = 0
         self.session = None
-        self.server_status = ray.ServerStatus.OFF
+        self.server_status = nex.ServerStatus.OFF
 
     @classmethod
     def to_daemon(self, *args):
@@ -185,7 +185,7 @@ class ListWidgetPreviewClients(QListWidget):
         if server:
             server.to_daemon(*args)
 
-    def server_status_changed(self, server_status: ray.ServerStatus):
+    def server_status_changed(self, server_status: nex.ServerStatus):
         self.server_status = server_status
         for i in range(self.count()):
             item: ClientItem = self.item(i)

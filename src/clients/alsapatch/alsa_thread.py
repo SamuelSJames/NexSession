@@ -98,7 +98,7 @@ class AlsaManager:
     def __init__(self, event_handler: EventHandler):
         self.ev_handler = event_handler
         self.terminate = False
-        self.seq = alsaseq.Sequencer(clientname='ray-alsapatch')
+        self.seq = alsaseq.Sequencer(clientname='nex-alsapatch')
 
         self._all_alsa_connections = list[AlsaConn]()
         self._connections = list[AlsaConn]()

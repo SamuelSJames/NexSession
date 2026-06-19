@@ -14,7 +14,7 @@ from qtpy.QtGui import QIcon, QPixmap, QPalette
 
 # Imports from src/shared
 from osclib import Address, verified_address, verified_address_from_port
-import ray
+import nex
 
 if TYPE_CHECKING:
     from gui_signaler import Signaler
@@ -23,8 +23,8 @@ if TYPE_CHECKING:
 _logger = logging.getLogger(__name__)
 _translate = QApplication.translate
 
-_ray_icons_cache_light = {}
-_ray_icons_cache_dark = {}
+_nex_icons_cache_light = {}
+_nex_icons_cache_dark = {}
 _app_icons_cache_light = {}
 _app_icons_cache_dark = {}
 
@@ -92,11 +92,11 @@ class ErrDaemon:
     WRONG_VERSION = -6
 
 
-def ray_icon(icon_name: str, dark=False) -> QIcon:
-    if dark and icon_name in _ray_icons_cache_dark.keys():
-        return _ray_icons_cache_dark[icon_name]
-    if not dark and icon_name in _ray_icons_cache_light.keys():
-        return _ray_icons_cache_light[icon_name]
+def nex_icon(icon_name: str, dark=False) -> QIcon:
+    if dark and icon_name in _nex_icons_cache_dark.keys():
+        return _nex_icons_cache_dark[icon_name]
+    if not dark and icon_name in _nex_icons_cache_light.keys():
+        return _nex_icons_cache_light[icon_name]
     
     icon = QIcon()
     breeze = 'breeze-dark' if dark else 'breeze'
@@ -108,9 +108,9 @@ def ray_icon(icon_name: str, dark=False) -> QIcon:
         QIcon.Mode.Disabled, QIcon.State.Off)
     
     if dark:
-        _ray_icons_cache_dark[icon_name] = icon
+        _nex_icons_cache_dark[icon_name] = icon
     else:
-        _ray_icons_cache_light[icon_name] = icon
+        _nex_icons_cache_light[icon_name] = icon
     
     return icon
 
@@ -240,7 +240,7 @@ class ArgParser(argparse.ArgumentParser):
             '--net-daemon-id', type=int, default=0,
             help=argparse.SUPPRESS)
         self.add_argument(
-            '-v', '--version', action='version', version=ray.VERSION)
+            '-v', '--version', action='version', version=nex.VERSION)
 
         parsed_args = argparse.ArgumentParser.parse_args(self)
         CommandLineArgs.eat_attributes(parsed_args)
@@ -259,7 +259,7 @@ def init_gui_tools():
     if not CommandLineArgs.session_root:
         CommandLineArgs.change_session_root(
             settings.value('default_session_root',
-                           str(ray.DEFAULT_SESSION_ROOT),
+                           str(nex.DEFAULT_SESSION_ROOT),
                            type=str))
 
 def is_dark_theme(widget: QWidget) -> bool:
@@ -309,54 +309,54 @@ def split_in_two(string: str) -> tuple[str, str]:
 def get_code_root() -> Path:
     return Path(__file__).parents[2]
 
-def server_status_string(server_status: ray.ServerStatus) -> str:
+def server_status_string(server_status: nex.ServerStatus) -> str:
     SERVER_STATUS_STRINGS = {
-        ray.ServerStatus.INVALID : _translate('server status', "invalid"),
-        ray.ServerStatus.OFF     : _translate('server status', "off"),
-        ray.ServerStatus.NEW     : _translate('server status', "new"),
-        ray.ServerStatus.OPEN    : _translate('server status', "open"),
-        ray.ServerStatus.CLEAR   : _translate('server status', "clear"),
-        ray.ServerStatus.SWITCH  : _translate('server status', "switch"),
-        ray.ServerStatus.LAUNCH  : _translate('server status', "launch"),
-        ray.ServerStatus.PRECOPY : _translate('server status', "copy"),
-        ray.ServerStatus.COPY    : _translate('server status', "copy"),
-        ray.ServerStatus.READY   : _translate('server status', "ready"),
-        ray.ServerStatus.SAVE    : _translate('server status', "save"),
-        ray.ServerStatus.CLOSE   : _translate('server status', "close"),
-        ray.ServerStatus.SNAPSHOT: _translate('server_status', "snapshot"),
-        ray.ServerStatus.REWIND  : _translate('server_status', "rewind"),
-        ray.ServerStatus.WAIT_USER   : _translate('server_status', "waiting"),
-        ray.ServerStatus.OUT_SAVE    : _translate('server_status', "save"),
-        ray.ServerStatus.OUT_SNAPSHOT: _translate('server_status', "snapshot"),
-        ray.ServerStatus.SCRIPT  : _translate('server_status', "script")}
+        nex.ServerStatus.INVALID : _translate('server status', "invalid"),
+        nex.ServerStatus.OFF     : _translate('server status', "off"),
+        nex.ServerStatus.NEW     : _translate('server status', "new"),
+        nex.ServerStatus.OPEN    : _translate('server status', "open"),
+        nex.ServerStatus.CLEAR   : _translate('server status', "clear"),
+        nex.ServerStatus.SWITCH  : _translate('server status', "switch"),
+        nex.ServerStatus.LAUNCH  : _translate('server status', "launch"),
+        nex.ServerStatus.PRECOPY : _translate('server status', "copy"),
+        nex.ServerStatus.COPY    : _translate('server status', "copy"),
+        nex.ServerStatus.READY   : _translate('server status', "ready"),
+        nex.ServerStatus.SAVE    : _translate('server status', "save"),
+        nex.ServerStatus.CLOSE   : _translate('server status', "close"),
+        nex.ServerStatus.SNAPSHOT: _translate('server_status', "snapshot"),
+        nex.ServerStatus.REWIND  : _translate('server_status', "rewind"),
+        nex.ServerStatus.WAIT_USER   : _translate('server_status', "waiting"),
+        nex.ServerStatus.OUT_SAVE    : _translate('server_status', "save"),
+        nex.ServerStatus.OUT_SNAPSHOT: _translate('server_status', "snapshot"),
+        nex.ServerStatus.SCRIPT  : _translate('server_status', "script")}
 
     return SERVER_STATUS_STRINGS[server_status]
 
-def client_status_string(client_status: ray.ClientStatus) -> str:
+def client_status_string(client_status: nex.ClientStatus) -> str:
     CLIENT_STATUS_STRINGS = {
-        ray.ClientStatus.INVALID: _translate('client_status', "invalid"),
-        ray.ClientStatus.STOPPED: _translate('client status', "stopped"),
-        ray.ClientStatus.LAUNCH : _translate('client status', "launch"),
-        ray.ClientStatus.OPEN   : _translate('client status', "open"),
-        ray.ClientStatus.READY  : _translate('client status', "ready"),
-        ray.ClientStatus.PRECOPY: _translate('client status', "copy"),
-        ray.ClientStatus.COPY   : _translate('client status', "copy"),
-        ray.ClientStatus.SAVE   : _translate('client status', "save"),
-        ray.ClientStatus.SWITCH : _translate('client status', "switch"),
-        ray.ClientStatus.QUIT   : _translate('client status', "quit"),
-        ray.ClientStatus.NOOP   : _translate('client status', "noop"),
-        ray.ClientStatus.ERROR  : _translate('client status', "error"),
-        ray.ClientStatus.REMOVED: _translate('client status', "removed"),
-        ray.ClientStatus.UNDEF  : _translate('client_status', ""),
-        ray.ClientStatus.SCRIPT : _translate('client_status', 'script'),
-        ray.ClientStatus.LOSE   : _translate('client_status', "lose")}
+        nex.ClientStatus.INVALID: _translate('client_status', "invalid"),
+        nex.ClientStatus.STOPPED: _translate('client status', "stopped"),
+        nex.ClientStatus.LAUNCH : _translate('client status', "launch"),
+        nex.ClientStatus.OPEN   : _translate('client status', "open"),
+        nex.ClientStatus.READY  : _translate('client status', "ready"),
+        nex.ClientStatus.PRECOPY: _translate('client status', "copy"),
+        nex.ClientStatus.COPY   : _translate('client status', "copy"),
+        nex.ClientStatus.SAVE   : _translate('client status', "save"),
+        nex.ClientStatus.SWITCH : _translate('client status', "switch"),
+        nex.ClientStatus.QUIT   : _translate('client status', "quit"),
+        nex.ClientStatus.NOOP   : _translate('client status', "noop"),
+        nex.ClientStatus.ERROR  : _translate('client status', "error"),
+        nex.ClientStatus.REMOVED: _translate('client status', "removed"),
+        nex.ClientStatus.UNDEF  : _translate('client_status', ""),
+        nex.ClientStatus.SCRIPT : _translate('client_status', 'script'),
+        nex.ClientStatus.LOSE   : _translate('client_status', "lose")}
 
     return CLIENT_STATUS_STRINGS[client_status]
 
 def error_text(error: int) -> str:
     text = ''
     
-    if error == ray.Err.SESSION_IN_SESSION_DIR:
+    if error == nex.Err.SESSION_IN_SESSION_DIR:
         text = _translate(
             'guimsg', 
             "Can't create session in a dir containing a session "

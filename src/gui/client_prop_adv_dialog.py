@@ -8,8 +8,8 @@ from qtpy.QtWidgets import QApplication, QAbstractButton, QDialogButtonBox
 from qtpy.QtCore import Slot # type:ignore
 
 # Imports from src/shared
-import ray
-import osc_paths.ray as r
+import nex
+import osc_paths.nex as r
 
 # Local imports
 from child_dialogs import ChildDialog
@@ -28,7 +28,7 @@ _translate = QApplication.translate
 
 class AdvancedPropertiesDialog(ChildDialog):
     def __init__(self, parent: 'ClientPropertiesDialog',
-                 client: ray.ClientData):
+                 client: nex.ClientData):
         super().__init__(parent) # type:ignore
         self.ui = ui.client_advanced_properties.Ui_Dialog()
         self.ui.setupUi(self)
@@ -46,13 +46,13 @@ class AdvancedPropertiesDialog(ChildDialog):
         self.ui.lineEditClientId.setText(client.client_id)
         self.ui.comboBoxPrefixMode.setCurrentIndex(client.prefix_mode.value)
 
-        if client.prefix_mode is ray.PrefixMode.CUSTOM:
+        if client.prefix_mode is nex.PrefixMode.CUSTOM:
             self.ui.lineEditCustomPrefix.setText(client.custom_prefix)
         else:
             self.ui.lineEditCustomPrefix.setEnabled(False)
         
         self.ui.checkBoxLongJackNaming.setChecked(
-            client.jack_naming is ray.JackNaming.LONG)
+            client.jack_naming is nex.JackNaming.LONG)
         
         self.ui.lineEditClientId.textEdited.connect(self._client_id_line_edited)
         self.ui.comboBoxPrefixMode.currentIndexChanged.connect(
@@ -70,9 +70,9 @@ class AdvancedPropertiesDialog(ChildDialog):
         self._update_preview()
     
     # Slot(int)
-    def _client_status_changed(self, status: ray.ClientStatus):
+    def _client_status_changed(self, status: nex.ClientStatus):
         self.ui.buttonBox.button(QDialogButtonBox.StandardButton.Apply).setEnabled( # type:ignore
-            status is ray.ClientStatus.STOPPED)
+            status is nex.ClientStatus.STOPPED)
     
     @Slot()
     def _client_id_line_edited(self):
@@ -81,14 +81,14 @@ class AdvancedPropertiesDialog(ChildDialog):
         self._update_preview()
     
     def _update_preview(self, *args):
-        if self.ui.comboBoxPrefixMode.currentIndex() == ray.PrefixMode.SESSION_NAME.value:
+        if self.ui.comboBoxPrefixMode.currentIndex() == nex.PrefixMode.SESSION_NAME.value:
             if self._client_is_real:
                 if TYPE_CHECKING:
                     assert isinstance(self._client, (Client, TrashedClient))
                 prefix_str = self._client.session.name
             else:
                 prefix_str = "SESSION NAME"
-        elif self.ui.comboBoxPrefixMode.currentIndex() == ray.PrefixMode.CLIENT_NAME.value:
+        elif self.ui.comboBoxPrefixMode.currentIndex() == nex.PrefixMode.CLIENT_NAME.value:
             prefix_str = self._client.name
         else:
             prefix_str = self.ui.lineEditCustomPrefix.text()

@@ -30,7 +30,7 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This script converts all regular &lt;span style=&quot; font-weight:600;&quot;&gt;Hydrogen&lt;br/&gt;&lt;/span&gt;Ray-Hack clients to the NSM protocol.&lt;/p&gt;&lt;p&gt;Where do you want the script to proceed:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This script converts all regular &lt;span style=&quot; font-weight:600;&quot;&gt;Hydrogen&lt;br/&gt;&lt;/span&gt;Nex-Hack clients to the NSM protocol.&lt;/p&gt;&lt;p&gt;Where do you want the script to proceed:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>

@@ -12,9 +12,9 @@ from qtpy.QtWidgets import (QDialogButtonBox, QListWidget, QListWidgetItem,
                              QFrame, QMenu, QAction, QShortcut) # type:ignore
 
 # Imports from src/shared
-import ray
+import nex
 import client_properties_dialog
-import osc_paths.ray as r
+import osc_paths.nex as r
 
 # Local imports
 from gui_tools import RS, _translate, is_dark_theme, get_app_icon
@@ -34,7 +34,7 @@ DISPLAY_NAME_DATA = Qt.ItemDataRole.UserRole + 1
 
 class TemplateSlot(QFrame):
     def __init__(self, list_widget: QListWidget, session: 'SignaledSession',
-                 name: str, factory: bool, client_data: ray.ClientData):
+                 name: str, factory: bool, client_data: nex.ClientData):
         QFrame.__init__(self)
         self.ui = ui.template_slot.Ui_Frame()
         self.ui.setupUi(self)
@@ -79,15 +79,15 @@ class TemplateSlot(QFrame):
             self._name, self.client_data.icon, self._factory,
             self.get_display_name())
 
-    def update_ray_hack_data(self, *args):
-        if self.client_data.ray_hack is None:
-            self.client_data.ray_hack = ray.RayHack.new_from(*args)
-        self.client_data.ray_hack.update(*args)
+    def update_nex_hack_data(self, *args):
+        if self.client_data.nex_hack is None:
+            self.client_data.nex_hack = nex.NexHack.new_from(*args)
+        self.client_data.nex_hack.update(*args)
 
-    def update_ray_net_data(self, *args):
-        if self.client_data.ray_net is None:
-            self.client_data.ray_net = ray.RayNet.new_from(*args)
-        self.client_data.ray_net.update(*args)
+    def update_nex_net_data(self, *args):
+        if self.client_data.nex_net is None:
+            self.client_data.nex_net = nex.NexNet.new_from(*args)
+        self.client_data.nex_net.update(*args)
 
     def set_display_name(self, display_name: str):
         self.ui.label.setText(display_name)
@@ -113,7 +113,7 @@ class TemplateItem(QListWidgetItem):
         QListWidgetItem.__init__(
             self, parent, QListWidgetItem.ItemType.UserType + 1)
 
-        self.client_data = ray.ClientData()
+        self.client_data = nex.ClientData()
         self._widget = TemplateSlot(parent, session,
                                     name, factory, self.client_data)
         self.setData(TEMPLATE_NAME_DATA, name)
@@ -147,11 +147,11 @@ class TemplateItem(QListWidgetItem):
     def update_client_data(self, *args):
         self._widget.update_client_data(*args)
 
-    def update_ray_hack_data(self, *args):
-        self._widget.update_ray_hack_data(*args)
+    def update_nex_hack_data(self, *args):
+        self._widget.update_nex_hack_data(*args)
 
-    def update_ray_net_data(self, *args):
-        self._widget.update_ray_net_data(*args)
+    def update_nex_net_data(self, *args):
+        self._widget.update_nex_net_data(*args)
 
     def set_display_name(self, display_name: str):
         self.setData(DISPLAY_NAME_DATA, display_name)
@@ -192,8 +192,8 @@ class AddApplicationDialog(ChildDialog):
             'AddApplication/factory_box', True, type=bool))
         self.ui.checkBoxUser.setChecked(RS.settings.value(
             'AddApplication/user_box', True, type=bool))
-        self.ui.checkBoxRayHack.setChecked(RS.settings.value(
-            'AddApplication/ray_hack_box', True, type=bool))
+        self.ui.checkBoxNexHack.setChecked(RS.settings.value(
+            'AddApplication/nex_hack_box', True, type=bool))
         self.ui.widgetTemplateInfos.setVisible(False)
 
         self.ui.checkBoxFactory.stateChanged.connect(
@@ -202,8 +202,8 @@ class AddApplicationDialog(ChildDialog):
             self._user_box_changed)
         self.ui.checkBoxNsm.stateChanged.connect(
             self._nsm_box_changed)
-        self.ui.checkBoxRayHack.stateChanged.connect(
-            self._ray_hack_box_changed)
+        self.ui.checkBoxNexHack.stateChanged.connect(
+            self._nex_hack_box_changed)
         self.ui.pushButtonRefresh.clicked.connect(
             self._refresh_database)
         self._refresh_shortcut = QShortcut('F5', self)
@@ -243,10 +243,10 @@ class AddApplicationDialog(ChildDialog):
             self._add_factory_templates)
         self.signaler.client_template_update.connect(
             self._update_client_template)
-        self.signaler.client_template_ray_hack_update.connect(
-            self._update_client_template_ray_hack)
-        self.signaler.client_template_ray_net_update.connect(
-            self._update_client_template_ray_net)
+        self.signaler.client_template_nex_hack_update.connect(
+            self._update_client_template_nex_hack)
+        self.signaler.client_template_nex_net_update.connect(
+            self._update_client_template_nex_net)
         self.signaler.favorite_added.connect(self._favorite_added)
         self.signaler.favorite_removed.connect(self._favorite_removed)
 
@@ -305,11 +305,11 @@ class AddApplicationDialog(ChildDialog):
 
     def _nsm_box_changed(self, state):
         if not state:
-            self.ui.checkBoxRayHack.setChecked(True)
+            self.ui.checkBoxNexHack.setChecked(True)
 
         self._update_filtered_list()
 
-    def _ray_hack_box_changed(self, state):
+    def _nex_hack_box_changed(self, state):
         if not state:
             self.ui.checkBoxNsm.setChecked(True)
 
@@ -381,7 +381,7 @@ class AddApplicationDialog(ChildDialog):
                     self._update_template_infos(item)
                 break
 
-    def _update_client_template_ray_hack(self, args):
+    def _update_client_template_nex_hack(self, args):
         factory = bool(args[0])
         template_name = args[1]
 
@@ -389,12 +389,12 @@ class AddApplicationDialog(ChildDialog):
             item: TemplateItem = self.ui.templateList.item(i) # type:ignore
 
             if item.matches_with(factory, template_name):
-                item.update_ray_hack_data(*args[2:])
+                item.update_nex_hack_data(*args[2:])
                 if self.ui.templateList.currentItem() == item:
                     self._update_template_infos(item)
                 break
 
-    def _update_client_template_ray_net(self, args):
+    def _update_client_template_nex_net(self, args):
         factory = bool(args[0])
         template_name = args[1]
 
@@ -402,7 +402,7 @@ class AddApplicationDialog(ChildDialog):
             item: TemplateItem = self.ui.templateList.item(i) # type:ignore
 
             if item.matches_with(factory, template_name):
-                item.update_ray_net_data(*args[2:])
+                item.update_nex_net_data(*args[2:])
                 if self.ui.templateList.currentItem() == item:
                     self._update_template_infos(item)
                 break
@@ -429,11 +429,11 @@ class AddApplicationDialog(ChildDialog):
                 item.setHidden(True)
 
             if item.client_data is not None:
-                if (item.client_data.protocol is ray.Protocol.RAY_HACK
-                        and not self.ui.checkBoxRayHack.isChecked()):
+                if (item.client_data.protocol is nex.Protocol.NEX_HACK
+                        and not self.ui.checkBoxNexHack.isChecked()):
                     item.setHidden(True)
 
-                if (item.client_data.protocol is not ray.Protocol.RAY_HACK
+                if (item.client_data.protocol is not nex.Protocol.NEX_HACK
                         and not self.ui.checkBoxNsm.isChecked()):
                     item.setHidden(True)
 
@@ -502,7 +502,7 @@ class AddApplicationDialog(ChildDialog):
         for widget in (self.ui.labelProtocolTitle,
                        self.ui.labelProtocolColon,
                        self.ui.labelProtocol):
-            widget.setVisible(bool(cdata.protocol is not ray.Protocol.NSM))
+            widget.setVisible(bool(cdata.protocol is not nex.Protocol.NSM))
 
         for widget in (self.ui.labelLabelTitle,
                        self.ui.labelLabelColon,
@@ -513,7 +513,7 @@ class AddApplicationDialog(ChildDialog):
                        self.ui.labelNameColon,
                        self.ui.labelName):
             widget.setVisible(bool(
-                cdata.protocol in (ray.Protocol.NSM, ray.Protocol.INTERNAL)))
+                cdata.protocol in (nex.Protocol.NSM, nex.Protocol.INTERNAL)))
 
         self.ui.toolButtonUser.setVisible(not item.is_factory)
         self.ui.toolButtonFavorite.set_template(
@@ -523,16 +523,16 @@ class AddApplicationDialog(ChildDialog):
             item.data(TEMPLATE_NAME_DATA), item.is_factory))
 
         self.ui.widgetNonSaveable.setVisible(bool(
-            cdata.ray_hack is not None
-            and cdata.protocol is ray.Protocol.RAY_HACK
-            and cdata.ray_hack.no_save_level > 0))
+            cdata.nex_hack is not None
+            and cdata.protocol is nex.Protocol.NEX_HACK
+            and cdata.nex_hack.no_save_level > 0))
 
         # little security
-        # client_properties_dialog could crash if ray_hack has not been updated yet
+        # client_properties_dialog could crash if nex_hack has not been updated yet
         # (never seen this appears, but it could with slow systems)
         self.ui.toolButtonAdvanced.setEnabled(
-            bool(cdata.protocol is not ray.Protocol.RAY_HACK
-                 or cdata.ray_hack is not None))
+            bool(cdata.protocol is not nex.Protocol.NEX_HACK
+                 or cdata.nex_hack is not None))
 
     def _current_item_changed(self, item, previous_item):
         self.has_selection = bool(item)
@@ -564,11 +564,11 @@ class AddApplicationDialog(ChildDialog):
 
         self.remove_template(item.data(TEMPLATE_NAME_DATA), False)
 
-    def _server_status_changed(self, server_status: ray.ServerStatus):
+    def _server_status_changed(self, server_status: nex.ServerStatus):
         self._server_will_accept = bool(
             server_status not in (
-                ray.ServerStatus.OFF,
-                ray.ServerStatus.CLOSE)
+                nex.ServerStatus.OFF,
+                nex.ServerStatus.CLOSE)
             and not self.server_copying)
         self._prevent_ok()
 
@@ -608,6 +608,6 @@ class AddApplicationDialog(ChildDialog):
             'AddApplication/user_box',
             self.ui.checkBoxUser.isChecked())
         RS.settings.setValue(
-            'AddApplication/ray_hack_box',
-            self.ui.checkBoxRayHack.isChecked())
+            'AddApplication/nex_hack_box',
+            self.ui.checkBoxNexHack.isChecked())
         RS.settings.sync()

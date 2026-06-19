@@ -11,19 +11,19 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Convert Ardour session to Ray</string>
+   <string>Convert Ardour session to Nex</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>This script helps you to load an ardour session made with Ardour into a RaySession session.
+      <string>This script helps you to load an ardour session made with Ardour into a NexSession session.
 
 For performance reasons, the ardour project will be moved (and not copied) to the session directory. This script seems to work well, but there is absolutely no warranty that some problems could appear, so  it is advisable to backup your ardour session first.
 
-In the future, think to always start Ardour from RaySession ! You can never be sure to not need another software, and auto snapshots can help you a lot.
+In the future, think to always start Ardour from NexSession ! You can never be sure to not need another software, and auto snapshots can help you a lot.
 
-Now let choose the Ardour session you want to convert to a Ray session.</string>
+Now let choose the Ardour session you want to convert to a Nex session.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>

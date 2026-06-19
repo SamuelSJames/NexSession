@@ -1,13 +1,13 @@
-# RaySession plans
+# NexSession plans
 
-Of course, the main objectives of RaySession are already achieved. There are still a lot of features ideas for the patchbay, see https://github.com/Houston4444/HoustonPatchbay/blob/main/plans.md. But few features can be added to RaySession itself too.
+Of course, the main objectives of NexSession are already achieved. There are still a lot of features ideas for the patchbay, see https://github.com/Houston4444/HoustonPatchbay/blob/main/plans.md. But few features can be added to NexSession itself too.
 
 
 ## Add some widgets to the tool bar
 
 Since tool bar is customizable, we could add optional actions for _recents sessions_, _session scripts_, maybe others.
 
-## Remove totally ray-proxy
+## Remove totally nex-proxy
 
 Done.
 
@@ -34,6 +34,6 @@ As carla-patchbay, be able to load inside a session, a session starting a new JA
 
 ## Plugin launcher
 
-First, there is a client to write for this, maybe starting from carla-single, starting with carla-database window if no config file is found. We could add a button directly in RaySession GUI (Add Plugin). What would be nice would be to can select the default plugin GUI or a generic one (it needs one more NSM capability I think).
+First, there is a client to write for this, maybe starting from carla-single, starting with carla-database window if no config file is found. We could add a button directly in NexSession GUI (Add Plugin). What would be nice would be to can select the default plugin GUI or a generic one (it needs one more NSM capability I think).
 
 It can be very long to implement, but it would be a big step forward.

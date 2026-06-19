@@ -76,7 +76,7 @@ no
 """
 
 ADD_EXEC_OPS = """
-ray_hack
+nex_hack
 not_start
 prefix_mode:client_name
 prefix_mode:session_name

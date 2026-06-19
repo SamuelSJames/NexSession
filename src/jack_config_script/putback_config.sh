@@ -9,7 +9,7 @@ if ! [ -f "$backup_jack_conf" ];then
     exit 0
 fi
 
-ray_operation=close
+nex_operation=close
 
 current_parameters=$(get_current_parameters)
 wanted_parameters=$(cat "$backup_jack_conf")

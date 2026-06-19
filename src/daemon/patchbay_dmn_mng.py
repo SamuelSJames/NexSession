@@ -16,7 +16,7 @@ from patshared import Naming
 
 # shared/ imports
 from osclib import Address
-import osc_paths.ray as r
+import osc_paths.nex as r
 
 # local imports
 from internal_client import InternalClient
@@ -101,7 +101,7 @@ def get_port() -> Optional[int]:
     if _MainObj.daemon_server is None:
         return None
 
-    patchbay_file = (Path('/tmp/RaySession/patchbay_daemons')
+    patchbay_file = (Path('/tmp/NexSession/patchbay_daemons')
                      / str(_MainObj.daemon_server.port))
 
     if not patchbay_file.exists():
@@ -173,7 +173,7 @@ def start(gui_url='', one_shot_act=''):
     if _MainObj.is_internal:
         try:
             _MainObj.internal_client = InternalClient(
-                'ray-patchbay_daemon',
+                'nex-patchbay_daemon',
                 (str(_MainObj.daemon_server.port),
                  gui_url,
                  str(pretty_names_active),
@@ -185,7 +185,7 @@ def start(gui_url='', one_shot_act=''):
             _logger.info('Patchbay daemon started internal')
 
         except:
-            _logger.warning('Failed to launch ray-patch_dmn as internal')
+            _logger.warning('Failed to launch nex-patch_dmn as internal')
 
     else:
         START_IN_KONSOLE = False
@@ -201,7 +201,7 @@ def start(gui_url='', one_shot_act=''):
             if START_IN_KONSOLE:
                 _MainObj.process.setProgram('konsole')
                 _MainObj.process.setArguments(
-                    ['--hold', '-e', 'ray-patch_dmn',
+                    ['--hold', '-e', 'nex-patch_dmn',
                     str(_MainObj.daemon_server.port),
                         gui_url,
                         str(pretty_names_active),
@@ -209,7 +209,7 @@ def start(gui_url='', one_shot_act=''):
                         '--info', CommandLineArgs.info,
                         '--dbg', CommandLineArgs.dbg])
             else:
-                _MainObj.process.setProgram('ray-patch_dmn')
+                _MainObj.process.setProgram('nex-patch_dmn')
                 _MainObj.process.setArguments(
                     [str(_MainObj.daemon_server.port),
                         gui_url,
@@ -219,10 +219,10 @@ def start(gui_url='', one_shot_act=''):
                         '--dbg', CommandLineArgs.dbg])
 
             _MainObj.process.start()            
-            _logger.info('ray-patch_dmn process started')
+            _logger.info('nex-patch_dmn process started')
 
         except:
-            _logger.warning('Failed to launch ray-patch_dmn')
+            _logger.warning('Failed to launch nex-patch_dmn')
     
 def set_ready():
     port = get_port()

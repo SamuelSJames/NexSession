@@ -1,25 +1,25 @@
 
 
-# class RayServer:
-#     _p = '/ray/server/'
+# class NexServer:
+#     _p = '/nex/server/'
 #     QUIT = _p + 'quit'
 #     abort_copy = _p  + 'abort_copy'
     
 
-# class Ray:
-#     server = RayServer()
+# class Nex:
+#     server = NexServer()
 
 
-# ray = Ray()
-# print('choupio', ray.server.QUIT)
+# nex = Nex()
+# print('choupio', nex.server.QUIT)
 from pathlib import Path
 import sys
 
 root = Path(__file__)
-while root.name != 'RaySession':
+while root.name != 'NexSession':
     root = root.parent
     if root.name == '/':
-        print('Not in a RaySession dir')
+        print('Not in a NexSession dir')
         sys.exit(1)
 
 daemon_dir = root / 'src' / 'daemon'

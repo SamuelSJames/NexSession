@@ -38,7 +38,7 @@ class JackEngine(ProtoEngine):
 
     def init(self) -> bool:
         try:
-            self._client = jack.Client('ray-jackpatch', no_start_server=True)
+            self._client = jack.Client('nex-jackpatch', no_start_server=True)
         except jack.JackOpenError:
             _logger.error('Unable to make a jack client !')
             return False

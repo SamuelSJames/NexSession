@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=Jack Connections
+Name[fr]=Connexions ALSA
+Comment=Stores and reconnects ALSA MIDI patch connections
+Comment[fr]=Mémorise et reconnecte les connexions ALSA MIDI dans la baie de brassage
+Exec=nex-alsapatch
+Terminal=false
+Type=Application
+Icon=curve-connector
+StartupNotify=false
+NoDisplay=true
+Hidden=true
+Categories=System;

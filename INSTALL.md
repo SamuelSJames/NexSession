@@ -1,101 +1,202 @@
-# Preparing the source tree
+# Building and installing NexSession
 
-If you just cloned the git repository, make sure you also
-cloned the submodules, which you can do using:
+## Preparing the source tree
 
-`$ git submodule update --init`
+NexSession uses HoustonPatchbay as a Git submodule:
 
-# Building
+```bash
+git submodule update --init
+```
 
-## Build dependencies
+The current development worktree may contain intentional rebrand changes in both the main repository and submodule. Read `HANDOFF.md` before cleaning or resetting a development checkout.
 
-The required build dependencies are: (devel packages of these)
+## Fedora 44 development environment
 
- - PyQt6 (or PyQt5)
- - Qt6 dev tools (or Qt5 dev tools)
- - qtchooser (only for translations)
- - qttools5-dev-tools (only for translations, works for Qt5 and Qt6)
+The repaired Qt 6 build and GUI startup were verified on Fedora 44 GNOME Wayland with Python 3.14.
 
-The difficulty with Qt6 build (which is the default), is sometimes to get the following executables:
-- rcc
-- lrelease
+Install the system build and runtime dependencies:
 
-By chance, the compilation should work even if theses 2 tools are supposed to work with Qt5.
+```bash
+sudo dnf install -y \
+  gcc \
+  git \
+  make \
+  pipewire-jack-audio-connection-kit \
+  pipewire-jack-audio-connection-kit-devel \
+  python3-pyliblo3 \
+  python3-pyqt6 \
+  qt6-linguist \
+  qt6-qtbase-devel \
+  qt6-qtsvg
+```
 
+The tested system used `QtPy 2.4.3` and `JACK-Client 0.5.5` from the user Python environment:
 
-On Debian and Ubuntu, use these commands as root to install all build
-dependencies:
+```bash
+python3 -m pip install --user QtPy JACK-Client
+```
 
-- for Qt6 build:
+Prefer distribution packages when Fedora provides compatible versions. Optional ALSA MIDI support requires Python ALSA bindings, and the default patchbay themes benefit from the Roboto font family.
 
-`$ [sudo] apt install pyqt6-dev-tools qt6-base-dev-tools qtchooser qttools5-dev-tools`
+Confirm QtPy selects PyQt6:
 
-- for Qt5 build:
+```bash
+python3 -c "import qtpy; print(qtpy.API_NAME)"
+```
 
-`$ [sudo] apt install pyqt5-dev-tools qtchooser qttools5-dev-tools`
+Expected output:
 
+```text
+PyQt6
+```
 
-To build RaySession, simply run as usual:
+See `docs/fedora-pipewire.md` for PipeWire and WirePlumber service verification.
 
-`$ make`
+## Debian and Ubuntu dependencies
 
-if you prefer to build it with Qt5:
+For a Qt 6 build:
 
-`$ QT_VERSION=5 make`
+```bash
+sudo apt install \
+  fonts-roboto \
+  git \
+  pyqt6-dev-tools \
+  python3-jack-client \
+  python3-liblo \
+  python3-pyalsa \
+  python3-pyqt6 \
+  python3-pyqt6.qtsvg \
+  python3-qtpy \
+  qt6-base-dev-tools \
+  qt6-svg-plugins \
+  qtchooser \
+  qttools5-dev-tools
+```
 
-Depending of the distribution you might need to use the LRELEASE variable
-to build.  If you don't have 'lrelease' executable but 'lrelease-qt5' use:
+Package names vary between distribution releases. Since the original `pyliblo` project is unmaintained, use a packaged `pyliblo3` where available or install the maintained fork from <https://github.com/gesellkammer/pyliblo3>.
 
-`$ make LRELEASE=lrelease-qt5`
+## Building
 
-on Debian, you probably need to set RCC this way:
-`$ RCC=/usr/lib/qt6/libexec/rcc make`
+Qt 6 is the default:
 
-# Installing
+```bash
+make
+```
 
-To install RaySession, simply run as usual:
+Fedora names the translation compiler `lrelease-qt6`, so the verified command is:
 
-`$ [sudo] make install`
+```bash
+make LRELEASE=lrelease-qt6
+```
 
-Packagers can make use of the 'PREFIX' and 'DESTDIR' variable during install,
-like this:
+For a Qt 5 build:
 
-`$ [sudo] make install PREFIX=/usr DESTDIR=./test-dir`
+```bash
+QT_VERSION=5 make LRELEASE=lrelease-qt5
+```
 
-# Uninstalling
+The Makefiles locate Qt 6's resource compiler with:
 
-To uninstall RaySession, run:
+```bash
+qtpaths6 --query QT_HOST_LIBEXECS
+```
 
-`$ [sudo] make uninstall`
+This resolves Fedora's `/usr/lib64/qt6/libexec/rcc` and Debian's corresponding Qt libexec directory. `RCC` can still be overridden explicitly for unusual installations:
 
-# Runtime dependencies
+```bash
+make RCC=/custom/qt6/libexec/rcc LRELEASE=/custom/qt6/bin/lrelease
+```
 
-To run it, you'll additionally need:
-   - qt6-svg-plugins (or probably libqt5svg5 for Qt5)
-   - python3-pyqt6 (or python3-pyqt5 for Qt5)
-   - python3-pyqt6.qtsvg (or python3-pyqt5 for Qt5)
-   - python3-qtpy
-   - python3-jack-client
-   - python3-pyliblo3 (or python3-liblo, depending on what is available)
-   - git (not absolutely required but highly recommended)
-   - python3-pyalsa (recommended)
-   - Roboto font family (used by default patchbay theme)
+Resource generation is failure-safe: output is written to a temporary file before replacing `src/gui/resources_rc.py` or HoustonPatchbay's resource module. Never accept a zero-byte generated resource file as a successful build.
 
-To install runtime dependencies on debian based systems, run:
+## Running from the source tree
 
-`[sudo] apt install qt6-svg-plugins python3-pyqt6 python3-pyqt6.qtsvg python3-qtpy python3-jack-client git python3-pyalsa python3-liblo fonts-roboto`
+```bash
+./src/bin/nexsession
+```
 
-IMPORTANT: since python 3.11, because pyliblo has been totally abandonned
-by Dominic Sacre, for liblo you need to use the following fork:
+Run graphical tests from the actual desktop user session. A remote or restricted shell may fail to access Wayland/X11 even when the application itself is healthy.
 
-    https://github.com/gesellkammer/pyliblo3
+For a headless startup and daemon-communication smoke test:
 
-Simply install it with:
+```bash
+env QT_QPA_PLATFORM=offscreen \
+  timeout --signal=INT 5s ./src/bin/nexsession
+```
 
-`$ python3 -m pip install pyliblo3`
+Exit status `124` is expected because `timeout` ends the healthy Qt event loop. Healthy output includes `GUI connected` and `Bye Bye...` and does not include a traceback or missing-resource warning.
 
-# Running
+## Installing
 
-You can run RaySession without install, by using:
+The default prefix is `/usr/local`:
 
-`$ ./src/bin/raysession`
+```bash
+sudo make install LRELEASE=lrelease-qt6
+```
+
+The installation used during Fedora testing was explicit:
+
+```bash
+sudo make install PREFIX=/usr/local LRELEASE=lrelease-qt6
+```
+
+Distribution packagers can use `PREFIX` and `DESTDIR`:
+
+```bash
+make install PREFIX=/usr DESTDIR="$PWD/package-root"
+```
+
+Verify the installed copy:
+
+```bash
+env QT_QPA_PLATFORM=offscreen \
+  timeout --signal=INT 5s nexsession
+```
+
+## Uninstalling
+
+Use the same prefix selected during installation:
+
+```bash
+sudo make uninstall PREFIX=/usr/local
+```
+
+## Troubleshooting
+
+### Missing icons or fonts followed by `IndexError`
+
+Check that both generated resource modules are non-empty:
+
+```bash
+test -s src/gui/resources_rc.py
+test -s HoustonPatchbay/source/patchbay/resources_rc.py
+```
+
+Then force resource regeneration:
+
+```bash
+make -B RES LRELEASE=lrelease-qt6
+make -C HoustonPatchbay -B RES LRELEASE=lrelease-qt6
+```
+
+If `rcc` cannot be found, verify:
+
+```bash
+command -v qtpaths6
+qtpaths6 --query QT_HOST_LIBEXECS
+```
+
+### Empty patchbay theme warning
+
+Current code normalizes an empty `Canvas/theme_name` setting to NexSession's `Yellow Boards` fallback and persists it on shutdown. Build and reinstall current sources if an older installed copy repeats:
+
+```text
+Unable to find theme
+theme '' has not been found,use 'Yellow Boards' instead.
+```
+
+The user setting is normally stored under `~/.config/NexSession/NexSession.conf`.
+
+### Qt platform plugin/display failure
+
+Errors such as `Failed to create wl_display` or `could not connect to display` can be caused by running outside the real desktop session or inside a restricted sandbox. Confirm `WAYLAND_DISPLAY`, `DISPLAY`, `XDG_RUNTIME_DIR`, and `DBUS_SESSION_BUS_ADDRESS` belong to the logged-in desktop user. Use the offscreen smoke test to separate display access from application startup problems.

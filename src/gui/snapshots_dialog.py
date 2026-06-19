@@ -8,7 +8,7 @@ from qtpy.QtCore import Qt, QDateTime, QDate
 from qtpy.QtWidgets import QDialogButtonBox, QTreeWidgetItem
 
 # imports from shared
-import osc_paths.ray as r
+import osc_paths.nex as r
 
 # Local imports
 from child_dialogs import ChildDialog

@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 from qtpy.QtWidgets import QAction # type:ignore
 
 # Imports from src/shared
-import ray
-import osc_paths.ray as r
+import nex
+import osc_paths.nex as r
 
 # Local imports
 from gui_server_thread import GuiServerThread
@@ -26,8 +26,8 @@ if TYPE_CHECKING:
 _logger = logging.getLogger(__name__)
 
 
-class Client(QObject, ray.ClientData):
-    status_changed = Signal(ray.ClientStatus)
+class Client(QObject, nex.ClientData):
+    status_changed = Signal(nex.ClientStatus)
 
     def __init__(self, session: 'SignaledSession',
                  client_id: str, protocol_int: int):
@@ -38,13 +38,13 @@ class Client(QObject, ray.ClientData):
 
         # set ClientData attributes
         self.client_id = client_id
-        self.protocol = ray.Protocol(protocol_int)
-        self.ray_hack = ray.RayHack()
-        self.ray_net = ray.RayNet()
+        self.protocol = nex.Protocol(protocol_int)
+        self.nex_hack = nex.NexHack()
+        self.nex_net = nex.NexNet()
         
-        self._previous_status = ray.ClientStatus.STOPPED
+        self._previous_status = nex.ClientStatus.STOPPED
 
-        self.status = ray.ClientStatus.STOPPED
+        self.status = nex.ClientStatus.STOPPED
         self.has_gui = False
         self.gui_state = False
         self.has_dirty = False
@@ -54,15 +54,15 @@ class Client(QObject, ray.ClientData):
         self.widget = self.main_win.create_client_widget(self)
         self._properties_dialog: Optional[ClientPropertiesDialog] = None
 
-    def set_status(self, status: ray.ClientStatus):
+    def set_status(self, status: nex.ClientStatus):
         self._previous_status = self.status
         self.status = status
         self.status_changed.emit(status)
 
         if (not self.has_dirty
-                and self.status is ray.ClientStatus.READY
+                and self.status is nex.ClientStatus.READY
                 and self._previous_status in (
-                    ray.ClientStatus.OPEN, ray.ClientStatus.SAVE)):
+                    nex.ClientStatus.OPEN, nex.ClientStatus.SAVE)):
             self.last_save = time.time()
 
         self.widget.update_status(status)
@@ -97,18 +97,18 @@ class Client(QObject, ray.ClientData):
         
         self.widget.update_client_data()
 
-    def update_ray_hack(self, *args):
-        if self.ray_hack is None:
+    def update_nex_hack(self, *args):
+        if self.nex_hack is None:
             return
         
-        self.ray_hack.update(*args)
+        self.nex_hack.update(*args)
         self.widget.update_client_data()
 
-    def update_ray_net(self, *args):
-        if self.ray_net is None:
+    def update_nex_net(self, *args):
+        if self.nex_net is None:
             return
         
-        self.ray_net.update(*args)
+        self.nex_net.update(*args)
         self.widget.update_client_data()
 
     def send_properties_to_daemon(self):
@@ -120,31 +120,31 @@ class Client(QObject, ray.ClientData):
             return
 
         server.to_daemon(r.client.UPDATE_PROPERTIES,
-                         *ray.ClientData.spread_client(self))
+                         *nex.ClientData.spread_client(self))
 
-    def send_ray_hack(self):
-        if self.ray_hack is None:
+    def send_nex_hack(self):
+        if self.nex_hack is None:
             return
 
         server = GuiServerThread.instance()
         if server is None:
             return
 
-        server.to_daemon(r.client.UPDATE_RAY_HACK_PROPERTIES,
+        server.to_daemon(r.client.UPDATE_NEX_HACK_PROPERTIES,
                          self.client_id,
-                         *self.ray_hack.spread())
+                         *self.nex_hack.spread())
 
-    def send_ray_net(self):
-        if self.ray_net is None:
+    def send_nex_net(self):
+        if self.nex_net is None:
             return
 
         server = GuiServerThread.instance()
         if server is None:
             return
 
-        server.to_daemon(r.client.UPDATE_RAY_NET_PROPERTIES,
+        server.to_daemon(r.client.UPDATE_NEX_NET_PROPERTIES,
                          self.client_id,
-                         *self.ray_net.spread())
+                         *self.nex_net.spread())
 
     def show_properties_dialog(self, second_tab=False):
         if self._properties_dialog is None:
@@ -154,13 +154,13 @@ class Client(QObject, ray.ClientData):
         self._properties_dialog.update_contents()
 
         if second_tab:
-            if self.protocol is ray.Protocol.RAY_HACK:
+            if self.protocol is nex.Protocol.NEX_HACK:
                 self._properties_dialog.enable_test_zone(True)
             self._properties_dialog.set_on_second_tab()
 
         self._properties_dialog.show()
 
-        if ray.get_window_manager() is not ray.WindowManager.WAYLAND:
+        if nex.get_window_manager() is not nex.WindowManager.WAYLAND:
             self._properties_dialog.activateWindow()
 
     def close_properties_dialog(self):
@@ -184,15 +184,15 @@ class Client(QObject, ray.ClientData):
 
         prefix = self.session.name
 
-        if self.prefix_mode is ray.PrefixMode.CLIENT_NAME:
+        if self.prefix_mode is nex.PrefixMode.CLIENT_NAME:
             prefix = self.name
-        elif self.prefix_mode is ray.PrefixMode.CUSTOM:
+        elif self.prefix_mode is nex.PrefixMode.CUSTOM:
             prefix = self.custom_prefix
 
         return f'{self.session.path}/{prefix}.{self.client_id}'
 
 
-class TrashedClient(ray.ClientData):
+class TrashedClient(nex.ClientData):
     def __init__(self, session: 'SignaledSession'):
         self.session = session
         self.menu_action: Optional[QAction] = None

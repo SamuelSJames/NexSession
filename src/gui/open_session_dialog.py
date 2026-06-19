@@ -19,12 +19,12 @@ else:
 
 
 # Imports from src/shared
-import ray
-import osc_paths.ray as r
+import nex
+import osc_paths.nex as r
 
 # Local imports
 import child_dialogs
-from gui_tools import CommandLineArgs, ray_icon, is_dark_theme
+from gui_tools import CommandLineArgs, nex_icon, is_dark_theme
 from child_dialogs import ChildDialog
 from client_properties_dialog import ClientPropertiesDialog
 from snapshots_dialog import (
@@ -115,8 +115,8 @@ class SessionItem(QTreeWidgetItem):
     def set_notes_icon(self, icon):
         self.setIcon(COLUMN_NOTES, icon)
 
-    def set_scripted(self, script_flags: ray.ScriptFile, for_child=False):
-        if script_flags is ray.ScriptFile.PREVENT:
+    def set_scripted(self, script_flags: nex.ScriptFile, for_child=False):
+        if script_flags is nex.ScriptFile.PREVENT:
             self.setText(COLUMN_SCRIPTS, "")
         else:
             if for_child:
@@ -220,7 +220,7 @@ class SaveSessionTemplateDialog(child_dialogs.SaveTemplateSessionDialog):
         child_dialogs.SaveTemplateSessionDialog.__init__(self, parent)
         self._server_will_accept = True
 
-    def _server_status_changed(self, server_status: ray.ServerStatus):
+    def _server_status_changed(self, server_status: nex.ServerStatus):
         # server will always accept, whatever the status
         pass
     
@@ -237,7 +237,7 @@ class DuplicateDialog(child_dialogs.NewSessionDialog):
         self.ui.toolButtonFolder.setVisible(False)
         self._original_session_name = ''
     
-    def _server_status_changed(self, server_status: ray.ServerStatus):
+    def _server_status_changed(self, server_status: nex.ServerStatus):
         # server will always accept, whatever the status
         pass
     
@@ -294,9 +294,9 @@ class OpenSessionDialog(ChildDialog):
 
         dark = is_dark_theme(self)
         self.action_duplicate.setIcon(
-            ray_icon('xml-node-duplicate', dark))
+            nex_icon('xml-node-duplicate', dark))
         self.action_save_as_template.setIcon(
-            ray_icon('document-save-as-template', dark))
+            nex_icon('document-save-as-template', dark))
 
         self.action_rename.triggered.connect(self._ask_for_session_rename)
         self.action_duplicate.triggered.connect(self._ask_for_session_duplicate)
@@ -395,7 +395,7 @@ class OpenSessionDialog(ChildDialog):
         self._set_corner_group(CORNER_HIDDEN)
         
         self.ui.checkBoxSaveCurrentSession.setVisible(
-            self.session.server_status is ray.ServerStatus.READY)
+            self.session.server_status is nex.ServerStatus.READY)
         self.ui.listWidgetPreview.server_status_changed(
             self.session.server_status)
         
@@ -419,24 +419,24 @@ class OpenSessionDialog(ChildDialog):
         for folder in self.folders:
             folder.sort_childrens()
         
-    def _server_status_changed(self, server_status: ray.ServerStatus):
+    def _server_status_changed(self, server_status: nex.ServerStatus):
         self.ui.toolButtonFolder.setEnabled(
-            bool(server_status in (ray.ServerStatus.OFF,
-                                   ray.ServerStatus.READY,
-                                   ray.ServerStatus.CLOSE)))
+            bool(server_status in (nex.ServerStatus.OFF,
+                                   nex.ServerStatus.READY,
+                                   nex.ServerStatus.CLOSE)))
 
         self._server_will_accept = bool(
             server_status in (
-                ray.ServerStatus.OFF,
-                ray.ServerStatus.READY) and not self.server_copying)
+                nex.ServerStatus.OFF,
+                nex.ServerStatus.READY) and not self.server_copying)
 
-        if server_status is not ray.ServerStatus.OFF:
+        if server_status is not nex.ServerStatus.OFF:
             if self._root_folder_file_dialog is not None:
                 self._root_folder_file_dialog.reject()
             self._root_folder_message_box.reject()
 
         self.ui.checkBoxSaveCurrentSession.setVisible(
-            server_status is ray.ServerStatus.READY)
+            server_status is nex.ServerStatus.READY)
         
         self.ui.listWidgetPreview.server_status_changed(server_status)
 
@@ -954,13 +954,13 @@ class OpenSessionDialog(ChildDialog):
                 self.accept()
 
     def _session_preview_update(self, state: int):
-        preview_state = ray.PreviewState(state)
+        preview_state = nex.PreviewState(state)
         
-        if preview_state is ray.PreviewState.NOTES:
+        if preview_state is nex.PreviewState.NOTES:
             self.ui.plainTextEditNotes.setPlainText(
                 self.session.preview_notes)
 
-        elif preview_state is ray.PreviewState.CLIENTS:
+        elif preview_state is nex.PreviewState.CLIENTS:
             for pv_client in self.session.preview_client_list:
                 client_slot = self.ui.listWidgetPreview \
                     .create_client_widget(pv_client)
@@ -968,11 +968,11 @@ class OpenSessionDialog(ChildDialog):
                     pv_client.client_id
                     in self.session.preview_started_clients)
         
-        elif preview_state is ray.PreviewState.SNAPSHOTS:
+        elif preview_state is nex.PreviewState.SNAPSHOTS:
             self.main_snap_group.snapshots.clear()
             self._add_snapshots(self.session.preview_snapshots)
         
-        elif preview_state is ray.PreviewState.FOLDER_SIZE:
+        elif preview_state is nex.PreviewState.FOLDER_SIZE:
             locale = QLocale()
             self.ui.labelSessionSize.setText(
                 locale.formattedDataSize(self.session.preview_size))
@@ -1044,7 +1044,7 @@ class OpenSessionDialog(ChildDialog):
             if session_item is not None:
                 if has_notes:
                     session_item.set_notes_icon(
-                        ray_icon('notes', is_dark_theme(self)))
+                        nex_icon('notes', is_dark_theme(self)))
                 
                 # we add directly date to top item
                 # this way folder also read the last date
@@ -1058,14 +1058,14 @@ class OpenSessionDialog(ChildDialog):
             # means that all the session root directory is scripted
             for i in range(self.ui.sessionList.topLevelItemCount()):
                 item: SessionItem = self.ui.sessionList.topLevelItem(i) # type:ignore
-                item.set_scripted(ray.ScriptFile(script_flags))
+                item.set_scripted(nex.ScriptFile(script_flags))
             return
 
         for i in range(self.ui.sessionList.topLevelItemCount()):
             item = self.ui.sessionList.topLevelItem(i) # type:ignore
             scripted_item = item.find_item_with(dir_name)
             if scripted_item is not None:
-                scripted_item.set_scripted(ray.ScriptFile(script_flags))
+                scripted_item.set_scripted(nex.ScriptFile(script_flags))
 
     def _resize_session_names_column(self):
         self.ui.sessionList.setColumnWidth(COLUMN_NOTES, 20)

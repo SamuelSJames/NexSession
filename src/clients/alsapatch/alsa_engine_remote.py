@@ -1,4 +1,4 @@
-'''When this module is used, ray-alsapatch is internal and is a 
+'''When this module is used, nex-alsapatch is internal and is a
 remote for the patchbay daemon. It allows to not create another ALSA
 client.
 '''
@@ -15,8 +15,8 @@ from patcher.bases import (
     EventHandler, Event, JackPort,
     PortMode, PortType, ProtoEngine, FullPortName)
 from osclib import BunServerThread, OscPack, bun_manage
-import osc_paths.ray as r
-import osc_paths.ray.patchbay.monitor as rpm
+import osc_paths.nex as r
+import osc_paths.nex.patchbay.monitor as rpm
 
 from .check_internal import IS_PATCHBAY_INTERNAL
 

@@ -40,7 +40,7 @@ for line in contents.splitlines():
 funcs_path = dict[str, str]()
 for path in path_types_d.keys():
     if path.startswith('r.'):
-        func_name = '_ray_' + path.partition('.')[2].replace('.', '_').lower()
+        func_name = '_nex_' + path.partition('.')[2].replace('.', '_').lower()
     elif path.startswith('nsm.'):
         func_name = '_nsm_' + path.partition('.')[2].replace('.', '_').lower()
 

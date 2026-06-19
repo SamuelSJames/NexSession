@@ -37,7 +37,7 @@ class DummySession(OperatingSession):
                             self.duplicate_only_done]
         self.next_function()
 
-    def ray_server_save_session_template(
+    def nex_server_save_session_template(
             self, osp: OscPack, session_name: str, template_name: str, net: bool):
         self.steps_osp = osp
         self.steps_order = [(self.preload, session_name),
@@ -46,7 +46,7 @@ class DummySession(OperatingSession):
                             (self.save_session_template, template_name, net)]
         self.next_function()
 
-    def ray_server_rename_session(self, osp: OscPack):
+    def nex_server_rename_session(self, osp: OscPack):
         self.steps_osp = osp
         full_session_name, new_session_name = osp.args
 
@@ -58,7 +58,7 @@ class DummySession(OperatingSession):
                             (self.rename_done, new_session_name)]
         self.next_function()
     
-    def ray_server_get_session_preview(
+    def nex_server_get_session_preview(
             self, osp: OscPack, folder_sizes: list):
         session_name = osp.args[0]
         self.steps_order = [(self.preload, session_name, False),

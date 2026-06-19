@@ -4,7 +4,7 @@
 
 from . import nsm
 from . import osc
-from . import ray
+from . import nex
 
 ERROR = '/error'
 MINOR_ERROR = '/minor_error'

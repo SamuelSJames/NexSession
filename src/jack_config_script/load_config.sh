@@ -7,7 +7,7 @@
 
 source shared.sh || exit 0
 
-ray_operation=load
+nex_operation=load
 
 # read current and session parameters, and diff between them
 current_parameters=$(get_current_parameters for_load)
@@ -19,10 +19,10 @@ make_diff_parameters
 
 # save the current configuration to can restore it
 # (only if we are not in a switch situation)
-$RAY_SWITCHING_SESSION || echo "$current_parameters" > "$backup_jack_conf"
+$NEX_SWITCHING_SESSION || echo "$current_parameters" > "$backup_jack_conf"
 
 # no reliable JACK infos because JACK was started before the checker script
-if $RAY_JACK_RELIABILITY_CHECK && [[ "$(current_value_of reliable_infos)" == 0 ]];then
+if $NEX_JACK_RELIABILITY_CHECK && [[ "$(current_value_of reliable_infos)" == 0 ]];then
     if has_different_value hostname;then
         $jack_was_started && stop_jack
         has_different_value /driver/rate && set_samplerate

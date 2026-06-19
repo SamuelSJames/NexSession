@@ -14,7 +14,7 @@ has_pulse_jack(){
 
 
 get_current_parameters(){
-    $RAY_HOSTNAME_SENSIBLE && echo "hostname:$(hostname)"
+    $NEX_HOSTNAME_SENSIBLE && echo "hostname:$(hostname)"
 
     parameters_path="$tmp_dir/jack_current_parameters"
 
@@ -30,10 +30,10 @@ get_current_parameters(){
         for ((i=0; i<=50; i++));do
             sleep 0.1
             [ -f "$parameters_path" ] && break
-            [ "$i" == 2 ] && ray_control script_info "$tr_waiting_jack_infos" >/dev/null
+            [ "$i" == 2 ] && nex_control script_info "$tr_waiting_jack_infos" >/dev/null
         done
 
-        ray_control hide_script_info >/dev/null
+        nex_control hide_script_info >/dev/null
     fi
 
     if [ -f "$parameters_path" ];then
@@ -76,10 +76,10 @@ set_jack_parameters(){
 
 
 start_jack(){
-    ray_control script_info "$tr_starting_jack"
+    nex_control script_info "$tr_starting_jack"
     jack_control start &>/dev/null
     if ! jack_control status &>/dev/null;then
-        ray_control script_info "$(tr_start_jack_failed_${ray_operation})"
+        nex_control script_info "$(tr_start_jack_failed_${nex_operation})"
         # session load is aborted, and script_info dialog will not be hidden
         exit 1
     fi
@@ -87,12 +87,12 @@ start_jack(){
 
 
 stop_jack(){
-    if $RAY_SWITCHING_SESSION;then
-        ray_control script_info "$tr_stopping_clients"
-        ray_control clear_clients
+    if $NEX_SWITCHING_SESSION;then
+        nex_control script_info "$tr_stopping_clients"
+        nex_control clear_clients
     fi
 
-    ray_control script_info "$tr_stopping_jack"
+    nex_control script_info "$tr_stopping_jack"
     jack_control stop &>/dev/null
 }
 
@@ -134,19 +134,19 @@ check_device(){
             if [[ "$(wanted_value_of /driver/duplex)" == "1" ]];then
                 pb_device=$(wanted_value_of /driver/playback)
                 if ! check_alsa_device "$pb_device";then
-                    ray_control script_info "$(tr_device_not_connected_${ray_operation} "$pb_device")"
+                    nex_control script_info "$(tr_device_not_connected_${nex_operation} "$pb_device")"
                     exit 1
                 fi
 
                 cp_device="$(wanted_value_of /driver/capture)"
                 if ! check_alsa_device "$cp_device" capture;then
-                    ray_control script_info "$(tr_device_not_connected_${ray_operation} "$cp_device")"
+                    nex_control script_info "$(tr_device_not_connected_${nex_operation} "$cp_device")"
                     exit 1
                 fi
             else
                 pb_device="$(wanted_value_of /driver/device)"
                 if ! check_alsa_device "$pb_device";then
-                    ray_control script_info "$(tr_device_not_connected_${ray_operation} "$pb_device")"
+                    nex_control script_info "$(tr_device_not_connected_${nex_operation} "$pb_device")"
                     exit 1
                 fi
             fi
@@ -154,7 +154,7 @@ check_device(){
         net )
             check_url=$(wanted_value_of /driver/multicast-ip)
             if [[ -n "$check_url" ]] && ! ping -c 1 "$check_url" &>/dev/null;then
-                ray_control script_info "$(tr_device_not_connected_${ray_operation} "$check_url")"
+                nex_control script_info "$(tr_device_not_connected_${nex_operation} "$check_url")"
                 exit 1
             fi
             ;;
@@ -166,7 +166,7 @@ check_device(){
 
 
 reconfigure_pulseaudio(){
-    $RAY_MANAGE_PULSEAUDIO || return
+    $NEX_MANAGE_PULSEAUDIO || return
     has_pulse_jack || return
     current_pulse_vars=$(echo "$current_parameters"|grep ^pulseaudio_)
     wanted_pulse_vars=$(echo "$wanted_parameters"|grep ^pulseaudio_)
@@ -190,7 +190,7 @@ reconfigure_pulseaudio(){
         return
     fi
 
-    ray_control script_info "$tr_reconfigure_pulseaudio"
+    nex_control script_info "$tr_reconfigure_pulseaudio"
 
     $as_it_just_was && pulse_vars="$current_pulse_vars" || pulse_vars="$wanted_pulse_vars"
     ./pulse2jack_tool.py "$pulse_vars"
@@ -213,7 +213,7 @@ current_value_of(){
 
 
 has_different_value(){
-    if ! $RAY_HOSTNAME_SENSIBLE;then
+    if ! $NEX_HOSTNAME_SENSIBLE;then
         [[ "$1" == hostname ]] && return 1
     fi
     echo "$diff_parameters"|grep -q ^"$1"$
@@ -222,9 +222,9 @@ has_different_value(){
 
 source locale.sh
 
-session_jack_file="$RAY_SESSION_PATH/jack_parameters"
+session_jack_file="$NEX_SESSION_PATH/jack_parameters"
 
-tmp_dir=/tmp/RaySession
+tmp_dir=/tmp/NexSession
 [ -d "$tmp_dir" ] || mkdir -p "$tmp_dir"
 backup_jack_conf="$tmp_dir/jack_backup_parameters"
 tmp_pulse_file="$tmp_dir/has_pulse_jack"

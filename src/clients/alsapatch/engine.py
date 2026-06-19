@@ -11,8 +11,8 @@ else:
 
 
 class Engine(AlsaEngine): # type:ignore
-    XML_TAG = 'RAY-ALSAPATCH'
-    EXECUTABLE = 'ray-alsapatch'
+    XML_TAG = 'NEX-ALSAPATCH'
+    EXECUTABLE = 'nex-alsapatch'
     NSM_NAME = 'ALSA Connections'
 
     def __init__(self, event_handler: EventHandler):

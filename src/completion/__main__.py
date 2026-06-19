@@ -8,8 +8,8 @@ from arg_lines import (
     ADD_EXEC_OPS, LIST_CLIENTS_FILTERS,
     CLIENT_ARG, TRASHED_CLIENT_ARG)
 
-MULTI_DAEMON_FILE = Path('/tmp/RaySession/multi-daemon.json')
-CONFIG_FILE = Path.home() / '.config' / 'RaySession' / 'RaySession.conf'
+MULTI_DAEMON_FILE = Path('/tmp/NexSession/multi-daemon.json')
+CONFIG_FILE = Path.home() / '.config' / 'NexSession' / 'NexSession.conf'
 
 
 class ControlState(Enum):
@@ -26,7 +26,7 @@ class RControl:
         
     def command(self, *args) -> str:
         if self.state is ControlState.NOT_CHECKED:
-            port = ray_control('get_port')
+            port = nex_control('get_port')
             if port:
                 self.state = ControlState.STARTED
             else:
@@ -54,15 +54,15 @@ class RControl:
                                 break
                 
                 if self.port == '0':
-                    self.port = ray_control(
+                    self.port = nex_control(
                         'start_new_hidden').partition('\n')[0]
                 crade_log('le port hidden', self.port)
                 self.state = ControlState.HIDDEN_STARTED
                 
         if self.state is ControlState.STARTED:
-            return ray_control(*args)
+            return nex_control(*args)
         
-        return ray_control('--port', self.port, *args)
+        return nex_control('--port', self.port, *args)
     
     def bs_comm(self, *args):
         ret = self.command(*args)
@@ -76,7 +76,7 @@ class RControl:
     
     def clear(self):
         if self.state is ControlState.HIDDEN_STARTED:
-            ray_control('--port', self.port, 'quit')
+            nex_control('--port', self.port, 'quit')
 
 
 r_control = RControl()
@@ -85,11 +85,11 @@ def crade_log(*args):
     pass
 
     # # uncomment this to have logs
-    # with open('ray_comp_log', 'a') as f:
+    # with open('nex_comp_log', 'a') as f:
     #     f.write(f"{args}")
 
-def ray_control(*args: str) -> str:
-    ctrls = ['ray_control'] + [a for a in args]
+def nex_control(*args: str) -> str:
+    ctrls = ['nex_control'] + [a for a in args]
     try:
         ret = subprocess.check_output(
             ctrls, stderr=subprocess.DEVNULL).decode()
@@ -100,7 +100,7 @@ def ray_control(*args: str) -> str:
 
 def get_default_root() -> str:
     if not CONFIG_FILE.exists():
-        return str(Path.home() / 'Ray Sessions')
+        return str(Path.home() / 'NexSessions')
     
     try:
         with open(CONFIG_FILE, 'r') as f:
@@ -121,7 +121,7 @@ def get_default_root() -> str:
         if read_general and line_strip.startswith('default_session_root='):
             return line_strip.partition('=')[2]
     
-    return str(Path.home() / 'Ray Sessions')
+    return str(Path.home() / 'NexSessions')
 
 def complete_control(comp_words: list[str]) -> str:
     if len(comp_words) == 1:
@@ -132,7 +132,7 @@ def complete_control(comp_words: list[str]) -> str:
         
     if comp_words[0] == '--port':
         if len(comp_words) == 2:
-            return ray_control('list_daemons')
+            return nex_control('list_daemons')
         comp_words = comp_words[2:]
         
         if comp_words[0] == '--detach':
@@ -217,11 +217,11 @@ def complete_control(comp_words: list[str]) -> str:
     return ''
 
 if __name__ == '__main__':
-    # with open('ray_comp_log', 'w') as f:
+    # with open('nex_comp_log', 'w') as f:
     #     f.write('')
     
     app, *args = sys.argv[1:]
     crade_log(args)
     
-    if app == 'ray_control':
+    if app == 'nex_control':
         print(complete_control(args))

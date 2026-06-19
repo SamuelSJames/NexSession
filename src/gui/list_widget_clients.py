@@ -11,15 +11,15 @@ from qtpy.QtGui import (QIcon, QFontMetrics, QContextMenuEvent,
 from qtpy.QtCore import Slot, QSize, Qt, Signal # type:ignore
 
 # Imports from src/shared
-import ray
-import osc_paths.ray as r
+import nex
+import osc_paths.nex as r
 
 # Local imports
 import child_dialogs
 import snapshots_dialog
 from gui_server_thread import GuiServerThread
 from gui_tools import (client_status_string, _translate, is_dark_theme,
-                       ray_icon, split_in_two, get_app_icon)
+                       nex_icon, split_in_two, get_app_icon)
 
 # Import UIs made with Qt-Designer
 import ui.client_slot
@@ -49,7 +49,7 @@ class ClientSlot(QFrame):
         self._icon_off = QIcon()
 
         self.ui.toolButtonGUI.setVisible(False)
-        if client.protocol is not ray.Protocol.RAY_HACK:
+        if client.protocol is not nex.Protocol.NEX_HACK:
             self.ui.toolButtonHack.setVisible(False)
 
         # connect buttons to functions
@@ -92,19 +92,19 @@ class ClientSlot(QFrame):
         
         dark = is_dark_theme(self)
         
-        self._save_icon = ray_icon('document-save', dark)
-        self._saved_icon = ray_icon('document-saved', dark)
-        self._unsaved_icon = ray_icon('document-unsaved', dark)
-        self._no_save_icon = ray_icon('document-nosave', dark)
-        self._icon_visible = ray_icon('visibility', dark)
-        self._icon_invisible = ray_icon('hint', dark)
-        self._stop_icon = ray_icon('media-playback-stop', dark)
-        self._kill_icon = ray_icon('media-playback-stop_red', dark)
+        self._save_icon = nex_icon('document-save', dark)
+        self._saved_icon = nex_icon('document-saved', dark)
+        self._unsaved_icon = nex_icon('document-unsaved', dark)
+        self._no_save_icon = nex_icon('document-nosave', dark)
+        self._icon_visible = nex_icon('visibility', dark)
+        self._icon_invisible = nex_icon('hint', dark)
+        self._stop_icon = nex_icon('media-playback-stop', dark)
+        self._kill_icon = nex_icon('media-playback-stop_red', dark)
 
         self.ui.startButton.setIcon(
-            ray_icon('media-playback-start', dark)) # type:ignore
+            nex_icon('media-playback-start', dark)) # type:ignore
         self.ui.closeButton.setIcon(
-            ray_icon('window-close', dark)) # type:ignore
+            nex_icon('window-close', dark)) # type:ignore
         self.ui.saveButton.setIcon(
             self._save_icon) # type:ignore
         self.ui.stopButton.setIcon(
@@ -132,7 +132,7 @@ class ClientSlot(QFrame):
             self.to_daemon(r.client.SHOW_OPTIONAL_GUI, self.get_client_id())
 
     def _order_hack_visibility(self, state):
-        if self.client.protocol is not ray.Protocol.RAY_HACK:
+        if self.client.protocol is not nex.Protocol.NEX_HACK:
             return
 
         if state:
@@ -223,7 +223,7 @@ class ClientSlot(QFrame):
             self.ui.startButton.setVisible(True)
             self.ui.stopButton.setVisible(True)
             self.ui.toolButtonHack.setVisible(
-                self.client.protocol is ray.Protocol.RAY_HACK)
+                self.client.protocol is nex.Protocol.NEX_HACK)
 
     def _set_fat(self, yesno: bool, very_fat=False):
         if yesno:
@@ -340,36 +340,36 @@ class ClientSlot(QFrame):
 
         self._gray_icon(
             bool(self.client.status in (
-                    ray.ClientStatus.STOPPED,
-                    ray.ClientStatus.PRECOPY)))
+                    nex.ClientStatus.STOPPED,
+                    nex.ClientStatus.PRECOPY)))
 
         if not self.ui.toolButtonGUI.isVisible():
             self.ui.toolButtonGUI.setVisible(
                 bool(':optional-gui:' in self.client.capabilities))
             self.set_gui_state(self.client.gui_state)
         
-        if (self.client.protocol is ray.Protocol.RAY_HACK
-                and self.client.ray_hack is not None):
-            if self.client.ray_hack.relevant_no_save_level():
+        if (self.client.protocol is nex.Protocol.NEX_HACK
+                and self.client.nex_hack is not None):
+            if self.client.nex_hack.relevant_no_save_level():
                 self.ui.saveButton.setIcon(self._no_save_icon) # type:ignore
             else:
                 self.ui.saveButton.setIcon(self._save_icon) # type:ignore
 
-    def update_status(self, status: ray.ClientStatus):
+    def update_status(self, status: nex.ClientStatus):
         self.ui.lineEditClientStatus.setText(client_status_string(status))
         self.ui.lineEditClientStatus.setEnabled(
-            status is not ray.ClientStatus.STOPPED)
+            status is not nex.ClientStatus.STOPPED)
         self.ui.actionFindBoxesInPatchbay.setEnabled(
-            status not in (ray.ClientStatus.STOPPED, ray.ClientStatus.PRECOPY)) 
+            status not in (nex.ClientStatus.STOPPED, nex.ClientStatus.PRECOPY))
 
-        ray_hack = bool(self.client.protocol is ray.Protocol.RAY_HACK)
+        nex_hack = bool(self.client.protocol is nex.Protocol.NEX_HACK)
 
         if status in (
-                ray.ClientStatus.LAUNCH,
-                ray.ClientStatus.OPEN,
-                ray.ClientStatus.SWITCH,
-                ray.ClientStatus.NOOP,
-                ray.ClientStatus.LOSE):
+                nex.ClientStatus.LAUNCH,
+                nex.ClientStatus.OPEN,
+                nex.ClientStatus.SWITCH,
+                nex.ClientStatus.NOOP,
+                nex.ClientStatus.LOSE):
             self.ui.startButton.setEnabled(False)
             self.ui.stopButton.setEnabled(True)
             self.ui.saveButton.setEnabled(False)
@@ -383,7 +383,7 @@ class ClientSlot(QFrame):
                 self.ui.startButton.setVisible(False)
                 self.ui.stopButton.setVisible(True)
 
-        elif status is ray.ClientStatus.READY:
+        elif status is nex.ClientStatus.READY:
             self.ui.startButton.setEnabled(False)
             self.ui.stopButton.setEnabled(True)
             self.ui.closeButton.setEnabled(False)
@@ -397,7 +397,7 @@ class ClientSlot(QFrame):
                 self.ui.startButton.setVisible(False)
                 self.ui.stopButton.setVisible(True)
 
-        elif status is ray.ClientStatus.STOPPED:
+        elif status is nex.ClientStatus.STOPPED:
             self.ui.startButton.setEnabled(True)
             self.ui.stopButton.setEnabled(False)
             self.ui.saveButton.setEnabled(False)
@@ -415,10 +415,10 @@ class ClientSlot(QFrame):
             self.ui.stopButton.setIcon(self._stop_icon) # type:ignore
             self._stop_is_kill = False
 
-            if not ray_hack:
+            if not nex_hack:
                 self.set_gui_state(False)
 
-        elif status is ray.ClientStatus.PRECOPY:
+        elif status is nex.ClientStatus.PRECOPY:
             self.ui.startButton.setEnabled(False)
             self.ui.stopButton.setEnabled(False)
             self.ui.saveButton.setEnabled(False)
@@ -436,7 +436,7 @@ class ClientSlot(QFrame):
             self.ui.stopButton.setIcon(self._stop_icon) # type:ignore
             self._stop_is_kill = False
 
-        elif status is ray.ClientStatus.COPY:
+        elif status is nex.ClientStatus.COPY:
             self.ui.saveButton.setEnabled(False)
 
     def allow_kill(self):
@@ -446,7 +446,7 @@ class ClientSlot(QFrame):
     def flash_if_open(self, flash: bool):
         if flash:
             self.ui.lineEditClientStatus.setText(
-                client_status_string(ray.ClientStatus.OPEN))
+                client_status_string(nex.ClientStatus.OPEN))
         else:
             self.ui.lineEditClientStatus.setText('')
 
@@ -472,9 +472,9 @@ class ClientSlot(QFrame):
     def set_progress(self, progress: float):
         self.ui.lineEditClientStatus.set_progress(progress)
 
-    def set_daemon_options(self, options: ray.Option):
+    def set_daemon_options(self, options: nex.Option):
         self.ui.actionReturnToAPreviousState.setVisible(
-            ray.Option.HAS_GIT in options)
+            nex.Option.HAS_GIT in options)
 
     def patchbay_is_shown(self, yesno: bool):
         self.ui.actionFindBoxesInPatchbay.setVisible(yesno)
@@ -485,7 +485,7 @@ class ClientSlot(QFrame):
         
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if (event.button() == Qt.MouseButton.LeftButton
-                and self.client.status is not ray.ClientStatus.STOPPED
+                and self.client.status is not nex.ClientStatus.STOPPED
                 and self.client.jack_client_name
                 and self.list_widget_item.isSelected()):
             self.client.session.patchbay_manager.select_client_box(
@@ -599,11 +599,11 @@ class ListWidgetClients(QListWidget):
 
             if (self.session is not None
                     and not self.session.server_status in (
-                        ray.ServerStatus.OFF,
-                        ray.ServerStatus.CLOSE,
-                        ray.ServerStatus.OUT_SAVE,
-                        ray.ServerStatus.WAIT_USER,
-                        ray.ServerStatus.OUT_SNAPSHOT)):
+                        nex.ServerStatus.OFF,
+                        nex.ServerStatus.CLOSE,
+                        nex.ServerStatus.OUT_SAVE,
+                        nex.ServerStatus.WAIT_USER,
+                        nex.ServerStatus.OUT_SNAPSHOT)):
                 menu = QMenu()
                 fav_menu = QMenu(_translate('menu', 'Favorites'), menu)
                 fav_menu.setIcon(QIcon(':scalable/breeze/star-yellow'))
@@ -639,7 +639,7 @@ class ListWidgetClients(QListWidget):
         # parse patchbay boxes of the selected client 
         if event.key() in (Qt.Key.Key_Left, Qt.Key.Key_Right):
             client = self.currentItem().widget.client
-            if (client.status is not ray.ClientStatus.STOPPED
+            if (client.status is not nex.ClientStatus.STOPPED
                     and client.jack_client_name
                     and self.currentItem().isSelected()
                     and self.session is not None):

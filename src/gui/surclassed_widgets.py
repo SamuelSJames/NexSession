@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from gui_session import Session
 
 
-class RayHackButton(QToolButton):
+class NexHackButton(QToolButton):
     order_hack_visibility = Signal(bool)
 
     def __init__(self, parent):
@@ -184,10 +184,14 @@ class StatusBar(QLineEdit):
         self._timer.setInterval(350)
         self._timer.timeout.connect(self._show_next_text)
 
+        font_families = QFontDatabase.applicationFontFamilies(0)
+        condensed_families = QFontDatabase.applicationFontFamilies(1)
+        default_family = self.font().family()
         self._ubuntu_font = QFont(
-            QFontDatabase.applicationFontFamilies(0)[0], 8)
+            font_families[0] if font_families else default_family, 8)
         self._ubuntu_font_cond = QFont(
-            QFontDatabase.applicationFontFamilies(1)[0], 8)
+            condensed_families[0] if condensed_families else default_family,
+            8)
         self._ubuntu_font.setBold(True)
         self._ubuntu_font_cond.setBold(True)
 
@@ -426,6 +430,6 @@ class CanvasGroupFilterFrame(filter_frame.FilterFrame):
         super().__init__(parent)
         
 
-class RayToolBar(tool_bar.PatchbayToolBar):
+class NexToolBar(tool_bar.PatchbayToolBar):
     def __init__(self, parent):
         super().__init__(parent)

@@ -6,10 +6,10 @@ import time
 # Imports from src/shared
 from osclib import Server, Address
 import osc_paths
-import osc_paths.ray as r
+import osc_paths.nex as r
 
-# !!! we don't load ray.py to win import duration
-# if change in ray.Err numbers, this has to be changed too !!!
+# !!! we don't load nex.py to win import duration
+# if change in nex.Err numbers, this has to be changed too !!!
 ERR_UNKNOWN_MESSAGE = -18
 
 def are_they_all_strings(args):
@@ -32,9 +32,9 @@ class OscServer(Server):
         self.add_method(osc_paths.ERROR, 'sis', self.error_message)
         self.add_method(osc_paths.MINOR_ERROR, 'sis',
                         self.minor_error_message)
-        self.add_method(r.control.MESSAGE, 's', self.ray_control_message)
+        self.add_method(r.control.MESSAGE, 's', self.nex_control_message)
         self.add_method(r.control.SERVER_ANNOUNCE, 'siisi',
-                        self.ray_control_server_announce)
+                        self.nex_control_server_announce)
         self._final_err = -1
         self._wait_for_announce = False
         self._wait_for_start = False
@@ -126,11 +126,11 @@ class OscServer(Server):
         if err == ERR_UNKNOWN_MESSAGE:
             self._final_err = -err
 
-    def ray_control_message(self, path, args, types, src_addr):
+    def nex_control_message(self, path, args, types, src_addr):
         message = args[0]
         sys.stdout.write("%s\n" % message)
 
-    def ray_control_server_announce(self, path, args, types, src_addr):
+    def nex_control_server_announce(self, path, args, types, src_addr):
         sys.stderr.write('--- Daemon started at port %i ---\n'
                          % src_addr.port)
 

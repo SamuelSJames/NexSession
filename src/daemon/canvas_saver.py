@@ -11,11 +11,11 @@ from patshared import (
     PortgroupMem, ViewsDict, CustomNames)
 
 # Imports from src/shared
-import ray
+import nex
 from jack_renaming_tools import group_belongs_to_client
 from osclib import MegaSend, OscPack
-import osc_paths.ray as r
-import osc_paths.ray.patchbay.monitor as rpm
+import osc_paths.nex as r
+import osc_paths.nex.patchbay.monitor as rpm
 
 # Local imports
 from daemon_tools import RS
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 _logger = logging.getLogger(__name__)
 
 
-JSON_PATH = 'ray_canvas.json'
+JSON_PATH = 'nex_canvas.json'
 VIEWS = 'views'
 PORTGROUPS = 'portgroups'
 CUSTOM_NAMES = 'custom_names'
@@ -41,7 +41,7 @@ def _get_version_tuple_json_dict(json_contents: dict) -> tuple[int, int, int]:
         try:
             version_list = [int(v) for v in version_str.split('.')]
         except:
-            version_list = [int(v) for v in ray.VERSION.split('.')]
+            version_list = [int(v) for v in nex.VERSION.split('.')]
     else:
         version_list = [0, 12, 0]
     
@@ -335,7 +335,7 @@ class CanvasSaver(ServerSender):
         json_contents = {}
         json_contents[VIEWS] = self.views_session.to_json_list()
         json_contents[CUSTOM_NAMES] = self.custom_names_session.to_json()
-        json_contents['version'] = ray.VERSION
+        json_contents['version'] = nex.VERSION
 
         with open(session_json_path, 'w+') as f:
             f.write(from_json_to_str(json_contents))
@@ -364,7 +364,7 @@ class CanvasSaver(ServerSender):
             VIEWS: self.views_config.to_json_list(),
             PORTGROUPS: self.portgroups.to_json(),
             CUSTOM_NAMES: self.custom_names_config.to_json(),
-            'version': ray.VERSION
+            'version': nex.VERSION
         }
 
         with open(self._config_json_path, 'w+') as f:

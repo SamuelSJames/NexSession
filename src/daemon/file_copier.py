@@ -11,10 +11,10 @@ from qtpy.QtCore import QProcess, QTimer
 
 # Imports from src/shared
 from osclib import Address
-import ray
+import nex
 import osc_paths
-import osc_paths.ray as r
-import osc_paths.ray.gui as rg
+import osc_paths.nex as r
+import osc_paths.nex.gui as rg
 
 # Local imports
 from server_sender import ServerSender
@@ -149,7 +149,7 @@ class FileCopier(ServerSender):
                                 self.send(self._abort_src_addr,
                                           osc_paths.MINOR_ERROR,
                                           self._abort_src_path,
-                                          ray.Err.SUBPROCESS_CRASH,
+                                          nex.Err.SUBPROCESS_CRASH,
                                           "%s hasn't been removed !")
 
             self._is_active = False
@@ -224,7 +224,7 @@ class FileCopier(ServerSender):
                 return
 
             for path in tmp_list:
-                if path.name == '.ray-snapshots':
+                if path.name == '.nex-snapshots':
                     continue
 
                 src_list.append(path)

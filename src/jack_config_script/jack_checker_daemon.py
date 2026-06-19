@@ -12,7 +12,7 @@ except:
     sys.stderr.write('python3-dbus is missing !\n')
     sys.exit(1)
 
-state_file_path = '/tmp/RaySession/jack_current_parameters'
+state_file_path = '/tmp/NexSession/jack_current_parameters'
 
 name_base = 'org.jackaudio'
 control_interface_name = name_base + '.JackControl'

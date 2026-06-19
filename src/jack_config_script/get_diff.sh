@@ -1,6 +1,6 @@
 source shared.sh || exit 0
 
-ray_operation=load
+nex_operation=load
 
 # read current and session parameters, and diff between them
 current_parameters=$(get_current_parameters for_load)

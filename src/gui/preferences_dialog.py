@@ -8,8 +8,8 @@ from qtpy.QtWidgets import QApplication, QMessageBox
 from qtpy.QtCore import Slot # type:ignore
 
 # Imports from src/shared
-import ray
-import osc_paths.ray as r
+import nex
+import osc_paths.nex as r
 
 # Local imports
 from child_dialogs import ChildDialog
@@ -80,9 +80,9 @@ class PreferencesDialog(ChildDialog):
 
         # fill systray checkboxes
         self.ui.groupBoxSystray.setChecked(
-            self._main_win.systray_mode is not ray.Systray.OFF)
+            self._main_win.systray_mode is not nex.Systray.OFF)
         self.ui.checkBoxOnlySessionRunning.setChecked(
-            self._main_win.systray_mode is ray.Systray.SESSION_ONLY)
+            self._main_win.systray_mode is nex.Systray.SESSION_ONLY)
         self.ui.checkBoxReversedMenu.setChecked(
             self._main_win.reversed_systray_menu)
         self.ui.checkBoxShutdown.setChecked(
@@ -131,12 +131,12 @@ class PreferencesDialog(ChildDialog):
             self.ui.checkBoxReversedMenu.isChecked()
         )
     
-    def _get_systray_mode(self) -> ray.Systray:
+    def _get_systray_mode(self) -> nex.Systray:
         if self.ui.groupBoxSystray.isChecked():
             if self.ui.checkBoxOnlySessionRunning.isChecked():
-                return ray.Systray.SESSION_ONLY
-            return ray.Systray.ALWAYS
-        return ray.Systray.OFF
+                return nex.Systray.SESSION_ONLY
+            return nex.Systray.ALWAYS
+        return nex.Systray.OFF
     
     def _make_all_dialogs_reappear(self):
         button = QMessageBox.question(

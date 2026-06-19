@@ -22,10 +22,10 @@ from patchbay.tools_widgets import PatchbayToolsWidget, TextWithIcons
 
 # Imports from src/shared
 from osclib import is_on_this_machine
-import ray
+import nex
 import osc_paths
-import osc_paths.ray as r
-import osc_paths.ray.gui as rg
+import osc_paths.nex as r
+import osc_paths.nex.gui as rg
 
 # Local imports
 import add_application_dialog
@@ -35,14 +35,14 @@ import snapshots_dialog
 import preferences_dialog
 import list_widget_clients
 from gui_tools import (
-    RS, ray_icon, CommandLineArgs, _translate, server_status_string,
+    RS, nex_icon, CommandLineArgs, _translate, server_status_string,
     is_dark_theme, get_code_root, get_app_icon)
 from gui_client import TrashedClient
 from gui_server_thread import GuiServerThread
 from utility_scripts import UtilityScriptLauncher
 
 # Import UIs made with Qt-Designer
-import ui.raysession
+import ui.nexsession
 
 if TYPE_CHECKING:
     from .gui_session import SignaledSession
@@ -56,7 +56,7 @@ UI_PATCHBAY_SHOWN = 2
 class MainWindow(QMainWindow):
     def __init__(self, session: 'SignaledSession'):
         QMainWindow.__init__(self)
-        self.ui = ui.raysession.Ui_MainWindow()
+        self.ui = ui.nexsession.Ui_MainWindow()
         self.ui.setupUi(self)
 
         self.session = session
@@ -95,7 +95,7 @@ class MainWindow(QMainWindow):
 
         # do not enable keep focus option under Wayland
         # because activate a window from it self on Wayland not allowed
-        if ray.get_window_manager() is ray.WindowManager.WAYLAND:
+        if nex.get_window_manager() is nex.WindowManager.WAYLAND:
             self._keep_focus = False
             self.ui.actionKeepFocus.setEnabled(False)
 
@@ -192,9 +192,9 @@ class MainWindow(QMainWindow):
         self.ui.actionConvertArdourSession.triggered.connect(
             self.util_script_launcher.convert_ardour_to_session)
         self.ui.actionConvertHydrogenRhNsm.triggered.connect(
-            self.util_script_launcher.convert_ray_hack_to_nsm_hydrogen)
+            self.util_script_launcher.convert_nex_hack_to_nsm_hydrogen)
         self.ui.actionConvertJackMixerRhNsm.triggered.connect(
-            self.util_script_launcher.convert_ray_hack_to_nsm_jack_mixer)
+            self.util_script_launcher.convert_nex_hack_to_nsm_jack_mixer)
         self.ui.actionConvertToNsmFileFormat.triggered.connect(
             self.util_script_launcher.convert_to_nsm_file_format)
         self.ui.actionQuit.triggered.connect(self._action_quit_app)
@@ -233,7 +233,16 @@ class MainWindow(QMainWindow):
             self._session_scripts_toggled)
         self.ui.actionRememberOptionalGuiStates.triggered.connect(
             self._remember_optional_gui_states_toggled)
-        self.ui.actionAboutRaySession.triggered.connect(self._about_raysession)
+        self._fedora_pipewire_action = QAction(
+            QIcon.fromTheme('audio-card'),
+            _translate('MainWindow', 'Fedora / PipeWire Setup'),
+            self)
+        self.ui.menuAbout.insertAction(
+            self.ui.actionAboutNexSession,
+            self._fedora_pipewire_action)
+        self._fedora_pipewire_action.triggered.connect(
+            self._fedora_pipewire_setup)
+        self.ui.actionAboutNexSession.triggered.connect(self._about_nexsession)
         self.ui.actionAboutQt.triggered.connect(QApplication.aboutQt)
         self.ui.actionOnlineManual.triggered.connect(self._online_manual)
         self.ui.actionInternalManual.triggered.connect(self._internal_manual)
@@ -321,68 +330,68 @@ class MainWindow(QMainWindow):
 
         if self.ui.actionNewSession.icon().isNull():
             self.ui.actionNewSession.setIcon(
-                ray_icon('folder-new', dark))
+                nex_icon('folder-new', dark))
         if self.ui.actionOpenSession.icon().isNull():
             self.ui.actionOpenSession.setIcon(
-                ray_icon('document-open', dark))
+                nex_icon('document-open', dark))
 
         if self.ui.actionControlMenu.icon().isNull():
             self.ui.actionControlMenu.setIcon(
                 QIcon.fromTheme('configuration_section'))
             if self.ui.actionControlMenu.icon().isNull():
                 self.ui.actionControlMenu.setIcon(
-                    ray_icon('configure', dark))
+                    nex_icon('configure', dark))
 
         if self.ui.actionOpenSessionFolder.icon().isNull():
             self.ui.actionOpenSessionFolder.setIcon(
-                ray_icon('system-file-manager', dark))
+                nex_icon('system-file-manager', dark))
 
         if self.ui.actionAddApplication.icon().isNull():
             self.ui.actionAddApplication.setIcon(
-                ray_icon('list-add', dark))
+                nex_icon('list-add', dark))
 
         if self.ui.actionAddExecutable.icon().isNull():
             self.ui.actionAddExecutable.setIcon(
                 QIcon.fromTheme('system-run'))
             if self.ui.actionAddExecutable.icon().isNull():
                 self.ui.actionAddExecutable.setIcon(
-                    ray_icon('run-install'))
+                    nex_icon('run-install'))
 
         self.ui.actionReturnToAPreviousState.setIcon(
-            ray_icon('media-seek-backward', dark))
+            nex_icon('media-seek-backward', dark))
 
         self.ui.actionRememberOptionalGuiStates.setIcon(
-            ray_icon('visibility', dark))
+            nex_icon('visibility', dark))
         self.ui.trashButton.setIcon(
-            ray_icon('trash-empty', dark))
+            nex_icon('trash-empty', dark))
         if self.ui.trashButton.icon().isNull():
             self.ui.trashButton.setIcon(
-                ray_icon('trash', dark))
+                nex_icon('trash', dark))
 
         self.ui.actionDuplicateSession.setIcon(
-            ray_icon('xml-node-duplicate', dark))
+            nex_icon('xml-node-duplicate', dark))
         self.ui.actionDuplicateSession_2.setIcon(
-            ray_icon('xml-node-duplicate', dark))
+            nex_icon('xml-node-duplicate', dark))
         self.ui.actionSaveTemplateSession.setIcon(
-            ray_icon('document-save-as-template', dark))
+            nex_icon('document-save-as-template', dark))
         self.ui.actionSaveTemplateSession_2.setIcon(
-            ray_icon('document-save-as-template', dark))
+            nex_icon('document-save-as-template', dark))
         self.ui.actionCloseSession.setIcon(
-            ray_icon('window-close', dark))
+            nex_icon('window-close', dark))
         self.ui.actionAbortSession.setIcon(
-            ray_icon('list-remove', dark))
+            nex_icon('list-remove', dark))
         self.ui.actionSaveSession.setIcon(
-            ray_icon('document-save', dark))
+            nex_icon('document-save', dark))
         self.ui.toolButtonSaveSession.setIcon(
-            ray_icon('document-save', dark))
+            nex_icon('document-save', dark))
         self.ui.actionSessionNotes.setIcon(
-            ray_icon('notes', dark))
+            nex_icon('notes', dark))
         self.ui.toolButtonNotes.setIcon(
-            ray_icon('notes', dark))
+            nex_icon('notes', dark))
         self.ui.actionDesktopsMemory.setIcon(
-            ray_icon('view-list-icons', dark))
+            nex_icon('view-list-icons', dark))
         self.ui.toolButtonSessionMenu.setIcon(
-            ray_icon('application-menu', dark))
+            nex_icon('application-menu', dark))
         self.ui.listWidget.set_session(self.session)
         self.ui.listWidget.currentItemChanged.connect(
             self._list_widget_item_changed)
@@ -436,29 +445,29 @@ class MainWindow(QMainWindow):
         # systray icon and related
         self.wild_shutdown: bool = RS.settings.value(
             'wild_shutdown', False, type=bool)
-        self.systray_mode = ray.Systray(
+        self.systray_mode = nex.Systray(
             RS.settings.value(
-                'systray_mode', ray.Systray.SESSION_ONLY.value, type=int))
+                'systray_mode', nex.Systray.SESSION_ONLY.value, type=int))
         self.reversed_systray_menu: bool = RS.settings.value(
             'reversed_systray_menu', False, type=bool)
 
-        systray_icon = QIcon.fromTheme('raysession')
+        systray_icon = QIcon.fromTheme('nexsession')
         if systray_icon.isNull():
-            systray_icon = QIcon(':main_icon/48x48/raysession')
+            systray_icon = QIcon(':main_icon/48x48/nexsession')
 
         self._systray = QSystemTrayIcon(self)
         self._systray.activated.connect(self._systray_activated)
         self._systray.setIcon(systray_icon)
-        self._systray.setToolTip(ray.APP_TITLE)
+        self._systray.setToolTip(nex.APP_TITLE)
         self._systray_menu = QMenu()
         self._systray_menu_add = QMenu(self._systray_menu)
 
         self._build_systray_menu()
 
         if (not CommandLineArgs.under_nsm
-            and (self.systray_mode is ray.Systray.ALWAYS
-                    or (self.systray_mode is ray.Systray.SESSION_ONLY
-                        and self.session.server_status is not ray.ServerStatus.OFF))):
+            and (self.systray_mode is nex.Systray.ALWAYS
+                    or (self.systray_mode is nex.Systray.SESSION_ONLY
+                        and self.session.server_status is not nex.ServerStatus.OFF))):
             self._systray.show()
 
         self.preferences_dialog: \
@@ -553,7 +562,7 @@ class MainWindow(QMainWindow):
         self.to_daemon(r.session.OPEN_FOLDER)
 
     def change_systray_options(
-            self, systray_mode: ray.Systray, wild_shutdown: bool,
+            self, systray_mode: nex.Systray, wild_shutdown: bool,
             reversed_systray_menu: bool):        
         self.systray_mode = systray_mode
         self.wild_shutdown = wild_shutdown
@@ -567,14 +576,14 @@ class MainWindow(QMainWindow):
         RS.settings.setValue('reversed_systray_menu',
                              self.reversed_systray_menu)
 
-        if self.systray_mode is ray.Systray.OFF:
+        if self.systray_mode is nex.Systray.OFF:
             self._systray.hide()
-        elif self.systray_mode is ray.Systray.SESSION_ONLY:
-            if self.session.server_status is ray.ServerStatus.OFF:
+        elif self.systray_mode is nex.Systray.SESSION_ONLY:
+            if self.session.server_status is nex.ServerStatus.OFF:
                 self._systray.hide()
             else:
                 self._systray.show()
-        elif self.systray_mode is ray.Systray.ALWAYS:
+        elif self.systray_mode is nex.Systray.ALWAYS:
             self._systray.show()
 
     def _open_systray_options(self):
@@ -594,30 +603,30 @@ class MainWindow(QMainWindow):
         if not keep_focus:
             self._timer_raisewin.stop()
 
-    def _set_option(self, option: ray.Option, state: bool):
+    def _set_option(self, option: nex.Option, state: bool):
         option_int = option.value
         if not state:
             option_int = - option_int
         self.to_daemon(r.server.SET_OPTION, option_int)
 
     def _bookmark_session_folder_toggled(self, state: bool):
-        self._set_option(ray.Option.BOOKMARK_SESSION, state)
+        self._set_option(nex.Option.BOOKMARK_SESSION, state)
 
     def _desktops_memory_toggled(self, state: bool):
-        self._set_option(ray.Option.DESKTOPS_MEMORY, state)
+        self._set_option(nex.Option.DESKTOPS_MEMORY, state)
 
     def _auto_snapshot_toggled(self, state: bool):
-        self._set_option(ray.Option.SNAPSHOTS, state)
+        self._set_option(nex.Option.SNAPSHOTS, state)
 
     def _session_scripts_toggled(self, state: bool):
-        self._set_option(ray.Option.SESSION_SCRIPTS, state)
+        self._set_option(nex.Option.SESSION_SCRIPTS, state)
 
     def _remember_optional_gui_states_toggled(self, state: bool):
-        self._set_option(ray.Option.GUI_STATES, state)
+        self._set_option(nex.Option.GUI_STATES, state)
 
     def _flash_open(self):
         for client in self.session.client_list:
-            if client.status is ray.ClientStatus.OPEN:
+            if client.status is nex.ClientStatus.OPEN:
                 client.widget.flash_if_open(self._flash_open_bool)
 
         self._flash_open_bool = not self._flash_open_bool
@@ -665,10 +674,10 @@ class MainWindow(QMainWindow):
             return
 
         if template_name.startswith('///'):
-            if template_name == '///' + ray.FACTORY_SESSION_TEMPLATES[1]:
+            if template_name == '///' + nex.FACTORY_SESSION_TEMPLATES[1]:
                 if not RS.is_hidden(RS.HD_JackConfigScript):
                     # display jack_config_script info dialog
-                    # and manage ray-jack_checker auto_start
+                    # and manage nex-jack_checker auto_start
 
                     session_path = "%s/%s" % (CommandLineArgs.session_root,
                                               session_short_path)
@@ -688,7 +697,7 @@ class MainWindow(QMainWindow):
 
                     self.to_daemon(r.server.EXOTIC_ACTION, action)
 
-            elif template_name == '///' + ray.FACTORY_SESSION_TEMPLATES[2]:
+            elif template_name == '///' + nex.FACTORY_SESSION_TEMPLATES[2]:
                 if not RS.is_hidden(RS.HD_SessionScripts):
                     # display session scripts info dialog
                     session_path = "%s/%s" % (CommandLineArgs.session_root,
@@ -774,8 +783,12 @@ class MainWindow(QMainWindow):
             return
         self.to_daemon(r.session.OPEN_SNAPSHOT, snapshot)
 
-    def _about_raysession(self):
-        dialog = child_dialogs.AboutRaySessionDialog(self)
+    def _about_nexsession(self):
+        dialog = child_dialogs.AboutNexSessionDialog(self)
+        dialog.exec()
+
+    def _fedora_pipewire_setup(self):
+        dialog = child_dialogs.FedoraPipeWireDialog(self)
         dialog.exec()
 
     def _online_manual(self):
@@ -786,7 +799,7 @@ class MainWindow(QMainWindow):
             short_locale = locale_str[:2]
 
         QDesktopServices.openUrl(
-            QUrl('http://raysession.tuxfamily.org/%s/manual.html'
+            QUrl('http://nexsession.tuxfamily.org/%s/manual.html'
                  % short_locale))
 
     def _internal_manual(self):
@@ -813,8 +826,8 @@ class MainWindow(QMainWindow):
 
     def _add_application(self):
         if self.session.server_status in (
-                ray.ServerStatus.CLOSE,
-                ray.ServerStatus.OFF):
+                nex.ServerStatus.CLOSE,
+                nex.ServerStatus.OFF):
             return
 
         dialog = add_application_dialog.AddApplicationDialog(self)
@@ -833,8 +846,8 @@ class MainWindow(QMainWindow):
 
     def _add_executable(self):
         if self.session.server_status in (
-                ray.ServerStatus.CLOSE,
-                ray.ServerStatus.OFF):
+                nex.ServerStatus.CLOSE,
+                nex.ServerStatus.OFF):
             return
 
         dialog = child_dialogs.NewExecutableDialog(self)
@@ -842,12 +855,12 @@ class MainWindow(QMainWindow):
         if not dialog.result():
             return
 
-        command, auto_start, bool_ray_hack, \
+        command, auto_start, bool_nex_hack, \
             prefix_mode, prefix, client_id, jack_naming = dialog.get_selection()
 
         self.to_daemon(
             r.session.ADD_EXEC, command, int(auto_start),
-            int(bool_ray_hack), prefix_mode, prefix, client_id, int(jack_naming))
+            int(bool_nex_hack), prefix_mode, prefix, client_id, int(jack_naming))
 
     def _show_jack_patchbay(self, yesno: bool):
         self.save_window_settings(
@@ -903,14 +916,14 @@ class MainWindow(QMainWindow):
         status = self.session.server_status
 
         if status not in (
-                ray.ServerStatus.PRECOPY,
-                ray.ServerStatus.COPY,
-                ray.ServerStatus.SNAPSHOT,
-                ray.ServerStatus.OUT_SNAPSHOT,
-                ray.ServerStatus.WAIT_USER):
+                nex.ServerStatus.PRECOPY,
+                nex.ServerStatus.COPY,
+                nex.ServerStatus.SNAPSHOT,
+                nex.ServerStatus.OUT_SNAPSHOT,
+                nex.ServerStatus.WAIT_USER):
             return
 
-        if status in (ray.ServerStatus.PRECOPY, ray.ServerStatus.COPY):
+        if status in (nex.ServerStatus.PRECOPY, nex.ServerStatus.COPY):
             if not self.server_copying:
                 return
 
@@ -922,11 +935,11 @@ class MainWindow(QMainWindow):
 
             self.to_daemon(r.server.ABORT_COPY)
 
-        elif status in (ray.ServerStatus.SNAPSHOT,
-                        ray.ServerStatus.OUT_SNAPSHOT):
+        elif status in (nex.ServerStatus.SNAPSHOT,
+                        nex.ServerStatus.OUT_SNAPSHOT):
             self._show_snapshot_progress_dialog()
 
-        elif status is ray.ServerStatus.WAIT_USER:
+        elif status is nex.ServerStatus.WAIT_USER:
             dialog = child_dialogs.WaitingCloseUserDialog(self)
             dialog.exec()
 
@@ -957,16 +970,16 @@ class MainWindow(QMainWindow):
                 # else, just stop the daemon and quit
                 
                 session_path = subprocess.run(
-                    ['ray_control', 'get_session_path'], capture_output=True)
+                    ['nex_control', 'get_session_path'], capture_output=True)
                 if session_path.stdout:
                     dialog = child_dialogs.WrongVersionLocalDialog(self)
                     dialog.exec()
                     if dialog.result():
-                        subprocess.run(['ray_control', 'quit'])
+                        subprocess.run(['nex_control', 'quit'])
                         self._quit_app_now()
                     
                 else:
-                    subprocess.run(['ray_control', 'quit'])
+                    subprocess.run(['nex_control', 'quit'])
                     self._quit_app_now()
                 return
         
@@ -980,7 +993,7 @@ class MainWindow(QMainWindow):
 
         new_url = dialog.get_url()
 
-        tried_urls = ray.get_list_in_settings(RS.settings, 'network/tried_urls')
+        tried_urls = nex.get_list_in_settings(RS.settings, 'network/tried_urls')
         if new_url not in tried_urls:
             tried_urls.append(new_url)
 
@@ -1001,34 +1014,34 @@ class MainWindow(QMainWindow):
         self.server_copying = copying
         self._server_status_changed(self.session.server_status)
 
-    def _server_status_changed(self, server_status: ray.ServerStatus):
+    def _server_status_changed(self, server_status: nex.ServerStatus):
         self.session.update_server_status(server_status)
 
         self.ui.lineEditServerStatus.setText(
             server_status_string(server_status))
         self.ui.frameCurrentSession.setEnabled(
-            bool(server_status is not ray.ServerStatus.OFF))
+            bool(server_status is not nex.ServerStatus.OFF))
 
-        if self.systray_mode is ray.Systray.SESSION_ONLY:
-            if server_status is ray.ServerStatus.OFF:
+        if self.systray_mode is nex.Systray.SESSION_ONLY:
+            if server_status is nex.ServerStatus.OFF:
                 self._systray.hide()
             else:
                 self._systray.show()
 
-        if server_status in (ray.ServerStatus.SNAPSHOT,
-                             ray.ServerStatus.OUT_SNAPSHOT):
+        if server_status in (nex.ServerStatus.SNAPSHOT,
+                             nex.ServerStatus.OUT_SNAPSHOT):
             self._timer_snapshot.start()
         elif self._timer_snapshot.isActive():
             self._timer_snapshot.stop()
 
-        if server_status is ray.ServerStatus.COPY:
+        if server_status is nex.ServerStatus.COPY:
             self.ui.actionSaveSession.setEnabled(False)
             self.ui.actionCloseSession.setEnabled(False)
             self.ui.actionAbortSession.setEnabled(False)
             self.ui.actionReturnToAPreviousState.setEnabled(False)
             return
 
-        if server_status is ray.ServerStatus.PRECOPY:
+        if server_status is nex.ServerStatus.PRECOPY:
             self.ui.actionSaveSession.setEnabled(False)
             self.ui.actionCloseSession.setEnabled(False)
             self.ui.actionAbortSession.setEnabled(True)
@@ -1045,18 +1058,18 @@ class MainWindow(QMainWindow):
 
         close_or_off = bool(
             server_status in (
-                ray.ServerStatus.CLOSE,
-                ray.ServerStatus.WAIT_USER,
-                ray.ServerStatus.OUT_SAVE,
-                ray.ServerStatus.OUT_SNAPSHOT,
-                ray.ServerStatus.OFF))
-        ready = bool(server_status is ray.ServerStatus.READY)
+                nex.ServerStatus.CLOSE,
+                nex.ServerStatus.WAIT_USER,
+                nex.ServerStatus.OUT_SAVE,
+                nex.ServerStatus.OUT_SNAPSHOT,
+                nex.ServerStatus.OFF))
+        ready = bool(server_status is nex.ServerStatus.READY)
 
         self.ui.actionSaveSession.setEnabled(ready)
         self.ui.actionCloseSession.setEnabled(ready)
         self.ui.actionAbortSession.setEnabled(
-            not bool(server_status in (ray.ServerStatus.CLOSE,
-                                       ray.ServerStatus.OFF)))
+            not bool(server_status in (nex.ServerStatus.CLOSE,
+                                       nex.ServerStatus.OFF)))
         self.ui.actionDuplicateSession.setEnabled(not close_or_off)
         self.ui.actionDuplicateSession_2.setEnabled(not close_or_off)
         self.ui.actionReturnToAPreviousState.setEnabled(not close_or_off)
@@ -1071,9 +1084,9 @@ class MainWindow(QMainWindow):
         self._favorites_menu.setEnabled(
             bool(self.session.favorite_list and not close_or_off))
         self.ui.actionOpenSessionFolder.setEnabled(
-            bool(server_status is not ray.ServerStatus.OFF))
+            bool(server_status is not nex.ServerStatus.OFF))
         self.ui.actionSessionNotes.setEnabled(
-            bool(server_status is not ray.ServerStatus.OFF))
+            bool(server_status is not nex.ServerStatus.OFF))
 
         self.ui.stackedWidgetSessionName.set_editable(
             ready and self.session.is_renameable)
@@ -1101,11 +1114,11 @@ class MainWindow(QMainWindow):
             self.ui.actionAbortSession.setEnabled(False)
             self.ui.menuRecentSessions.setEnabled(False)
 
-        if server_status is ray.ServerStatus.OFF:
+        if server_status is nex.ServerStatus.OFF:
             if self.terminate_request:
                 self.daemon_manager.stop()
 
-        if server_status is ray.ServerStatus.WAIT_USER:
+        if server_status is nex.ServerStatus.WAIT_USER:
             if not RS.is_hidden(RS.HD_WaitCloseUser):
                 dialog = child_dialogs.WaitingCloseUserDialog(self)
                 dialog.exec()
@@ -1128,9 +1141,9 @@ class MainWindow(QMainWindow):
         self._systray_menu_add.setIcon(QIcon.fromTheme('list-add'))
         self._systray_menu_add.setEnabled(
             self.session.server_status not in
-                (ray.ServerStatus.OFF, ray.ServerStatus.CLOSE,
-                 ray.ServerStatus.WAIT_USER, ray.ServerStatus.OUT_SAVE,
-                 ray.ServerStatus.OUT_SNAPSHOT))
+                (nex.ServerStatus.OFF, nex.ServerStatus.CLOSE,
+                 nex.ServerStatus.WAIT_USER, nex.ServerStatus.OUT_SAVE,
+                 nex.ServerStatus.OUT_SNAPSHOT))
 
         if self.reversed_systray_menu:
             self._systray_menu.addAction(self.ui.actionQuit)
@@ -1168,7 +1181,7 @@ class MainWindow(QMainWindow):
                           QSystemTrayIcon.ActivationReason.DoubleClick):
             return
 
-        wayland = bool(ray.get_window_manager() is ray.WindowManager.WAYLAND)
+        wayland = bool(nex.get_window_manager() is nex.WindowManager.WAYLAND)
 
         if self.isMinimized():
             if self.hidden_maximized:
@@ -1272,7 +1285,7 @@ class MainWindow(QMainWindow):
         # it is a workaround for a bug with python-qt.
         # (when reorder widgets sometimes one widget is totally hidden
         # until user resize the window)
-        # It has to be modified when ui_raysession is modified.
+        # It has to be modified when ui_nexsession is modified.
 
         self.ui.listWidget.clear()
         self.ui.verticalLayout.removeWidget(self.ui.listWidget)
@@ -1333,25 +1346,25 @@ class MainWindow(QMainWindow):
         self.session.patchbay_manager.select_client_box(
             current.widget.client.jack_client_name)
 
-    def set_daemon_options(self, options: ray.Option):
+    def set_daemon_options(self, options: nex.Option):
         self.ui.actionBookmarkSessionFolder.setChecked(
-            ray.Option.BOOKMARK_SESSION in options)
+            nex.Option.BOOKMARK_SESSION in options)
         self.ui.actionDesktopsMemory.setChecked(
-            ray.Option.DESKTOPS_MEMORY in options)
+            nex.Option.DESKTOPS_MEMORY in options)
         self.ui.actionAutoSnapshot.setChecked(
-            ray.Option.SNAPSHOTS in options)
+            nex.Option.SNAPSHOTS in options)
         self.ui.actionSessionScripts.setChecked(
-            ray.Option.SESSION_SCRIPTS in options)
+            nex.Option.SESSION_SCRIPTS in options)
         self.ui.actionRememberOptionalGuiStates.setChecked(
-            ray.Option.GUI_STATES in options)
+            nex.Option.GUI_STATES in options)
 
-        has_wmctrl = ray.Option.HAS_WMCTRL in options
+        has_wmctrl = nex.Option.HAS_WMCTRL in options
         self.ui.actionDesktopsMemory.setEnabled(has_wmctrl)
         if has_wmctrl:
             self.ui.actionDesktopsMemory.setText(
                 _translate('actions', 'Desktops Memory'))
 
-        has_git = ray.Option.HAS_GIT in options
+        has_git = nex.Option.HAS_GIT in options
         self.ui.actionAutoSnapshot.setEnabled(has_git)
         self.ui.actionReturnToAPreviousState.setVisible(has_git)
         self.ui.toolButtonSnapshots.setVisible(has_git)
@@ -1385,7 +1398,7 @@ class MainWindow(QMainWindow):
             icon_str = 'notes-editing'
 
         self.ui.actionSessionNotes.setIcon(
-            ray_icon(icon_str, is_dark_theme(self)))
+            nex_icon(icon_str, is_dark_theme(self)))
 
     def stop_client(self, client_id):
         client = self.session.get_client(client_id)
@@ -1393,15 +1406,15 @@ class MainWindow(QMainWindow):
             return
 
         if client.check_last_save:
-            if (client.protocol is ray.Protocol.RAY_HACK
-                    and client.ray_hack is not None
-                    and client.ray_hack.relevant_no_save_level()):
+            if (client.protocol is nex.Protocol.NEX_HACK
+                    and client.nex_hack is not None
+                    and client.nex_hack.relevant_no_save_level()):
                 dialog = child_dialogs.StopClientNoSaveDialog(self, client_id)
                 dialog.exec()
                 if not dialog.result():
                     return
 
-            elif client.status is ray.ClientStatus.READY:
+            elif client.status is nex.ClientStatus.READY:
                 if client.has_dirty:
                     if client.dirty_state:
                         dialog = child_dialogs.StopClientDialog(self, client_id)
@@ -1427,7 +1440,7 @@ class MainWindow(QMainWindow):
 
         client = self.session.get_client(client_id)
         if not client or client.status not in (
-                ray.ClientStatus.COPY, ray.ClientStatus.PRECOPY):
+                nex.ClientStatus.COPY, nex.ClientStatus.PRECOPY):
             return
 
         dialog = child_dialogs.AbortClientCopyDialog(self, client_id)
@@ -1438,10 +1451,10 @@ class MainWindow(QMainWindow):
 
         self.to_daemon(r.server.ABORT_COPY)
 
-    def client_status_changed(self, client_id: str, status: ray.ClientStatus):
+    def client_status_changed(self, client_id: str, status: nex.ClientStatus):
         # launch/stop flashing status if 'open'
         for client in self.session.client_list:
-            if client.status is ray.ClientStatus.OPEN:
+            if client.status is nex.ClientStatus.OPEN:
                 if not self._timer_flicker_open.isActive():
                     self._timer_flicker_open.start()
                 break
@@ -1451,13 +1464,13 @@ class MainWindow(QMainWindow):
         # launch/stop timer_raisewin if keep focus
         if self._keep_focus:
             for client in self.session.client_list:
-                if client.status is ray.ClientStatus.OPEN:
+                if client.status is nex.ClientStatus.OPEN:
                     if not self._timer_raisewin.isActive():
                         self._timer_raisewin.start()
                     break
             else:
                 self._timer_raisewin.stop()
-                if status is ray.ClientStatus.READY:
+                if status is nex.ClientStatus.READY:
                     self._raise_window()
 
     def print_message(self, message: str):
@@ -1466,12 +1479,12 @@ class MainWindow(QMainWindow):
 
     def rename_session(self, session_name: str, session_path: str):
         if session_name:
-            self.setWindowTitle('%s - %s' % (ray.APP_TITLE, session_name))
+            self.setWindowTitle('%s - %s' % (nex.APP_TITLE, session_name))
             self.ui.stackedWidgetSessionName.set_text(session_name)
             if self.notes_dialog is not None:
                 self.notes_dialog.update_session()
         else:
-            self.setWindowTitle(ray.APP_TITLE)
+            self.setWindowTitle(nex.APP_TITLE)
             self.ui.stackedWidgetSessionName.set_text(
                 _translate('main view', 'No Session Loaded'))
             if self.notes_dialog is not None:
@@ -1505,7 +1518,7 @@ class MainWindow(QMainWindow):
         if (not RS.is_hidden(RS.HD_StartupRecentSessions)
                 and time.time() - self._startup_time < 5
                 and self.session.recent_sessions
-                and self.session.server_status is ray.ServerStatus.OFF):
+                and self.session.server_status is nex.ServerStatus.OFF):
             # ahah, dirty way to prevent a dialog once again
             self._startup_time -= 5
 
@@ -1543,9 +1556,9 @@ class MainWindow(QMainWindow):
 
         self.ui.trashButton.setEnabled(
             bool(not self.session.server_status in (
-                ray.ServerStatus.OFF, ray.ServerStatus.OUT_SAVE,
-                ray.ServerStatus.WAIT_USER, ray.ServerStatus.OUT_SNAPSHOT,
-                ray.ServerStatus.CLOSE)))
+                nex.ServerStatus.OFF, nex.ServerStatus.OUT_SAVE,
+                nex.ServerStatus.WAIT_USER, nex.ServerStatus.OUT_SNAPSHOT,
+                nex.ServerStatus.CLOSE)))
 
         return act_x_trashed
 
@@ -1612,8 +1625,8 @@ class MainWindow(QMainWindow):
         enable = bool(
             self.session.favorite_list
             and not self.session.server_status in (
-                ray.ServerStatus.OFF, ray.ServerStatus.CLOSE,
-                ray.ServerStatus.OUT_SAVE, ray.ServerStatus.OUT_SNAPSHOT))
+                nex.ServerStatus.OFF, nex.ServerStatus.CLOSE,
+                nex.ServerStatus.OUT_SAVE, nex.ServerStatus.OUT_SNAPSHOT))
 
         self.ui.toolButtonFavorites.setEnabled(enable)
 
@@ -1651,7 +1664,7 @@ class MainWindow(QMainWindow):
             del self._script_action_dialog
             self.to_daemon(
                 osc_paths.ERROR, rg.SCRIPT_USER_ACTION,
-                ray.Err.NOT_NOW, 'another script_user_action take place')
+                nex.Err.NOT_NOW, 'another script_user_action take place')
 
         self._script_action_dialog = child_dialogs.ScriptUserActionDialog(self)
         self._script_action_dialog.set_main_text(text)
@@ -1666,7 +1679,7 @@ class MainWindow(QMainWindow):
     def daemon_crash(self):
         QMessageBox.critical(
             self, _translate('errors', "daemon crash!"),
-            _translate('errors', "ray-daemon crashed, sorry !"))
+            _translate('errors', "nex-daemon crashed, sorry !"))
         QApplication.quit()
 
     def save_window_settings(self, patchbay_mode=UI_PATCHBAY_UNDEF):

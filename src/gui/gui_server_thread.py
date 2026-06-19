@@ -8,11 +8,11 @@ from patshared import GroupPos
 
 # Imports from src/shared
 from osclib import BunServerThread, OscMulTypes, OscPack, Address
-import ray
+import nex
 import osc_paths
-import osc_paths.ray as r
-import osc_paths.ray.gui as rg
-import osc_paths.ray.patchbay.monitor as rpm
+import osc_paths.nex as r
+import osc_paths.nex.gui as rg
+import osc_paths.nex.patchbay.monitor as rpm
 
 # Local imports
 from gui_tools import CommandLineArgs
@@ -45,18 +45,18 @@ METHODS_DICT = {
     rg.session.IS_NSM: '',
     rg.session.RENAMEABLE: 'i',
     rg.session.SORT_CLIENTS: 's*',
-    rg.client.NEW: ray.ClientData.ARG_TYPES,
-    rg.client.UPDATE: ray.ClientData.ARG_TYPES,
-    rg.client.RAY_HACK_UPDATE: 's' + ray.RayHack.ARG_TYPES,
+    rg.client.NEW: nex.ClientData.ARG_TYPES,
+    rg.client.UPDATE: nex.ClientData.ARG_TYPES,
+    rg.client.NEX_HACK_UPDATE: 's' + nex.NexHack.ARG_TYPES,
     rg.client.SWITCH: 'ss',
     rg.client.STATUS: 'si',
     rg.client.DIRTY: 'si',
     rg.client.HAS_OPTIONAL_GUI: 's',
     rg.client.GUI_VISIBLE: 'si',
     rg.client.STILL_RUNNING: 's',
-    rg.trash.ADD: ray.ClientData.ARG_TYPES,
-    rg.trash.RAY_HACK_UPDATE: 's' + ray.RayHack.ARG_TYPES,
-    rg.trash.RAY_NET_UPDATE: 's' + ray.RayNet.ARG_TYPES,
+    rg.trash.ADD: nex.ClientData.ARG_TYPES,
+    rg.trash.NEX_HACK_UPDATE: 's' + nex.NexHack.ARG_TYPES,
+    rg.trash.NEX_NET_UPDATE: 's' + nex.NexNet.ARG_TYPES,
     rg.trash.REMOVE: 's',
     rg.trash.CLEAR: '',
     rg.favorites.ADDED: 'ssis',
@@ -89,9 +89,9 @@ METHODS_DICT = {
     rpm.PRETTY_NAMES_LOCKED: 'i',
     rg.preview.CLEAR: '',
     rg.preview.NOTES: 's',
-    rg.preview.client.UPDATE: ray.ClientData.ARG_TYPES,
-    rg.preview.client.RAY_HACK_UPDATE: 's' + ray.RayHack.ARG_TYPES,
-    rg.preview.client.RAY_NET_UPDATE: 's' + ray.RayNet.ARG_TYPES,
+    rg.preview.client.UPDATE: nex.ClientData.ARG_TYPES,
+    rg.preview.client.NEX_HACK_UPDATE: 's' + nex.NexHack.ARG_TYPES,
+    rg.preview.client.NEX_NET_UPDATE: 's' + nex.NexNet.ARG_TYPES,
     rg.preview.client.IS_STARTED: 'si',
     rg.preview.SNAPSHOT: 's',
     rg.preview.SESSION_SIZE: 'h',
@@ -261,8 +261,8 @@ class GuiServerThread(BunServerThread):
 
         if self.signaler is not None:
             self.signaler.daemon_announce.emit(
-                osp.src_addr, version, ray.ServerStatus(server_status_int),
-                ray.Option(options), session_root, is_net_free)
+                osp.src_addr, version, nex.ServerStatus(server_status_int),
+                nex.Option(options), session_root, is_net_free)
 
     @validator(rg.server.ROOT, 's')
     def _server_root(self, osp: OscPack):
@@ -274,7 +274,7 @@ class GuiServerThread(BunServerThread):
     def _server_status(self, osp: OscPack):
         status_int: int = osp.args[0] # type:ignore
         self.signaler.server_status_changed.emit(
-            ray.ServerStatus(status_int))
+            nex.ServerStatus(status_int))
 
     @validator(rg.server.COPYING, 'i')
     def _server_copying(self, osp: OscPack):
@@ -331,17 +331,17 @@ class GuiServerThread(BunServerThread):
         args: tuple[str, int] = osp.args # type:ignore
         self.signaler.scripted_dir.emit(*args)
 
-    @validator(rg.client_template.UPDATE, 'iss' + ray.ClientData.ARG_TYPES)
+    @validator(rg.client_template.UPDATE, 'iss' + nex.ClientData.ARG_TYPES)
     def _client_template_update(self, osp: OscPack):
         self.signaler.client_template_update.emit(osp.args)
 
-    @validator(rg.client_template.RAY_HACK_UPDATE, 'is' + ray.RayHack.ARG_TYPES)
-    def _client_template_ray_hack_update(self, osp: OscPack):
-        self.signaler.client_template_ray_hack_update.emit(osp.args)
+    @validator(rg.client_template.NEX_HACK_UPDATE, 'is' + nex.NexHack.ARG_TYPES)
+    def _client_template_nex_hack_update(self, osp: OscPack):
+        self.signaler.client_template_nex_hack_update.emit(osp.args)
 
-    @validator(rg.client_template.RAY_NET_UPDATE, 'is' + ray.RayNet.ARG_TYPES)
-    def _client_template_ray_net_update(self, osp: OscPack):
-        self.signaler.client_template_ray_net_update.emit(osp.args)
+    @validator(rg.client_template.NEX_NET_UPDATE, 'is' + nex.NexNet.ARG_TYPES)
+    def _client_template_nex_net_update(self, osp: OscPack):
+        self.signaler.client_template_nex_net_update.emit(osp.args)
 
     @validator(rg.client.PROGRESS, 'sf')
     def _client_progress(self, osp: OscPack):
@@ -349,12 +349,12 @@ class GuiServerThread(BunServerThread):
         self.signaler.client_progress.emit(*args)
 
     @validator(rpm.ANNOUNCE, 'iiiis')
-    def _ray_gui_patchbay_announce(self, osp: OscPack):
+    def _nex_gui_patchbay_announce(self, osp: OscPack):
         args: tuple[int, int, int, int, str] = osp.args # type:ignore
         self.patchbay_addr = Address(args[4])
     
     @validator(rg.preview.STATE, 'i')
-    def _ray_gui_preview_state(self, osp: OscPack):
+    def _nex_gui_preview_state(self, osp: OscPack):
         pv_state: int = osp.args[0] # type:ignore
         self.signaler.session_preview_update.emit(pv_state)
 
@@ -379,7 +379,7 @@ class GuiServerThread(BunServerThread):
 
     def announce(self, address: Address):
         self.send(address, r.server.GUI_ANNOUNCE,
-                  ray.VERSION, int(CommandLineArgs.under_nsm),
+                  nex.VERSION, int(CommandLineArgs.under_nsm),
                   os.getenv('NSM_URL', ''), os.getpid(),
                   CommandLineArgs.net_daemon_id, '')
 

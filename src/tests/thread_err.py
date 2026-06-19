@@ -10,7 +10,7 @@ sys.path.insert(1, str(Path(__file__).parents[1] / 'patchbay_daemon'))
 sys.path.insert(1, str(Path(__file__).parents[1] / 'shared'))
 
 from proc_name import set_proc_name
-set_proc_name('ray-threaderr')
+set_proc_name('nex-threaderr')
 
 def togo():
     for j in range(2000):

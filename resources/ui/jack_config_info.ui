@@ -68,7 +68,7 @@
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;title&gt;Session Scripts Infos&lt;/title&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Noto Sans'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Session scripts are located in the &lt;span style=&quot; font-style:italic;&quot;&gt;ray-scripts&lt;/span&gt; folder in the session folder, but they could also be located in a &lt;span style=&quot; font-style:italic;&quot;&gt;ray-scripts&lt;/span&gt; folder in a parent folder of the session folder.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Session scripts are located in the &lt;span style=&quot; font-style:italic;&quot;&gt;nex-scripts&lt;/span&gt; folder in the session folder, but they could also be located in a &lt;span style=&quot; font-style:italic;&quot;&gt;nex-scripts&lt;/span&gt; folder in a parent folder of the session folder.&lt;/p&gt;
 &lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;For example:&lt;/p&gt;
 &lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;the scripts folder for this new session will be:&lt;br /&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;%s&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;But could just as well be:&lt;br /&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;%s&lt;/span&gt;&lt;/p&gt;
@@ -143,7 +143,7 @@ p, li { white-space: pre-wrap; }
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Unfortunately, at the moment it is not possible to get the current JACK configuration with certainty, so JACK will be restarted at the first session opening.&lt;br/&gt;You can work around this problem by automatically starting a light daemon at your desktop session startup.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="text">
-      <string>Automatically start ray-jack_checker daemon at startup</string>
+      <string>Automatically start nex-jack_checker daemon at startup</string>
      </property>
      <property name="checked">
       <bool>true</bool>

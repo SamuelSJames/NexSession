@@ -12,10 +12,10 @@ from io import BytesIO
 # Imports from src/shared
 from osclib import Address, are_same_osc_port
 from osclib.bases import OscPack
-import ray
+import nex
 from xml_tools import XmlElement
-import osc_paths.ray as r
-import osc_paths.ray.gui as rg
+import osc_paths.nex as r
+import osc_paths.nex.gui as rg
 import osc_paths.nsm as nsm
 
 # Local imports
@@ -88,7 +88,7 @@ class Session(ServerSender):
     def message(self, string: str, even_dummy=False):
         '''write in the prompt, with the following syntax:
         
-        `[ray-daemon] message`
+        `[nex-daemon] message`
         
         Also write in log files'''
         
@@ -122,7 +122,7 @@ class Session(ServerSender):
         multi_daemon_file.update()
 
         if self.path:
-            if self.has_server_option(ray.Option.BOOKMARK_SESSION):
+            if self.has_server_option(nex.Option.BOOKMARK_SESSION):
                 self.bookmarker.set_daemon_port(self.get_server_port())
                 self.bookmarker.make_all(self.path)
 
@@ -171,7 +171,7 @@ class Session(ServerSender):
             if client.client_id == client_id:
                 return client
 
-        _logger.error(f'client_id {client_id} is not in ray-daemon session')
+        _logger.error(f'client_id {client_id} is not in nex-daemon session')
 
     def get_client_by_address(self, addr: Address) -> Optional[Client]:
         if not addr:
@@ -186,12 +186,12 @@ class Session(ServerSender):
             raise NameError("No client to trash: %s" % client.client_id)
             return
 
-        client.set_status(ray.ClientStatus.REMOVED)
+        client.set_status(nex.ClientStatus.REMOVED)
 
         ## Theses lines are commented because finally choice is to
         ## always send client to trash
         ## comment self.trashed_client.append(client) if choice is reversed !!!
-        #if client.is_ray_hack():
+        #if client.is_nex_hack():
             #client_dir = client.get_project_path()
             #if os.path.isdir(client_dir):
                 #if os.listdir(client_dir):
@@ -219,7 +219,7 @@ class Session(ServerSender):
         if client not in self.clients:
             raise NameError("No client to remove: %s" % client.client_id)
 
-        client.set_status(ray.ClientStatus.REMOVED)
+        client.set_status(nex.ClientStatus.REMOVED)
 
         self.clients.remove(client)
 
@@ -264,22 +264,22 @@ class Session(ServerSender):
 
         return client_id
 
-    def _save_session_file(self) -> ray.Err:
+    def _save_session_file(self) -> nex.Err:
         if self.path is None:
-            return ray.Err.NO_SESSION_OPEN
+            return nex.Err.NO_SESSION_OPEN
 
         session_path = self.path
-        session_file = session_path / 'raysession.xml'
+        session_file = session_path / 'nexsession.xml'
 
         if self.is_nsm_locked() and os.getenv('NSM_URL'):
-            session_file = session_path / 'raysubsession.xml'
+            session_file = session_path / 'nexsubsession.xml'
 
         if session_file.is_file() and not os.access(session_file, os.W_OK):
-            return ray.Err.CREATE_FAILED
+            return nex.Err.CREATE_FAILED
 
-        root = ET.Element('RAYSESSION')
+        root = ET.Element('NEXSESSION')
         xroot = XmlElement(root)
-        xroot.set_str('VERSION', ray.VERSION)
+        xroot.set_str('VERSION', nex.VERSION)
         xroot.set_str('name', self.name)
         if self.notes_shown:
             xroot.set_bool('notes_shown', True)
@@ -307,7 +307,7 @@ class Session(ServerSender):
             client.write_xml_properties(c)
             
         # save desktop memory of windows if needed
-        if self.has_server_option(ray.Option.DESKTOPS_MEMORY):
+        if self.has_server_option(nex.Option.DESKTOPS_MEMORY):
             self.desktops_memory.save()
             
         for win in self.desktops_memory.saved_windows:
@@ -323,7 +323,7 @@ class Session(ServerSender):
             f = BytesIO()
             tree.write(f)
             header = ("<?xml version='1.0' encoding='UTF-8'?>\n"
-                      "<!DOCTYPE RAYSESSION>\n")
+                      "<!DOCTYPE NEXSESSION>\n")
             text = header + f.getvalue().decode()
             
             with open(session_file, 'w') as f:
@@ -331,15 +331,15 @@ class Session(ServerSender):
 
         except BaseException as e:
             _logger.error(str(e))
-            return ray.Err.CREATE_FAILED
+            return nex.Err.CREATE_FAILED
         
-        return ray.Err.OK
+        return nex.Err.OK
 
     def generate_abstract_client_id(self, wanted_id:str) -> str:
         '''generates a client_id from wanted_id
            not regarding the existing ids in the session
            or session directory. Useful for templates'''
-        for to_rm in ('ray-', 'non-', 'carla-'):
+        for to_rm in ('nex-', 'non-', 'carla-'):
             if wanted_id.startswith(to_rm):
                 wanted_id = wanted_id.replace(to_rm, '', 1)
                 break
@@ -420,7 +420,7 @@ class Session(ServerSender):
         if self.load_locked or self.path is None:
             return False
 
-        if client.is_ray_hack:
+        if client.is_nex_hack:
             project_path = client.get_project_path()
             if project_path is None:
                 raise NoSessionPath
@@ -452,7 +452,7 @@ class Session(ServerSender):
             if osp is not None:
                 self.send(
                     *osp.error(),
-                    ray.Err.GENERAL_ERROR,
+                    nex.Err.GENERAL_ERROR,
                     "%s clients are missing or incorrect" \
                         % (len(self.clients) - len(client_ids_list)))
             return
@@ -475,7 +475,7 @@ class Session(ServerSender):
         
         while base_path.parent != base_path:
             base_path = base_path.parent
-            if Path(base_path / 'raysession.xml').is_file():
+            if Path(base_path / 'nexsession.xml').is_file():
                 return True
             
         return False

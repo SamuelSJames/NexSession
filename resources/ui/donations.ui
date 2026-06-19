@@ -57,7 +57,7 @@
        <item>
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Hi !&lt;/p&gt;&lt;p&gt;If you appreciate &lt;span style=&quot; font-weight:600;&quot;&gt;RaySession&lt;/span&gt;, this is already good news.&lt;br/&gt;This software is free as in Speech and as in Beer, but developing this program requires an incredibly unreasonable amount of time in relation to the donations associated with it.&lt;/p&gt;&lt;p&gt;Donations can help reduce the amount of time I spend on subordinate work, allowing me to develop new features. There is still so much to do...&lt;/p&gt;&lt;p&gt;Make a donation (even small) can also be a simple way to say &amp;quot;Thank you&amp;quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Hi !&lt;/p&gt;&lt;p&gt;If you appreciate &lt;span style=&quot; font-weight:600;&quot;&gt;NexSession&lt;/span&gt;, this is already good news.&lt;br/&gt;This software is free as in Speech and as in Beer, but developing this program requires an incredibly unreasonable amount of time in relation to the donations associated with it.&lt;/p&gt;&lt;p&gt;Donations can help reduce the amount of time I spend on subordinate work, allowing me to develop new features. There is still so much to do...&lt;/p&gt;&lt;p&gt;Make a donation (even small) can also be a simple way to say &amp;quot;Thank you&amp;quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>

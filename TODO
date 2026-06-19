@@ -1,16 +1,36 @@
 
+NexSession current priority (2026-06-19)
+
+    Foundation acceptance test:
+        create a session with Ardour or Carla
+        create PipeWire/JACK connections
+        save, close, and reopen the session
+        verify client state and connection restoration
+
+    Before major feature work:
+        split and commit the current rebrand/foundation work in reviewable groups
+        add regression coverage for Qt resource generation and empty theme fallback
+
+    Next architecture milestone:
+        design a PipeWire-native engine alongside the current JACK engine
+        preserve JACK compatibility as a fallback during incremental migration
+        map PipeWire nodes, ports, links, metadata, and registry events to the current patchbay model
+
+    See HANDOFF.md for completed work, exact verification commands, and worktree constraints.
+
+
 afficher le sous dossier -> preview ; session en cours
 
 Display server address in window title (network session).
 
 
-ray_control doc /ray/server/clear_client_templates_database
+nex_control doc /nex/server/clear_client_templates_database
 
 
 Patchbay:
 Zones (far future) ?
 PW video ports ?
-Damn connections (with ray-jackpatch)
+Damn connections (with nex-jackpatch)
 icons in theme
 
 etree pour le renommage de modèles (daemon)

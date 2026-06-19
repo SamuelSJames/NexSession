@@ -3,27 +3,27 @@
 # run this script if you were using a2j bridge with unique port names
 # (aka port name including the ALSA client ID)
 # and you now use a2j bridge without unique port names.
-# The script parse all sessions and modify all RAY-JACKPATCH xml files
+# The script parse all sessions and modify all NEX-JACKPATCH xml files
 # directly present in the session folder.
 
 # for example:
 #   a2j:USB Keystation 61es [24] (capture): USB Keystation 61es MIDI 1
 # will become :
 #   a2j:USB Keystation 61es (capture): USB Keystation 61es MIDI 1
-# in all RAY-JACKPATCH files.
+# in all NEX-JACKPATCH files.
 
 import xml.etree.ElementTree as ET
 from typing import Iterator, Optional
 import subprocess
 import os
 
-def ray_control(*args: list[str]) -> Optional[str]:
+def nex_control(*args: list[str]) -> Optional[str]:
     process: subprocess.CompletedProcess[bytes] = subprocess.run(
-        ['ray_control', *args], capture_output=True)
+        ['nex_control', *args], capture_output=True)
     stdout_bytes = process.stdout
     
     if stdout_bytes is None:
-        print('ray_control', ' '.join(args), 'returns empty output')
+        print('nex_control', ' '.join(args), 'returns empty output')
         return None
     
     stdout_str = stdout_bytes.decode()
@@ -39,8 +39,8 @@ def modify_file(file_path: str) -> bool:
         return False
     
     root = tree.getroot()
-    if root.tag != 'RAY-JACKPATCH':
-        print(f"{file_path} is not a RAY-JACKPATCH xml file")
+    if root.tag != 'NEX-JACKPATCH':
+        print(f"{file_path} is not a NEX-JACKPATCH xml file")
         return False
 
     # prepare avoid duplicated connections
@@ -100,14 +100,14 @@ def modify_file(file_path: str) -> bool:
     return True
 
 def list_patch_files() -> Iterator[str]:
-    session_root = ray_control('get_root')
-    all_sessions = ray_control('list_sessions')
+    session_root = nex_control('get_root')
+    all_sessions = nex_control('list_sessions')
         
     for session_name in all_sessions.splitlines():
         session_dir = f"{session_root}/{session_name}"
         for xml_file in os.listdir(session_dir):
             if xml_file.endswith('.xml'):
-                if xml_file == 'raysession.xml':
+                if xml_file == 'nexsession.xml':
                     continue
                 yield f"{session_dir}/{xml_file}"
 

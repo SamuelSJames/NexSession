@@ -61,10 +61,10 @@ if __name__ == '__main__':
     all_paths = contents.splitlines()
 
     code_root = paths_file.parent
-    while code_root.name != 'RaySession':
+    while code_root.name != 'NexSession':
         code_root = code_root.parent
         if code_root.name == '/':
-            print('this file is not in a RaySession folder, exit.')
+            print('this file is not in a NexSession folder, exit.')
             sys.exit(1)
 
     root = code_root / 'src' / 'shared' / 'osc_paths'

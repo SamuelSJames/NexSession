@@ -1,11 +1,11 @@
-If you want to translate RaySession, you're welcome !
+If you want to translate NexSession, you're welcome !
 
     go to ./locale : 
         cd locale
         
-    copy file raysession_en_US.ts to raysession_xx_XX.ts
+    copy file nexsession_en_US.ts to nexsession_xx_XX.ts
     replace xx and XX with the letters of your language.
-        cp raysession_en_US.ts raysession_xx_XX.ts
+        cp nexsession_en_US.ts nexsession_xx_XX.ts
         
     open your .ts file with QLinguist, make your translations and publish.
 
@@ -15,7 +15,7 @@ in order to try it:
         cd ..
         
     open Makefile in a text editor
-    add raysession_xx_XX.qm to the Makefile (line 42)
+    add nexsession_xx_XX.qm to the Makefile (line 42)
     save Makefile
     
     then make:

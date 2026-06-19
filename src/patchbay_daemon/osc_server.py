@@ -7,8 +7,8 @@ from patshared import TransportWanted
 
 from osclib import (BunServer, Address, MegaSend,
                     are_same_osc_port, OscPack, bun_manage, OscPath)
-import osc_paths.ray as r
-import osc_paths.ray.patchbay.monitor as rpm
+import osc_paths.nex as r
+import osc_paths.nex.patchbay.monitor as rpm
 
 
 if TYPE_CHECKING:
@@ -30,12 +30,12 @@ class PatchbayDaemonServer(BunServer):
         self._tmp_gui_url = ''
     
     @bun_manage(r.patchbay.ADD_GUI, 's')
-    def _ray_patchbay_add_gui(self, osp: OscPack):
+    def _nex_patchbay_add_gui(self, osp: OscPack):
         gui_url: str = osp.args[0] # type:ignore
         self.add_gui(gui_url)
 
     @bun_manage(r.patchbay.GUI_DISANNOUNCE, 's')
-    def _ray_patchbay_gui_disannounce(self, osp: OscPack):
+    def _nex_patchbay_gui_disannounce(self, osp: OscPack):
         url: str = osp.args[0] # type:ignore
 
         for gui_addr in self.gui_list:
@@ -45,45 +45,45 @@ class PatchbayDaemonServer(BunServer):
                 break
 
     @bun_manage(r.patchbay.CONNECT, 'ss')
-    def _ray_patchbay_connect(self, osp: OscPack):
+    def _nex_patchbay_connect(self, osp: OscPack):
         port_out_name, port_in_name = osp.args
         # connect here
         self.pe.connect_ports(port_out_name, port_in_name)
     
     @bun_manage(r.patchbay.DISCONNECT, 'ss')
-    def _ray_patchbay_disconnect(self, osp: OscPack):
+    def _nex_patchbay_disconnect(self, osp: OscPack):
         port_out_name, port_in_name = osp.args
         # disconnect here
         self.pe.connect_ports(
             port_out_name, port_in_name, disconnect=True)
 
     @bun_manage(r.patchbay.SET_BUFFER_SIZE, 'i')
-    def _ray_patchbay_set_buffersize(self, osp: OscPack):
+    def _nex_patchbay_set_buffersize(self, osp: OscPack):
         buffer_size = osp.args[0]
         self.pe.set_buffer_size(buffer_size)
 
     @bun_manage(r.patchbay.REFRESH, '')
-    def _ray_patchbay_refresh(self, osp: OscPack):
+    def _nex_patchbay_refresh(self, osp: OscPack):
         self.pe.refresh()
 
     @bun_manage(r.patchbay.TRANSPORT_PLAY, 'i')
-    def _ray_patchbay_transport_play(self, osp: OscPack):
+    def _nex_patchbay_transport_play(self, osp: OscPack):
         self.pe.transport_play(bool(osp.args[0]))
     
     @bun_manage(r.patchbay.TRANSPORT_STOP, '')
-    def _ray_patchbay_transport_stop(self, osp: OscPack):
+    def _nex_patchbay_transport_stop(self, osp: OscPack):
         self.pe.transport_stop()
     
     @bun_manage(r.patchbay.TRANSPORT_RELOCATE, 'i')
-    def _ray_patchbay_transport_relocate(self, osp: OscPack):
+    def _nex_patchbay_transport_relocate(self, osp: OscPack):
         self.pe.transport_relocate(osp.args[0])
 
     @bun_manage(r.patchbay.ACTIVATE_DSP_LOAD, 'i')
-    def _ray_patchbay_activate_dsp_load(self, osp: OscPack):
+    def _nex_patchbay_activate_dsp_load(self, osp: OscPack):
         self.pe.dsp_wanted = bool(osp.args[0])
     
     @bun_manage(r.patchbay.ACTIVATE_TRANSPORT, 'i')
-    def _ray_patchbay_activate_transport(self, osp: OscPack):
+    def _nex_patchbay_activate_transport(self, osp: OscPack):
         try:
             transport_wanted = TransportWanted(osp.args[0])
         except:
@@ -91,12 +91,12 @@ class PatchbayDaemonServer(BunServer):
         self.pe.transport_wanted = transport_wanted
 
     @bun_manage(r.patchbay.GROUP_CUSTOM_NAME, 'sss*')
-    def _ray_patchbay_group_pretty_name(self, osp: OscPack):
+    def _nex_patchbay_group_pretty_name(self, osp: OscPack):
         if osp.args[0]:
             self.pretty_names.save_group(*osp.args)
 
     @bun_manage(r.patchbay.PORT_CUSTOM_NAME, 'sss*')
-    def _ray_patchbay_port_pretty_name(self, osp: OscPack):
+    def _nex_patchbay_port_pretty_name(self, osp: OscPack):
         if osp.args[0]:
             self.pretty_names.save_port(*osp.args)
         else:
@@ -105,34 +105,34 @@ class PatchbayDaemonServer(BunServer):
             self.pe.apply_pretty_names_export()
 
     @bun_manage(r.patchbay.SAVE_GROUP_CUSTOM_NAME, 'ssi')
-    def _ray_patchbay_save_group_pretty_name(self, osp: OscPack):
+    def _nex_patchbay_save_group_pretty_name(self, osp: OscPack):
         group_name, pretty_name, save_in_jack = osp.args
         self.pretty_names.save_group(group_name, pretty_name)
         if save_in_jack:
             self.pe.write_group_pretty_name(group_name, pretty_name)
     
     @bun_manage(r.patchbay.SAVE_PORT_CUSTOM_NAME, 'ssi')
-    def _ray_patchbay_save_port_pretty_name(self, osp: OscPack):
+    def _nex_patchbay_save_port_pretty_name(self, osp: OscPack):
         port_name, pretty_name, save_in_jack = osp.args
         self.pretty_names.save_port(port_name, pretty_name)
         if save_in_jack:
             self.pe.write_port_pretty_name(port_name, pretty_name)
 
     @bun_manage(r.patchbay.ENABLE_JACK_PRETTY_NAMING, 'i')
-    def _ray_patchbay_enable_jack_pretty_naming(self,  osp: OscPack):
+    def _nex_patchbay_enable_jack_pretty_naming(self,  osp: OscPack):
         export_pretty_names = bool(osp.args[0])
         self.pe.set_pretty_names_auto_export(export_pretty_names)
 
     @bun_manage(r.patchbay.EXPORT_ALL_CUSTOM_NAMES, '')
-    def _ray_patchbay_export_all_pretty_names(self, osp: OscPack):
+    def _nex_patchbay_export_all_pretty_names(self, osp: OscPack):
         self.pe.export_all_custom_names_to_jack_now()
         
     @bun_manage(r.patchbay.IMPORT_ALL_PRETTY_NAMES, '')
-    def _ray_patchbay_import_all_pretty_names(self, osp: OscPack):
+    def _nex_patchbay_import_all_pretty_names(self, osp: OscPack):
         self._import_all_pretty_names()
 
     @bun_manage(r.patchbay.CLEAR_ALL_PRETTY_NAMES, '')
-    def _ray_patchbay_clear_all_pretty_names(self, osp: OscPack):
+    def _nex_patchbay_clear_all_pretty_names(self, osp: OscPack):
         self.pe.clear_all_pretty_names_from_jack()
 
     @property

@@ -103,12 +103,12 @@
              </widget>
             </item>
             <item row="1" column="4">
-             <widget class="QCheckBox" name="checkBoxRayHack">
+             <widget class="QCheckBox" name="checkBoxNexHack">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Ray-Hack&lt;/span&gt; is a fake protocol that tries to manage non NSM compatible programs as it can.&lt;/p&gt;&lt;p&gt;It can be useful :&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;for audio programs that don't have NSM implementation yet&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;for non-audio programs&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Nex-Hack&lt;/span&gt; is a fake protocol that tries to manage non NSM compatible programs as it can.&lt;/p&gt;&lt;p&gt;It can be useful :&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;for audio programs that don't have NSM implementation yet&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;for non-audio programs&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
-               <string>Ray-Hack</string>
+               <string>Nex-Hack</string>
               </property>
               <property name="checkable">
                <bool>true</bool>

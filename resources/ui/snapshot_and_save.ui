@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Quit RaySession</string>
+   <string>Quit NexSession</string>
   </property>
   <property name="modal">
    <bool>false</bool>

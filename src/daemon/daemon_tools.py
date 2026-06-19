@@ -15,7 +15,7 @@ from qtpy.QtCore import (
 # Imports from src/shared
 from osclib import (
     Address, verified_address, verified_address_from_port)
-import ray
+import nex
 
 if TYPE_CHECKING:
     from client import Client
@@ -80,8 +80,8 @@ def init_daemon_tools():
     RS.set_settings(l_settings)
 
     RS.set_non_active_clients(
-        ray.get_list_in_settings(l_settings, 'daemon/non_active_list'))
-    RS.set_favorites(ray.get_list_in_settings(
+        nex.get_list_in_settings(l_settings, 'daemon/non_active_list'))
+    RS.set_favorites(nex.get_list_in_settings(
         l_settings, 'daemon/favorites'))
     TemplateRoots.init_config()
 
@@ -115,7 +115,7 @@ class AppTemplate:
 class RS:
     settings = QSettings()
     non_active_clients = []
-    favorites = list[ray.Favorite]()
+    favorites = list[nex.Favorite]()
 
     @classmethod
     def set_settings(cls, settings):
@@ -128,7 +128,7 @@ class RS:
         cls.non_active_clients = nalist
 
     @classmethod
-    def set_favorites(cls, favorites: list[ray.Favorite]):
+    def set_favorites(cls, favorites: list[nex.Favorite]):
         cls.favorites.clear()
         
         for fav in favorites:
@@ -142,17 +142,17 @@ class RS:
                 
                 if not display_name:
                     display_name = fav_dict.get('name')
-                cls.favorites.append(ray.Favorite(
+                cls.favorites.append(nex.Favorite(
                     fav_dict.get('name'),
                     fav_dict.get('icon'),
                     fav_dict.get('factory'),
                     display_name))
 
 class TemplateRoots:
-    net_session_name = ".ray-net-session-templates"
+    net_session_name = ".nex-net-session-templates"
     factory_sessions = get_code_root() / 'session_templates'
     factory_clients = get_code_root() / 'client_templates'    
-    factory_clients_xdg = Path('/etc/xdg/raysession/client_templates')
+    factory_clients_xdg = Path('/etc/xdg/nexsession/client_templates')
 
     @classmethod
     def init_config(cls):
@@ -172,7 +172,7 @@ class Terminal:
     @classmethod
     def message(cls, string: str, server_port=0):
         if cls._last_client_name != 'daemon':
-            sys.stderr.write(f'\n[\033[90mray-daemon\033[0m]\n')
+            sys.stderr.write(f'\n[\033[90mnex-daemon\033[0m]\n')
 
         sys.stderr.write(
             f'\033[92m{string}\033[0m\n')
@@ -201,7 +201,7 @@ class Terminal:
     @classmethod
     def prepare_logging(cls):
         if cls._last_client_name != 'daemon':
-            sys.stderr.write(f'\n[\033[90mray-daemon\033[0m]\n')
+            sys.stderr.write(f'\n[\033[90mnex-daemon\033[0m]\n')
             cls._last_client_name = 'daemon'
 
     @classmethod
@@ -209,7 +209,7 @@ class Terminal:
         snapshoter_str = "snapshoter:.%s" % command
 
         if cls._last_client_name != snapshoter_str:
-            sys.stderr.write(f'\n[\033[90mray-daemon-git{command}\033[0m]\n')
+            sys.stderr.write(f'\n[\033[90mnex-daemon-git{command}\033[0m]\n')
         sys.stderr.buffer.write(byte_str)
 
         cls._last_client_name = snapshoter_str
@@ -220,7 +220,7 @@ class Terminal:
 
         if cls._last_client_name != scripter_str:
             sys.stderr.write(
-                f'\n[\033[90mray-daemon {command} script\033[0m]\n')
+                f'\n[\033[90mnex-daemon {command} script\033[0m]\n')
         sys.stderr.buffer.write(byte_str)
 
         cls._last_client_name = scripter_str
@@ -250,7 +250,7 @@ class Terminal:
     @classmethod
     def warning(cls, string):
         sys.stderr.write(
-            f'[\033[90mray-daemon\033[0m]{string}\033[0m\n')
+            f'[\033[90mnex-daemon\033[0m]{string}\033[0m\n')
         cls._last_client_name = 'daemon'
 
 
@@ -319,7 +319,7 @@ class ArgParser(argparse.ArgumentParser):
         _translate = QCoreApplication.translate
 
         default_root = \
-            Path.home() / _translate('daemon', 'Ray Network Sessions')
+            Path.home() / _translate('daemon', 'Nex Network Sessions')
 
         self.add_argument(
             '--session-root', '-r', type=Path, default=default_root,
@@ -352,7 +352,7 @@ class ArgParser(argparse.ArgumentParser):
             '--no-options', action='store_true',
             help='start without any option and do not save options at quit')
         self.add_argument(
-            '--hidden', action='store_true', help='hide for ray_control')
+            '--hidden', action='store_true', help='hide for nex_control')
         self.add_argument(
             '--config-dir', '-c', type=str, default='',
             help='use a custom config dir')
@@ -365,7 +365,7 @@ class ArgParser(argparse.ArgumentParser):
             '--no-client-messages', '-ncm', action='store_true',
             help='do not print client messages')
         self.add_argument(
-            '-v', '--version', action='version', version=ray.VERSION)
+            '-v', '--version', action='version', version=nex.VERSION)
         self.add_argument(
             '-info', '--info', type=str, default='',
             help="set the log infos for specific modules, separated with ':'")
@@ -378,7 +378,7 @@ class ArgParser(argparse.ArgumentParser):
 
 
 class LogStreamHandler(logging.StreamHandler):
-    '''Allows to write `[ray-daemon]` before logging something
+    '''Allows to write `[nex-daemon]` before logging something
     if the previous message came from a client.'''
     
     def __init__(self, *args, **kwargs):

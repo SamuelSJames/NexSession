@@ -1,9 +1,30 @@
+Unreleased / NexSession development tree
+    Rebrand and Fedora foundation work:
+        rebrand RaySession application paths, launchers, templates, UI, manuals, and internal naming to NexSession
+        add the NexSession application icon in scalable and standard hicolor sizes
+        add Fedora and PipeWire development documentation and roadmap
+
+    Build fixes:
+        locate the Qt 6 resource compiler with qtpaths6 instead of assuming Debian's libexec path
+        make resource generation atomic so a failed rcc command cannot leave an apparently current zero-byte module
+        rebuild resources when a file listed in a qrc manifest changes
+        apply the same resource build repair to the HoustonPatchbay submodule
+
+    GUI fixes:
+        prevent startup failure when bundled application fonts cannot be loaded by using the widget font as fallback
+        normalize an empty patchbay theme to the application fallback and persist the resolved theme
+
+    Verification:
+        full Qt 6 build and Python compileall pass on Fedora 44 with Python 3.14 and PyQt6
+        source and installed offscreen startup smoke tests connect to nex-daemon and shut down without tracebacks
+        live GNOME Wayland source launch loads the GUI and patchbay resources
+
 0.17.4 / 2026-03-0X
     Bug fixes again.
     
     Bug fixes:
         remake session management works on fedora, it was broken because some OSC ports were wrongly considered as non local
-        ray_control completion install was broken
+        nex_control completion install was broken
         fix GUI freeze (infinite loop) if a port background is black in the theme
 
 
@@ -13,7 +34,7 @@
     Bug fixes:
         CV ports were considered as regular Audio ports until a patchbay refresh
         Some connection were missing in the graph after a pipewire quantum (buffer size) change
-        ray_control bash completion moved to a more correct place (at install)
+        nex_control bash completion moved to a more correct place (at install)
 
 0.17.2 / 2025-12-29
     Mainly one bug fix, sometimes the patch could crash if a JACK port disappears when listing JACK ports. It has more chances to happen at session switch.
@@ -38,13 +59,13 @@
         python3-qtpy
         python3 JACK-Client
 
-    RaySession itself:
-        New protocol: Internal. Used by ray-jackpatch, ray-alsapatch and ray-sooperlooper.
+    NexSession itself:
+        New protocol: Internal. Used by nex-jackpatch, nex-alsapatch and nex-sooperlooper.
             Avoid some UDP ports, some JACK clients, use less RAM.
             (in config: daemon/internal_mode can be FORCE_INTERNAL, FORCE_NSM or FOLLOW_PROTOCOL)
         Patchbay daemon now runs in the daemon process
             (in config: daemon/internal_patchbay can be 'true' or 'false')
-        ray_control: auto-completion for bash
+        nex_control: auto-completion for bash
         Tool bar: tool bar is now responsive design, it can have many lines if too much widgets are shown
     
     Patchbay:
@@ -62,7 +83,7 @@
 
     Bug Fixes:
         Support pyliblo3 as well as pyliblo (Done by AdamWill)
-        ray_control open_session_off fixed (very important for some scripts)
+        nex_control open_session_off fixed (very important for some scripts)
         execute chmod +w on session files after their copy from template (needed for NixOs)
         save_via_windows script is now POSIX compliant (Done by Dennis Braun)
 
@@ -80,7 +101,7 @@
     
     Templates:
         add Mixbus9 and Mixbus32C 8 and 9 templates (thanks to Erich Eickmeyer)
-        remove Jack Mixer old LASH template (Ray-Hack) (Jack Mixer uses NSM for a long time now)
+        remove Jack Mixer old LASH template (Nex-Hack) (Jack Mixer uses NSM for a long time now)
         rename Calf JACK Host template with a folder without spaces (adapt to debian policy)
 
 
@@ -89,7 +110,7 @@
 
     BugFix:
         Top left Favorites button was not working, template were listed, but nothing happened when clicking on it
-        fix a possible ray-alsapatch crash
+        fix a possible nex-alsapatch crash
         some widgets were not locked in client properties dialog when it is launched for a template preview
 
     Change:
@@ -104,7 +125,7 @@
 
     Major Fixes:
         Some client project files were not renamed at session duplicate (and certainly when creating a session from user template)
-        ray-jackpatch and ray-alsapatch various problems that involve loss of connections
+        nex-jackpatch and nex-alsapatch various problems that involve loss of connections
         "Optional-gui states" option was not working at all
         typo: replace 'identifiant' with 'identifier' in english version
 
@@ -118,11 +139,11 @@
 
     Packagers should set python3-pyalsa (>=1.2.4) as a dependency, else ALSA MIDI ports wont be displayed in the patchbay, and ALSA Connections client will not work.
 
-    Long time users (before 0.9.0) may note that ray-proxy and related methods will be removed in 1.0.0, because RayHack pseudo-protocol does the same thing better, and I don't want to maintain this code part anymore.
+    Long time users (before 0.9.0) may note that nex-proxy and related methods will be removed in 1.0.0, because NexHack pseudo-protocol does the same thing better, and I don't want to maintain this code part anymore.
 
-    RaySession itself:
+    NexSession itself:
         New Features:
-            RaySession has now a preferences dialog with tooltips.
+            NexSession has now a preferences dialog with tooltips.
             List factory templates also list templates for Ardour (and Mixbus) templates, it allows user to start directly Ardour with an ardour user session template.
             Start a template choosing its unique identifier (this identifier is also used by client to set its JACK group names), useful if you use many instances of the same client.
             Change client identifier, prefix mode or jack_naming method when the client is stopped, connections are updated.
@@ -137,12 +158,12 @@
         Fixes:
             fix SESSION_NAME not replaced in advanced trashed client properties
 
-    JACK Connections (ray-jackpatch):
+    JACK Connections (nex-jackpatch):
         Has been fully rewritten to not use Qt anymore, so, it should be lighter. 
         At startup, it now disconnects ports if theses ports were present and not connected at last save
 
-    ALSA Connections (ray-alsapatch):
-        This NSM client has been added, it makes exactly the same thing than ray-jackpatch, but for ALSA MIDI ports.
+    ALSA Connections (nex-alsapatch):
+        This NSM client has been added, it makes exactly the same thing than nex-jackpatch, but for ALSA MIDI ports.
         
     HoustonPatchbay:
         Add the possibility to show ALSA MIDI ports (not enabled by default).
@@ -155,7 +176,7 @@
 0.13.1 / 2023-01-20
     This release fixes the following bugs:
 
-    RaySession itself:
+    NexSession itself:
 
         window was highlighted on right click on systray icon
         fix multiple same group positions possible in json files (at load)
@@ -171,7 +192,7 @@
         fix theme not renamed after duplicate with new name
         fix inconsistent portgroup name if portgroup name endswith with AUX with at least digits at end of the port name.
 
-    Patchbay manual has been splitted from the RaySession manual, because of the existence of Patchance and Patchichi.
+    Patchbay manual has been splitted from the NexSession manual, because of the existence of Patchance and Patchichi.
 
 0.13.0 / 2022-09-18
     Patchbay has been extracted in a new submodule named HoustonPatchbay. This module is now used by Patchance and could be used by any other python Qt program.
@@ -195,7 +216,7 @@
     
 0.12.0 / 2021-12-17
     Features:
-        Add "Startup" dialog which let you open a recent session. This way, just lanch RaySession and press Enter to load the last session.
+        Add "Startup" dialog which let you open a recent session. This way, just lanch NexSession and press Enter to load the last session.
         
         Add optional systray icon, activated only when a session is loaded, but user can also decide to use it always or never. 
         
@@ -203,9 +224,9 @@
         add "long jack naming" checkbox in "add executable" dialog.
         
         Add "utility scripts" to menubar:
-            convert an ardour session to a Ray session (containing this ardour session)
+            convert an ardour session to a Nex session (containing this ardour session)
             Convert the current session to the NSM file format
-            Convert Ray-Hack clients to NSM, for Jack-Mixer and Hydrogen
+            Convert Nex-Hack clients to NSM, for Jack-Mixer and Hydrogen
         Add "recent sessions" to menubar and to systray icon.
         
         Add "prevent overlap" default option, with this, when a box is moved on front of other ones, theses other boxes are moved elsewhere (near).
@@ -217,7 +238,7 @@
         Ports in portgroups can now be larger if their name requires that
         Specific decorations for pipewire Monitor clients
         
-        ray_control: trashed_client remove_keep_files option added.
+        nex_control: trashed_client remove_keep_files option added.
         
         Add :monitor: NSM capability, a client can now be aware of other clients events.
     
@@ -238,7 +259,7 @@
         consider '/' as box title divisor only if it seems to be a client of session, and this way prevent some pipewire titles to be wrongly splitted
         fix crashes because of recursives error while moving a patchbay box.
         
-        fix crash with Ray-Net (Network Session) save client template action
+        fix crash with Nex-Net (Network Session) save client template action
         sooperlooper_nsm now follows given jack_client_name (with option, to prevent connections loses)
         
     New Templates:
@@ -261,7 +282,7 @@
     The most important new feature in this release is the apparition of the JACK patchbay. You also can press Ctrl+J to show/hide the patchbay.
 
     The patchbay has been forked from Carla, with some improvements.
-    For the moment, there are only 3 advantages to have the patchbay directly in RaySession's GUI
+    For the moment, there are only 3 advantages to have the patchbay directly in NexSession's GUI
 
         Boxes positions are memorized and replaced per session
         Boxes have icons of the corresponding NSM client
@@ -302,7 +323,7 @@
 
 0.10.1 / 2021-02-04
     Manual:
-        Add a complete online and offline manual accessible from the help tab of the menu bar. It opens RaySession's manual in your web browser.
+        Add a complete online and offline manual accessible from the help tab of the menu bar. It opens NexSession's manual in your web browser.
         Note that english is not my mother language, corrections are welcome.
 
     Bug Fixes:
@@ -320,25 +341,25 @@
         Add Application dialog largely improved with access to all possible informations about the templates
         Session Notes dialog where you can edit...session notes
         'duplicate', 'save session as template' and 'rename session' moved to a menu at top left of the session frame  
-        provide log files in ~/.config/RaySession/logs/
+        provide log files in ~/.config/NexSession/logs/
         improve open session dialog behavior between filter bar and treelist
         add "Make Reappear all hidden dialogs" action
-        add RayNet client protocol, which is used only for Network Sessions
+        add NexNet client protocol, which is used only for Network Sessions
         change icon for optional GUI visible/hidden (shamelessly pricked idea at Agordejo)
-        ray_control : add_client_template not started option added
+        nex_control : add_client_template not started option added
         clients now remember their template origin
         "save as template" button becomes "Update the Template" in save as template (session/client) dialog if template exists
         Jack config script now saves all pulse2jack configurations, even the more complex ones
 
     API change:
-        raysession's --session argument has been replaced with --start-session because --session was taken by Qt, -s still works fine
+        nexsession's --session argument has been replaced with --start-session because --session was taken by Qt, -s still works fine
     
     Bug Fixes:
         Now translated in french for french speaking users out of France
         Add all default Qt translations
-        raysession should connect to a running daemon without GUI, even after a GUI crash (GUI crash should not happen of course ;) )
-        ray_control start now start with the good session root if it is not the default one (~/Ray Sessions)
-        remove Hydrogen NSM template because RayHack template is safer for now
+        nexsession should connect to a running daemon without GUI, even after a GUI crash (GUI crash should not happen of course ;) )
+        nex_control start now start with the good session root if it is not the default one (~/NexSessions)
+        remove Hydrogen NSM template because NexHack template is safer for now
         Sequencer64 template has a -m option to work fine with JACK connections
     
     New Templates:
@@ -355,22 +376,22 @@ Bug Fix:
 
 0.9.0 / 2020-07-16
 New Features:
-    CLI: Control allmost all GUI actions and more with the CLI ray_control.
+    CLI: Control allmost all GUI actions and more with the CLI nex_control.
     Session scripts: allow user to edit shell scripts at session load, save and close.
     JACK config session script: script that saves and recalls the JACK configuration for the session.
         Add this from session templates in "New Session" window.
-    RayHack: New client protocol which is an alternative to ray-proxy.
+    NexHack: New client protocol which is an alternative to nex-proxy.
         This allows to launch directly the process and to edit its properties even if process is stopped.
         I know this feature will be considered as heretic by someones, this is not strong, I know it doesn't changes things too much.
-    Factory client templates are installed in /etc/xdg/raysession to allow packagers to add some templates.
+    Factory client templates are installed in /etc/xdg/nexsession to allow packagers to add some templates.
     Get client label, icon and description from their .desktop file.
     
 Subfolder combobox removed in New Session Dialog
-Daemon option "Save from client" has been removed. Please affect a global keyboard shortcut (Meta+Ctrl+S) to ray_control save instead.
+Daemon option "Save from client" has been removed. Please affect a global keyboard shortcut (Meta+Ctrl+S) to nex_control save instead.
 
 
 0.8.3 / 2019-11-25
-This release fixes the link for src/bin/ray_control from absolute to relative path.
+This release fixes the link for src/bin/nex_control from absolute to relative path.
 Sorry for the inconvenience.
 
 0.8.2 / 2019-11-20
@@ -380,17 +401,17 @@ If user name and user email were not mentioned to git, snapshot always failed wi
 Fix snapshot/git bug
 Fix network session not working
 Provide fallback icons for allmost all system icons
-add little script 'ray_control', this way you can use 'ray_control save' to save your running session (and affect this to a global keyboard shortcut (eg, Meta+Ctrl+S)).
+add little script 'nex_control', this way you can use 'nex_control save' to save your running session (and affect this to a global keyboard shortcut (eg, Meta+Ctrl+S)).
 
 0.8.1 / 2019-10-23
-Just a bug fix release. In v0.8.0 , first session creation failed (first session of the directory (e.g. ~/Ray Sessions/first session).
-Ray Session has also been renamed to RaySession everywhere it was.
+Just a bug fix release. In v0.8.0 , first session creation failed (first session of the directory (e.g. ~/NexSessions/first session).
+NexSession has also been renamed to NexSession everywhere it was.
 
 0.8.0 / 2019-10-15 Autumn Release.
 This release contains many new features. Mainly the snapshot manager.
 
 Snapshot manager (requires git): Take a snapshot at each session save. User can go back to a previous snapshot with the "rewind" button at the right of "executable" button. See "snapshots explain" file in code root for more info.
-Proxy: Improve integration of non savable clients. Possibility to display a special save icon and prevent accidental close on RaySession in this case. Try to close gracefully client window is possible (requires wmctrl).
+Proxy: Improve integration of non savable clients. Possibility to display a special save icon and prevent accidental close on NexSession in this case. Try to close gracefully client window is possible (requires wmctrl).
 Favorites: User can quickly add a favorite template with "Favorites" button or with a right click below clients.
 Add Application dialog: Now shows an "User" icon at right of each user template, click on it to remove this template. Click on favorite icon to add the template to favorites. Double click on template to launch it.
 Open Session dialog: Now shows all session in a tree-view (if some sessions are under a sub-folder). Double-click on session to open it.
@@ -404,7 +425,7 @@ Bug Fix: fix prevent desktop session disconnection (on KDE and maybe other ones 
 
 0.7.2 / 2019-07-15
 New Application Templates for OPNplug* and amsynth.
-fix unsaved stop signal in ray-proxy
+fix unsaved stop signal in nex-proxy
 faster pid check for desktops memory
 Thanks to jpcima for the OPNplug template pull request.
 
@@ -425,6 +446,6 @@ New Option (activated by default): provide bookmark (shortcut) of the session fo
 New Option: Desktops Memory (requires wmctrl). If activated, clients windows will be moved to the given desktop when session is ready, or when a client is ready. It may not works depending on your D.E.
 Edit executable and arguments in client properties window. Arguments are supposed to be not supported by NSM. Sometimes it works and it can be useful.
 option -s to load session at startup
-ray-proxy: new option "wait window for reply" (requires wmctrl)
+nex-proxy: new option "wait window for reply" (requires wmctrl)
 sooperlooper_nsm: option to pause and trig with jack_transport events (play/pause)
 new factory templates for ADLplug, Petri-Foo, Shuriken, Sequencer64 and SooperLooper +Transport

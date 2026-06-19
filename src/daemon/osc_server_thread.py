@@ -22,11 +22,11 @@ from osclib import (
     Address, BunServerThread, MegaSend, get_net_url, Message,
     OscPack, is_on_this_machine, are_same_osc_port, TCP,
     verified_address, OscMulTypes)
-import ray
+import nex
 from xml_tools import XmlElement
 import osc_paths
-import osc_paths.ray as r
-import osc_paths.ray.gui as rg
+import osc_paths.nex as r
+import osc_paths.nex.gui as rg
 import osc_paths.nsm as nsm
 
 # Local imports
@@ -108,9 +108,9 @@ METHODS_DICT = {
     r.client.START: 's',
     r.client.STOP: 's',
     r.client.TRASH: 's',
-    r.client.UPDATE_PROPERTIES: ray.ClientData.ARG_TYPES,
-    r.client.UPDATE_RAY_HACK_PROPERTIES: 's' + ray.RayHack.ARG_TYPES,
-    r.client.UPDATE_RAY_NET_PROPERTIES: 's' + ray.RayNet.ARG_TYPES,
+    r.client.UPDATE_PROPERTIES: nex.ClientData.ARG_TYPES,
+    r.client.UPDATE_NEX_HACK_PROPERTIES: 's' + nex.NexHack.ARG_TYPES,
+    r.client.UPDATE_NEX_NET_PROPERTIES: 's' + nex.NexNet.ARG_TYPES,
     r.trashed_client.REMOVE_DEFINITELY: 's',
     r.trashed_client.REMOVE_KEEP_FILES: 's',
     r.trashed_client.RESTORE: 's',
@@ -150,7 +150,7 @@ def validator(path: str, multypes: OscMulTypes, no_sess='', directos=False):
 
                 if server.session.path is None:
                     server.send(
-                        *osp.error(), ray.Err.NO_SESSION_OPEN, no_sess)
+                        *osp.error(), nex.Err.NO_SESSION_OPEN, no_sess)
                     return False
 
             response = func(*args, **kwargs)
@@ -204,7 +204,7 @@ class ClientCommunicating(BunServerThread):
         self.gui_list = list[Gui]()
         self.controller_list = list[Controller]()
         self.monitor_list = list[Address]()
-        self.server_status = ray.ServerStatus.OFF
+        self.server_status = nex.ServerStatus.OFF
         self.is_nsm_locked = False
         self.not_default = False
 
@@ -267,7 +267,7 @@ class ClientCommunicating(BunServerThread):
         executable_path: str = osp.args[0] # type:ignore
 
         if '/' in executable_path:
-            self.send(*osp.error(), ray.Err.LAUNCH_FAILED,
+            self.send(*osp.error(), nex.Err.LAUNCH_FAILED,
                 "Absolute paths are not permitted. Clients must be in $PATH")
             return False
 
@@ -287,21 +287,21 @@ class ClientCommunicating(BunServerThread):
         new_session_name: str = osp.args[0] # type:ignore
 
         if not _path_is_valid(new_session_name):
-            self.send(*osp.error(), ray.Err.CREATE_FAILED,
+            self.send(*osp.error(), nex.Err.CREATE_FAILED,
                       "Invalid session name.")
             return False
 
     @validator(nsm.server.DUPLICATE, 's')
     def _nsm_server_duplicate(self, osp: OscPack):
         if self.is_nsm_locked or self.session.path is None:
-            self.send(*osp.error(), ray.Err.NO_SESSION_OPEN,
+            self.send(*osp.error(), nex.Err.NO_SESSION_OPEN,
                       "No session to duplicate.")
             return False
 
         session_name: str = osp.args[0] # type:ignore
 
         if not _path_is_valid(session_name):
-            self.send(*osp.error(), ray.Err.CREATE_FAILED,
+            self.send(*osp.error(), nex.Err.CREATE_FAILED,
                       "Invalid session name.")
             return False
 
@@ -333,14 +333,14 @@ class ClientCommunicating(BunServerThread):
     def _nsm_server_broadcast(self, osp: OscPack):
         # don't allow clients to broadcast NSM commands
         follow_path: str = osp.args[0] # type:ignore
-        if follow_path.startswith(('/nsm/', '/ray/')):
+        if follow_path.startswith(('/nsm/', '/nex/')):
             return False
 
         for client in self.session.clients:
             if not client.addr:
                 continue
 
-            if (client.protocol is not ray.Protocol.NSM
+            if (client.protocol is not nex.Protocol.NSM
                     or not client.is_running()):
                 continue
 
@@ -444,12 +444,12 @@ class ClientCommunicating(BunServerThread):
     def message(self, msg: str):
         '''write in the prompt, with the following syntax:
         
-        `[ray-daemon] message`'''
+        `[nex-daemon] message`'''
         self.session.message(msg)
 
     def _unknown_message(self, osp: OscPack):
         self.send(osp.src_addr, osc_paths.MINOR_ERROR, osp.path,
-                  ray.Err.UNKNOWN_MESSAGE,
+                  nex.Err.UNKNOWN_MESSAGE,
                   "unknown osc message: %s %s" % (osp.path, osp.types))
 
     def send_gui(self, *args):
@@ -463,19 +463,19 @@ class OscServerThread(ClientCommunicating):
             self, session, osc_num=osc_num, tcp_port=tcp_port)
 
         self._OPTIONS_DICT = {
-            'save_from_client': ray.Option.SAVE_FROM_CLIENT,
-            'bookmark_session_folder': ray.Option.BOOKMARK_SESSION,
-            'desktops_memory': ray.Option.DESKTOPS_MEMORY,
-            'snapshots': ray.Option.SNAPSHOTS,
-            'session_scripts': ray.Option.SESSION_SCRIPTS,
-            'gui_states': ray.Option.GUI_STATES}
+            'save_from_client': nex.Option.SAVE_FROM_CLIENT,
+            'bookmark_session_folder': nex.Option.BOOKMARK_SESSION,
+            'desktops_memory': nex.Option.DESKTOPS_MEMORY,
+            'snapshots': nex.Option.SNAPSHOTS,
+            'session_scripts': nex.Option.SESSION_SCRIPTS,
+            'gui_states': nex.Option.GUI_STATES}
 
-        default_options = (ray.Option.BOOKMARK_SESSION
-                           | ray.Option.SNAPSHOTS
-                           | ray.Option.SESSION_SCRIPTS)
+        default_options = (nex.Option.BOOKMARK_SESSION
+                           | nex.Option.SNAPSHOTS
+                           | nex.Option.SESSION_SCRIPTS)
 
         try:
-            self.options = ray.Option(RS.settings.value(
+            self.options = nex.Option(RS.settings.value(
                 'daemon/options',
                 default_options.value,
                 type=int))
@@ -484,24 +484,24 @@ class OscServerThread(ClientCommunicating):
             self.options = default_options
 
         if CommandLineArgs.no_options:
-            self.options = ray.Option.NONE
+            self.options = nex.Option.NONE
 
         if shutil.which('wmctrl'):
-            self.options |= ray.Option.HAS_WMCTRL
+            self.options |= nex.Option.HAS_WMCTRL
         else:
-            self.options &= ~ray.Option.HAS_WMCTRL
+            self.options &= ~nex.Option.HAS_WMCTRL
 
         if shutil.which('git'):
-            self.options |= ray.Option.HAS_GIT
+            self.options |= nex.Option.HAS_GIT
         else:
-            self.options &= ~ray.Option.HAS_GIT
+            self.options &= ~nex.Option.HAS_GIT
 
         self.jack_export_naming = Naming.from_config_str(
             RS.settings.value('daemon/jack_export_naming',
                               'INTERNAL_PRETTY',
                               type=str))
 
-        self.internal_mode = ray.InternalMode.from_str(
+        self.internal_mode = nex.InternalMode.from_str(
             RS.settings.value(
                 'daemon/internal_mode', 'FOLLOW_PROTOCOL', type=str))
 
@@ -517,7 +517,7 @@ class OscServerThread(ClientCommunicating):
             self._terminal_command_is_default = False
         else:
             self.terminal_command = shlex.join(
-                which_terminal(title='RAY_TERMINAL_TITLE'))
+                which_terminal(title='NEX_TERMINAL_TITLE'))
         
         self.add_nice_methods(METHODS_DICT, self.generic_method)
         self.add_nice_methods(_validators_types, self.generic_method)
@@ -592,7 +592,7 @@ class OscServerThread(ClientCommunicating):
             return False
 
         # continue in main thread if patchbay_to_osc is not started yet
-        # see session_signaled.py -> _ray_server_ask_for_patchbay
+        # see session_signaled.py -> _nex_server_ask_for_patchbay
 
     @directos(r.server.CONTROLLER_ANNOUNCE, 'i')
     def _srv_controller_announce(self, osp: OscPack):
@@ -647,12 +647,12 @@ class OscServerThread(ClientCommunicating):
     def _srv_change_root(self, osp: OscPack):
         new_root: str = osp.args[0] # type:ignore
         if not(new_root.startswith('/') and _path_is_valid(new_root)):
-            self.send(*osp.error(), ray.Err.CREATE_FAILED,
+            self.send(*osp.error(), nex.Err.CREATE_FAILED,
                       "invalid session root !")
             return False
 
         if self._is_operation_pending(osp):
-            self.send(*osp.error(), ray.Err.OPERATION_PENDING,
+            self.send(*osp.error(), nex.Err.OPERATION_PENDING,
                       "Can't change session_root. Operation pending")
             return False
 
@@ -662,7 +662,7 @@ class OscServerThread(ClientCommunicating):
             self.terminal_command = osp.args[0]
             if not self.terminal_command:
                 self.terminal_command = shlex.join(
-                    which_terminal(title='RAY_TERMINAL_TITLE'))
+                    which_terminal(title='NEX_TERMINAL_TITLE'))
             self.send_gui(rg.server.TERMINAL_COMMAND,
                           self.terminal_command)
         self.send(*osp.reply(), 'terminal command set')
@@ -728,20 +728,20 @@ class OscServerThread(ClientCommunicating):
         templates_file = templates_root / 'client_templates.xml'
 
         if not templates_file.is_file():
-            self.send(*osp.error(), ray.Err.NO_SUCH_FILE,
+            self.send(*osp.error(), nex.Err.NO_SUCH_FILE,
                       "file %s is missing !" % templates_file)
             return False
 
         if not os.access(templates_file, os.W_OK):
-            self.send(*osp.error(), ray.Err.NO_SUCH_FILE,
+            self.send(*osp.error(), nex.Err.NO_SUCH_FILE,
                       "file %s in unwriteable !" % templates_file)
             return False
 
         tree = ET.parse(templates_file)
         root = tree.getroot()
 
-        if root.tag != 'RAY-CLIENT-TEMPLATES':
-            self.send(*osp.error(), ray.Err.BAD_PROJECT,
+        if root.tag != 'NEX-CLIENT-TEMPLATES':
+            self.send(*osp.error(), nex.Err.BAD_PROJECT,
                       "file %s is not write correctly !" % templates_file)
             return False
 
@@ -754,7 +754,7 @@ class OscServerThread(ClientCommunicating):
             if c.string('template-name') == template_name:
                 break
         else:
-            self.send(*osp.error(), ray.Err.NO_SUCH_FILE,
+            self.send(*osp.error(), nex.Err.NO_SUCH_FILE,
                       "No template \"%s\" to remove !" % template_name)
             return False
         
@@ -764,7 +764,7 @@ class OscServerThread(ClientCommunicating):
             tree.write(templates_file)
         except BaseException as e:
             _logger.error(str(e))
-            self.send(*osp.error(), ray.Err.CREATE_FAILED,
+            self.send(*osp.error(), nex.Err.CREATE_FAILED,
                       "Impossible to rewrite user client templates xml file")
             return False
         
@@ -774,7 +774,7 @@ class OscServerThread(ClientCommunicating):
                 shutil.rmtree(templates_dir)
             except BaseException as e:
                 _logger.error(str(e))
-                self.send(*osp.error(), ray.Err.CREATE_FAILED,
+                self.send(*osp.error(), nex.Err.CREATE_FAILED,
                       "Failed to remove the folder %s" % str(templates_dir))
                 return False
 
@@ -793,7 +793,7 @@ class OscServerThread(ClientCommunicating):
         session_name: str = osp.args[0] # type:ignore
 
         if not _path_is_valid(session_name):
-            self.send(*osp.error(), ray.Err.CREATE_FAILED,
+            self.send(*osp.error(), nex.Err.CREATE_FAILED,
                       "Invalid session name.")
             return False
 
@@ -804,12 +804,12 @@ class OscServerThread(ClientCommunicating):
 
         #save as template an not loaded session
         if not _path_is_valid(session_name):
-            self.send(*osp.error(), ray.Err.CREATE_FAILED,
+            self.send(*osp.error(), nex.Err.CREATE_FAILED,
                     "Invalid session name.")
             return False
 
         if '/' in template_name:
-            self.send(*osp.error(), ray.Err.CREATE_FAILED,
+            self.send(*osp.error(), nex.Err.CREATE_FAILED,
                       "Invalid template name.")
             return False
 
@@ -832,7 +832,7 @@ class OscServerThread(ClientCommunicating):
     @directos(r.server.SCRIPT_USER_ACTION, 's')
     def _srv_script_user_action(self, osp: OscPack):
         if not self.gui_list:
-            self.send(*osp.error(), ray.Err.LAUNCH_FAILED,
+            self.send(*osp.error(), nex.Err.LAUNCH_FAILED,
                       "This server has no attached GUI")
             return
         user_act: str = osp.args[0] # type:ignore
@@ -843,9 +843,9 @@ class OscServerThread(ClientCommunicating):
         'set option from GUI'
         option_int: int = osp.args[0] # type:ignore
         try:
-            option = ray.Option(abs(option_int))
+            option = nex.Option(abs(option_int))
         except:
-            self.send(*osp.error(), ray.Err.BAD_PROJECT,
+            self.send(*osp.error(), nex.Err.BAD_PROJECT,
                       f"Option num {abs(option_int)} does not exists")
             return False
 
@@ -861,7 +861,7 @@ class OscServerThread(ClientCommunicating):
 
     @directos(r.server.SET_OPTIONS, 'ss*')
     def _srv_set_options(self, osp: OscPack):
-        'set options from ray_control'
+        'set options from nex_control'
         osp_args: tuple[str, ...] = osp.args # type:ignore
 
         for option_str in osp_args:
@@ -873,15 +873,15 @@ class OscServerThread(ClientCommunicating):
             if option_str in self._OPTIONS_DICT:
                 option = self._OPTIONS_DICT[option_str]
                 if option_value:
-                    if (option is ray.Option.DESKTOPS_MEMORY
-                            and ray.Option.HAS_WMCTRL not in self.options):
+                    if (option is nex.Option.DESKTOPS_MEMORY
+                            and nex.Option.HAS_WMCTRL not in self.options):
                         self.send(osp.src_addr, osc_paths.MINOR_ERROR, osp.path,
                             "wmctrl is not present. "
                             "Impossible to activate 'desktops_memory' option")
                         continue
 
-                    if (option is ray.Option.SNAPSHOTS
-                            and ray.Option.HAS_GIT not in self.options):
+                    if (option is nex.Option.SNAPSHOTS
+                            and nex.Option.HAS_GIT not in self.options):
                         self.send(osp.src_addr, osc_paths.MINOR_ERROR, osp.path,
                             "git is not present. "
                             "Impossible to activate 'snapshots' option")
@@ -904,14 +904,14 @@ class OscServerThread(ClientCommunicating):
         option_str: str = osp.args[0] # type:ignore
 
         if option_str not in self._OPTIONS_DICT:
-            self.send(*osp.error(), ray.Err.GENERAL_ERROR,
+            self.send(*osp.error(), nex.Err.GENERAL_ERROR,
                       "option \"%s\" doesn't exists" % option_str)
             return
 
         if self.options & self._OPTIONS_DICT[option_str]:
             self.send(*osp.reply(), 'Has option')
         else:
-            self.send(*osp.error(), ray.Err.GENERAL_ERROR,
+            self.send(*osp.error(), nex.Err.GENERAL_ERROR,
                       "Option %s is not currently used" % option_str)
 
     @directos(r.server.CLEAR_CLIENT_TEMPLATES_DATABASE, '')
@@ -931,7 +931,7 @@ class OscServerThread(ClientCommunicating):
     def _srv_exotic_action(self, osp: OscPack):
         action: str = osp.args[0] # type:ignore
         autostart_dir = Path.home() / '.config' / 'autostart'
-        desk_file = "ray-jack_checker.desktop"
+        desk_file = "nex-jack_checker.desktop"
         dest_full_path = autostart_dir / desk_file
 
         if action == 'set_jack_checker_autostart':
@@ -1026,7 +1026,7 @@ class OscServerThread(ClientCommunicating):
     def _sess_save_as_template(self, osp: OscPack):
         template_name: str = osp.args[0] # type:ignore
         if '/' in template_name or template_name == '.':
-            self.send(*osp.error(), ray.Err.CREATE_FAILED,
+            self.send(*osp.error(), nex.Err.CREATE_FAILED,
                       "Invalid session template name.")
             return False
 
@@ -1037,7 +1037,7 @@ class OscServerThread(ClientCommunicating):
 
     @validator(r.session.TAKE_SNAPSHOT, 's|si')
     def _sess_take_snapshot(self, osp: OscPack):
-        if ray.Option.HAS_GIT not in self.options:
+        if nex.Option.HAS_GIT not in self.options:
             self.send(*osp.error(),
                       "snapshot impossible because git is not installed")
             return False
@@ -1053,7 +1053,7 @@ class OscServerThread(ClientCommunicating):
 
     @validator(r.session.SKIP_WAIT_USER, '')
     def _sess_skip_wait_user(self, osp: OscPack):
-        if self.server_status is not ray.ServerStatus.WAIT_USER:
+        if self.server_status is not nex.ServerStatus.WAIT_USER:
             return False
 
     @validator(r.session.DUPLICATE, 's', no_sess='No session to duplicate.')
@@ -1064,7 +1064,7 @@ class OscServerThread(ClientCommunicating):
         new_name: str = osp.args[0] # type:ignore
 
         if not _path_is_valid(new_name):
-            self.send(*osp.error(), ray.Err.CREATE_FAILED,
+            self.send(*osp.error(), nex.Err.CREATE_FAILED,
                       "Invalid session name.")
             return False
 
@@ -1086,7 +1086,7 @@ class OscServerThread(ClientCommunicating):
                 return False
 
         if '/' in new_session_name:
-            self.send(*osp.error(), ray.Err.CREATE_FAILED,
+            self.send(*osp.error(), nex.Err.CREATE_FAILED,
                       "Invalid session name.")
             return False
 
@@ -1112,23 +1112,23 @@ class OscServerThread(ClientCommunicating):
                     prefix_mode, prefix_pattern, client_id, jack_naming = osp_args
                     
                 try:
-                    protocol = ray.Protocol(protocol)
+                    protocol = nex.Protocol(protocol)
                 except:
-                    self.send(*osp.error(), ray.Err.CREATE_FAILED,
+                    self.send(*osp.error(), nex.Err.CREATE_FAILED,
                             f"Invalid protocol number: {protocol}")
                     return False
 
             case _:
                 osp_args_: tuple[str, ...] = osp.args # type:ignore
                 executable_path = osp_args_[0]
-                ray_hack = bool(len(osp_args_) > 1 and 'ray_hack' in osp_args_[1:])
-                if ray_hack:
-                    protocol = ray.Protocol.RAY_HACK
+                nex_hack = bool(len(osp_args_) > 1 and 'nex_hack' in osp_args_[1:])
+                if nex_hack:
+                    protocol = nex.Protocol.NEX_HACK
                 else:
-                    protocol = ray.Protocol.NSM
+                    protocol = nex.Protocol.NSM
 
-        if protocol is ray.Protocol.NSM and '/' in executable_path:
-            self.send(*osp.error(), ray.Err.LAUNCH_FAILED,
+        if protocol is nex.Protocol.NSM and '/' in executable_path:
+            self.send(*osp.error(), nex.Err.LAUNCH_FAILED,
                 "Absolute paths are not permitted. Clients must be in $PATH")
             return False
 
@@ -1163,14 +1163,14 @@ class OscServerThread(ClientCommunicating):
         self.send(*osp.reply(), 'notes hidden')
 
     @validator(r.client.CHANGE_PREFIX, 'si|ss|sis|sss')
-    def _ray_client_change_prefix(self, osp: OscPack):
-        if osp.args[1] in (ray.PrefixMode.CUSTOM.value, 'custom'):
+    def _nex_client_change_prefix(self, osp: OscPack):
+        if osp.args[1] in (nex.PrefixMode.CUSTOM.value, 'custom'):
             if len(osp.args) < 3:
                 self._unknown_message(osp)
                 return False
 
     @directos(r.favorites.ADD, 'ssis')
-    def _ray_favorites_add(self, osp: OscPack):
+    def _nex_favorites_add(self, osp: OscPack):
         osp_args: tuple[str, str, int, str] = osp.args # type:ignore
         name, icon, int_factory, display_name = osp_args
 
@@ -1182,12 +1182,12 @@ class OscServerThread(ClientCommunicating):
                 break
         else:
             RS.favorites.append(
-                ray.Favorite(name, icon, bool(int_factory), display_name))
+                nex.Favorite(name, icon, bool(int_factory), display_name))
 
         self.send_gui(rg.favorites.ADDED, *osp.args)
 
     @directos(r.favorites.REMOVE, 'si')
-    def _ray_favorites_remove(self, osp: OscPack):
+    def _nex_favorites_remove(self, osp: OscPack):
         osp_args: tuple[str, int] = osp.args # type:ignore
         name, int_factory = osp_args
 
@@ -1218,14 +1218,14 @@ class OscServerThread(ClientCommunicating):
 
     def _is_operation_pending(self, osp: OscPack) -> bool:
         if self.session.file_copier.is_active():
-            self.send(*osp.error(), ray.Err.COPY_RUNNING,
-                      "ray-daemon is copying files. "
+            self.send(*osp.error(), nex.Err.COPY_RUNNING,
+                      "nex-daemon is copying files. "
                       "Wait copy finish or abort copy, "
                       "and restart operation !")
             return True
 
         if self.session.steps_order:
-            self.send(*osp.error(), ray.Err.OPERATION_PENDING,
+            self.send(*osp.error(), nex.Err.OPERATION_PENDING,
                       "An operation pending.")
             return True
 
@@ -1252,7 +1252,7 @@ class OscServerThread(ClientCommunicating):
         if patchbay_port is not None:
             self.mega_send(patchbay_port, mega_send)
 
-    def set_server_status(self, server_status:ray.ServerStatus):
+    def set_server_status(self, server_status:nex.ServerStatus):
         self.server_status = server_status
         self.send_gui(rg.server.STATUS, server_status.value)
 
@@ -1279,7 +1279,7 @@ class OscServerThread(ClientCommunicating):
 
         tcp_url = get_net_url(self.tcp_port, protocol=TCP)
 
-        self.send(gui.addr, rg.server.ANNOUNCE, ray.VERSION,
+        self.send(gui.addr, rg.server.ANNOUNCE, nex.VERSION,
                   self.server_status.value, self.options.value,
                   str(self.session.root), int(is_net_free), tcp_url)
 
@@ -1311,16 +1311,16 @@ class OscServerThread(ClientCommunicating):
                       rg.client.NEW,
                       *client.spread())
 
-            if client.is_ray_hack:
+            if client.is_nex_hack:
                 self.send(gui.addr,
-                          rg.client.RAY_HACK_UPDATE,
+                          rg.client.NEX_HACK_UPDATE,
                           client.client_id,
-                          *client.ray_hack.spread())
-            elif client.is_ray_net:
+                          *client.nex_hack.spread())
+            elif client.is_nex_net:
                 self.send(gui.addr,
-                          rg.client.RAY_NET_UPDATE,
+                          rg.client.NEX_NET_UPDATE,
                           client.client_id,
-                          *client.ray_net.spread())
+                          *client.nex_net.spread())
 
             self.send(gui.addr, rg.client.STATUS,
                       client.client_id, client.status.value)
@@ -1337,14 +1337,14 @@ class OscServerThread(ClientCommunicating):
             self.send(gui.addr, rg.trash.ADD,
                       *trashed_client.spread())
 
-            if trashed_client.is_ray_hack:
-                self.send(gui.addr, rg.trash.RAY_HACK_UPDATE,
+            if trashed_client.is_nex_hack:
+                self.send(gui.addr, rg.trash.NEX_HACK_UPDATE,
                           trashed_client.client_id,
-                          *trashed_client.ray_hack.spread())
-            elif trashed_client.is_ray_net:
-                self.send(gui.addr, rg.trash.RAY_NET_UPDATE,
+                          *trashed_client.nex_hack.spread())
+            elif trashed_client.is_nex_net:
+                self.send(gui.addr, rg.trash.NEX_NET_UPDATE,
                           trashed_client.client_id,
-                          *trashed_client.ray_net.spread())
+                          *trashed_client.nex_net.spread())
 
         self.session.check_recent_sessions_existing()
         if self.session.root in self.session.recent_sessions.keys():
@@ -1365,7 +1365,7 @@ class OscServerThread(ClientCommunicating):
         controller.addr = control_address
         self.controller_list.append(controller)
         self.send(control_address, r.control.SERVER_ANNOUNCE,
-                  ray.VERSION, self.server_status.value, self.options.value,
+                  nex.VERSION, self.server_status.value, self.options.value,
                   str(self.session.root), 1)
 
     def send_controller_message(self, message: str):

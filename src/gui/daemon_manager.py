@@ -13,8 +13,8 @@ from qtpy.QtWidgets import QApplication
 
 # Imports from src/shared
 from osclib import Address, get_free_osc_port, verified_address
-import ray
-import osc_paths.ray as r
+import nex
+import osc_paths.nex as r
 
 # Local imports
 from gui_server_thread import GuiServerThread
@@ -28,7 +28,7 @@ _logger = logging.getLogger(__name__)
 
 
 def _get_port_gui_free() -> Optional[int]:
-    MULTI_DAEMON_FILE = '/tmp/RaySession/multi-daemon.json'
+    MULTI_DAEMON_FILE = '/tmp/NexSession/multi-daemon.json'
     try:
         with open(MULTI_DAEMON_FILE, 'r') as f:
             json_list = json.load(f)
@@ -150,16 +150,16 @@ class DaemonManager(QObject):
             sys.stderr.write(
                 _translate(
                     'error',
-                    "No announce from ray-daemon." 
-                    "RaySession can't works. Sorry.\n"))
+                    "No announce from nex-daemon."
+                    "NexSession can't works. Sorry.\n"))
             QApplication.quit()
 
     def _receive_announce(
-            self, src_addr: Address, version: str, server_status: ray.ServerStatus,
-            options: ray.Option, session_root: str, is_net_free: int):
+            self, src_addr: Address, version: str, server_status: nex.ServerStatus,
+            options: nex.Option, session_root: str, is_net_free: int):
         self._announce_timer.stop()
 
-        if version.split('.')[:2] != ray.VERSION.split('.')[:2]:
+        if version.split('.')[:2] != nex.VERSION.split('.')[:2]:
             # works only if the two firsts digits are the same (ex: 0.6)
             self.signaler.daemon_url_request.emit(
                 ErrDaemon.WRONG_VERSION, self.url)
@@ -180,7 +180,7 @@ class DaemonManager(QObject):
             return
 
         if (CommandLineArgs.out_daemon
-                and server_status is not ray.ServerStatus.OFF):
+                and server_status is not nex.ServerStatus.OFF):
             self.signaler.daemon_url_request.emit(ErrDaemon.NOT_OFF, self.url)
             self.disannounce(src_addr)
             return
@@ -192,7 +192,7 @@ class DaemonManager(QObject):
         self.session_root = session_root
         CommandLineArgs.change_session_root(self.session_root)
 
-        self._is_nsm_locked = ray.Option.NSM_LOCKED in options
+        self._is_nsm_locked = nex.Option.NSM_LOCKED in options
 
         if self._is_nsm_locked:
             if self.main_win is not None:
@@ -260,7 +260,7 @@ class DaemonManager(QObject):
                 sys.stderr.write(
                     "\033[92m%s\033[0m\n" % (
                         _translate('GUI_daemon',
-                                    "Connecting GUI to existing ray-daemon port %i")
+                                    "Connecting GUI to existing nex-daemon port %i")
                         % self._port))
 
                 if CommandLineArgs.start_session:
@@ -302,9 +302,9 @@ class DaemonManager(QObject):
             arguments.append('--config-dir')
             arguments.append(CommandLineArgs.config_dir)
 
-        _logger.debug(f'GUI starts ray-daemon with arguments {arguments}')
-        self._process.startDetached('ray-daemon', arguments)
-        #self.process.start('konsole', ['-e', 'ray-daemon'] + arguments)
+        _logger.debug(f'GUI starts nex-daemon with arguments {arguments}')
+        self._process.startDetached('nex-daemon', arguments)
+        #self.process.start('konsole', ['-e', 'nex-daemon'] + arguments)
 
     def stop(self):
         if self.launched_before:

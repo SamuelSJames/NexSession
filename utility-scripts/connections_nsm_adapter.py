@@ -69,8 +69,8 @@ def main_process():
     
     root = tree.getroot()
     
-    if root.tag != "RAY-JACKPATCH":
-        sys.stderr.write('xml file %s is not a RAY-JACKPATCH file\n' % input_file_path)
+    if root.tag != "NEX-JACKPATCH":
+        sys.stderr.write('xml file %s is not a NEX-JACKPATCH file\n' % input_file_path)
         sys.exit(1)
     
     for child in root:

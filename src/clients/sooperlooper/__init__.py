@@ -34,7 +34,7 @@ class ArgRead(Enum):
 
 
 def run():
-    set_proc_name('ray-sooploop')
+    set_proc_name('nex-sooploop')
 
     if not shutil.which('sooperlooper'):
         _logger.critical('SooperLooper is not installed.')
@@ -113,7 +113,7 @@ def run():
         global jack
         import jack
         try:
-            jack_client = jack.Client("sooper_ray_wk", no_start_server=True)
+            jack_client = jack.Client("sooper_nex_wk", no_start_server=True)
         except:
             jack_client = None
             _logger.error(
@@ -255,7 +255,7 @@ def internal_start(data: MainObject):
         global jack
         import jack
         try:
-            jack_client = jack.Client("sooper_ray_wk", no_start_server=True)
+            jack_client = jack.Client("sooper_nex_wk", no_start_server=True)
         except:
             jack_client = None
             _logger.error(

@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 # Imports from src/shared
-import ray
+import nex
 from nsm_client_qt import NSMThread, NSMSignaler
 import osc_paths.nsm as nsm
 
@@ -29,7 +29,7 @@ class NsmChild:
         self.project_path = ''
 
         serverNSM = NSMThread(
-            'raysession_child', self.nsm_signaler,
+            'nexsession_child', self.nsm_signaler,
             CommandLineArgs.NSM_URL, CommandLineArgs.debug)
         serverNSM.start()
 
@@ -43,10 +43,10 @@ class NsmChild:
 
         if server_nsm:
             server_nsm.announce(_translate('child_session', 'Child Session'),
-                                ':switch:optional-gui:', 'raysession')
+                                ':switch:optional-gui:', 'nexsession')
 
-    def _server_status_changed(self, server_status: ray.ServerStatus):
-        if server_status is ray.ServerStatus.READY:
+    def _server_status_changed(self, server_status: nex.ServerStatus):
+        if server_status is nex.ServerStatus.READY:
             server_nsm = NSMThread.instance()
             if not server_nsm:
                 return
@@ -105,7 +105,7 @@ class NsmChildOutside(NsmChild):
         if server_nsm:
             server_nsm.announce(
                 _translate('network_session', 'Network Session'),
-                ':switch:optional-gui:ray-network:', ray.RAYNET_BIN)
+                ':switch:optional-gui:nex-network:', nex.NEXNET_BIN)
 
             server_nsm.sendToDaemon(
                 nsm.client.NETWORK_PROPERTIES,

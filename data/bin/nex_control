@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+
+import sys
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+sys.path[0] = str(Path(__file__).parents[1]
+                  / 'share' / 'nexsession' / 'src' / 'control')
+
+if TYPE_CHECKING:
+    import src.control.nex_control
+else:
+    import nex_control

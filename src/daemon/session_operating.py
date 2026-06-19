@@ -18,11 +18,11 @@ from qtpy.QtCore import QCoreApplication, QTimer, QProcess
 # Imports from src/shared
 from osclib import Address, MegaSend, is_valid_osc_url
 from osclib.bases import OscPack, OscPath
-import ray
+import nex
 from xml_tools import XmlElement
 import osc_paths
-import osc_paths.ray as r
-import osc_paths.ray.gui as rg
+import osc_paths.nex as r
+import osc_paths.nex.gui as rg
 import osc_paths.nsm as nsm
 
 # Local imports
@@ -46,7 +46,7 @@ _translate = QCoreApplication.translate
 class OperatingSession(Session):
     def __init__(self, root: Path, session_id=0):
         Session.__init__(self, root, session_id)
-        self.wait_for = ray.WaitFor.NONE
+        self.wait_for = nex.WaitFor.NONE
 
         self.file_copier = FileCopier(self)
         self.step_scripter = StepScripter(self)
@@ -96,7 +96,7 @@ class OperatingSession(Session):
     def _wait_and_go_to(
             self, duration: int,
             follow: tuple[Callable, Any] | list[Callable] | Callable,
-            wait_for: ray.WaitFor, redondant=False):
+            wait_for: nex.WaitFor, redondant=False):
         self.timer.stop()
 
         # we need to delete timer to change the timeout connect
@@ -114,7 +114,7 @@ class OperatingSession(Session):
 
         # follow: Callable
 
-        if wait_for is ray.WaitFor.SCRIPT_QUIT:
+        if wait_for is nex.WaitFor.SCRIPT_QUIT:
             if self.step_scripter.is_running():
                 self.wait_for = wait_for
                 self.timer.setSingleShot(True)
@@ -124,7 +124,7 @@ class OperatingSession(Session):
                 follow()
             return
 
-        if wait_for is ray.WaitFor.PATCHBAY_QUIT:
+        if wait_for is nex.WaitFor.PATCHBAY_QUIT:
             if not patchbay_dmn_mng.is_running():
                 follow()
                 return
@@ -138,7 +138,7 @@ class OperatingSession(Session):
         if self.expected_clients:
             n_expected = len(self.expected_clients)
 
-            if wait_for is ray.WaitFor.ANNOUNCE:
+            if wait_for is nex.WaitFor.ANNOUNCE:
                 if n_expected == 1:
                     message = _translate('GUIMSG',
                         'waiting announce from %s...'
@@ -147,7 +147,7 @@ class OperatingSession(Session):
                     message = _translate('GUIMSG',
                         'waiting announce from %i clients...' % n_expected)
                 self.send_gui_message(message)
-            elif wait_for is ray.WaitFor.QUIT:
+            elif wait_for is nex.WaitFor.QUIT:
                 if n_expected == 1:
                     message = _translate('GUIMSG',
                         'waiting for %s to stop...'
@@ -167,7 +167,7 @@ class OperatingSession(Session):
             follow()
 
     def end_timer_if_last_expected(self, client: Client):
-        if self.wait_for is ray.WaitFor.QUIT and client in self.clients:
+        if self.wait_for is nex.WaitFor.QUIT and client in self.clients:
             self._remove_client(client)
 
         if client in self.expected_clients:
@@ -190,19 +190,19 @@ class OperatingSession(Session):
         if self.expected_clients:
             client_names = [c.gui_msg_style() for c in self.expected_clients]
 
-            if self.wait_for is ray.WaitFor.ANNOUNCE:
+            if self.wait_for is nex.WaitFor.ANNOUNCE:
                 self.send_gui_message(
                     _translate('GUIMSG', "%s didn't announce.")
                     % ', '.join(client_names))
 
-            elif self.wait_for is ray.WaitFor.QUIT:
+            elif self.wait_for is nex.WaitFor.QUIT:
                 self.send_gui_message(
                     _translate('GUIMSG', "%s still alive !")
                     % ', '.join(client_names))
 
             self.expected_clients.clear()
 
-        self.wait_for = ray.WaitFor.NONE
+        self.wait_for = nex.WaitFor.NONE
 
     def next_function(self, from_run_step=False, run_step_args=[]):
         if self.run_step_addr and not from_run_step:
@@ -226,7 +226,7 @@ class OperatingSession(Session):
             if len(next_item) > 1:
                 arguments = next_item[1:]
 
-        if (self.has_server_option(ray.Option.SESSION_SCRIPTS)
+        if (self.has_server_option(nex.Option.SESSION_SCRIPTS)
                 and not self.step_scripter.is_running()
                 and self.path is not None
                 and not from_run_step):
@@ -244,7 +244,7 @@ class OperatingSession(Session):
                                 step_string, arguments,
                                 self.steps_osp.src_addr,
                                 self.steps_osp.path)):
-                        self.set_server_status(ray.ServerStatus.SCRIPT)
+                        self.set_server_status(nex.ServerStatus.SCRIPT)
                         return
                     break
 
@@ -313,12 +313,12 @@ class OperatingSession(Session):
             elif client._internal is not None:
                 if client._internal.running:
                     has_alives = True
-                elif client.status is not ray.ClientStatus.STOPPED:
+                elif client.status is not nex.ClientStatus.STOPPED:
                     clients_to_finish.append(client)
 
             elif (client.is_running()
                     and client.launched_in_terminal
-                    and client.status is not ray.ClientStatus.LOSE):
+                    and client.status is not nex.ClientStatus.LOSE):
                 has_alives = True
                 if (client.nsm_active
                         and not os.path.exists('/proc/%i' % client.pid_from_nsm)):
@@ -332,22 +332,22 @@ class OperatingSession(Session):
 
     def _check_windows_appears(self):
         for client in self.clients:
-            if client.is_running() and client.ray_hack_waiting_win:
+            if client.is_running() and client.nex_hack_waiting_win:
                 break
         else:
             self.window_waiter.stop()
             return
 
-        if self.has_server_option(ray.Option.HAS_WMCTRL):
+        if self.has_server_option(nex.Option.HAS_WMCTRL):
             self.desktops_memory.set_active_window_list()
             for client in self.clients:
-                if client.ray_hack_waiting_win:
+                if client.nex_hack_waiting_win:
                     if self.desktops_memory.has_window(client.pid):
-                        client.ray_hack_waiting_win = False
-                        client.ray_hack_ready()
+                        client.nex_hack_waiting_win = False
+                        client.nex_hack_ready()
 
     def patchbay_process_finished(self):
-        if self.wait_for is ray.WaitFor.PATCHBAY_QUIT:
+        if self.wait_for is nex.WaitFor.PATCHBAY_QUIT:
             self.timer.setSingleShot(True)
             self.timer.stop()
             self.timer.start(0)
@@ -358,7 +358,7 @@ class OperatingSession(Session):
         
         self.send_even_dummy(*self.steps_osp.reply(), *args)
         
-    def _send_error(self, err: ray.Err, error_message: str):
+    def _send_error(self, err: nex.Err, error_message: str):
         # clear process order to allow other new operations
         self.steps_order.clear()
 
@@ -371,14 +371,14 @@ class OperatingSession(Session):
         
         self.send_even_dummy(*self.steps_osp.error(), err, error_message)
 
-    def _send_minor_error(self, err: ray.Err, error_message: str):
+    def _send_minor_error(self, err: nex.Err, error_message: str):
         if self.steps_osp is None:
             return
         
         self.send_even_dummy(*self.steps_osp.error(), err, error_message)
 
     def step_scripter_finished(self):
-        if self.wait_for is ray.WaitFor.SCRIPT_QUIT:
+        if self.wait_for is nex.WaitFor.SCRIPT_QUIT:
             self.timer.setSingleShot(True)
             self.timer.stop()
             self.timer.start(0)
@@ -415,7 +415,7 @@ class OperatingSession(Session):
         return client
 
     def adjust_files_after_copy(self, new_session_full_name: str,
-                                template_mode: ray.Template):
+                                template_mode: nex.Template):
         new_session_short_path = Path(new_session_full_name)
         
         if new_session_short_path.is_absolute():
@@ -423,22 +423,22 @@ class OperatingSession(Session):
         else:
             spath = self.root / new_session_short_path
 
-        # create tmp clients from raysession.xml to adjust files after copy
-        session_file = spath / 'raysession.xml'
+        # create tmp clients from nexsession.xml to adjust files after copy
+        session_file = spath / 'nexsession.xml'
 
         try:
             tree = ET.parse(session_file)
         except Exception as e:
             _logger.error(str(e))
             self._send_error(
-                ray.Err.BAD_PROJECT,
+                nex.Err.BAD_PROJECT,
                 _translate("error", "impossible to read %s as a XML file")
                     % session_file)
             return
         
         root = tree.getroot()
-        if root.tag != 'RAYSESSION':
-            self.load_error(ray.Err.BAD_PROJECT)
+        if root.tag != 'NEXSESSION':
+            self.load_error(nex.Err.BAD_PROJECT)
             return
         
         root.attrib['name'] = spath.name
@@ -462,7 +462,7 @@ class OperatingSession(Session):
         except BaseException as e:
             _logger.error(str(e))
             self._send_error(
-                ray.Err.CREATE_FAILED,
+                nex.Err.CREATE_FAILED,
                 _translate("error", "impossible to write XML file %s")
                     % session_file)
             return
@@ -483,9 +483,9 @@ class OperatingSession(Session):
             return
 
         if outing:
-            self.set_server_status(ray.ServerStatus.OUT_SAVE)
+            self.set_server_status(nex.ServerStatus.OUT_SAVE)
         else:
-            self.set_server_status(ray.ServerStatus.SAVE)
+            self.set_server_status(nex.ServerStatus.SAVE)
 
         self.send_gui_message(_translate('GUIMSG', '-- Saving session %s --')
                                 % highlight_text(self.short_path_name))
@@ -507,7 +507,7 @@ class OperatingSession(Session):
                             % len(self.expected_clients))
 
         self._wait_and_go_to(10000, (self.save_substep1, outing),
-                             ray.WaitFor.REPLY)
+                             nex.WaitFor.REPLY)
 
     def save_substep1(self, outing=False, save_clients=True):
         self._clean_expected()
@@ -516,7 +516,7 @@ class OperatingSession(Session):
             for client in self.clients:
                 if client.has_error():
                     self._send_error(
-                        ray.Err.GENERAL_ERROR,
+                        nex.Err.GENERAL_ERROR,
                         "Some clients could not save")
                     break
 
@@ -526,12 +526,12 @@ class OperatingSession(Session):
 
         err = self._save_session_file()
         if err:
-            self.save_error(ray.Err.CREATE_FAILED)
+            self.save_error(nex.Err.CREATE_FAILED)
             return
 
         self.canvas_saver.save_json_session_canvas(self.path)
 
-        full_notes_path = self.path / ray.NOTES_PATH
+        full_notes_path = self.path / nex.NOTES_PATH
 
         if self.notes:
             try:
@@ -555,37 +555,37 @@ class OperatingSession(Session):
     def save_done(self):
         self.message("Done.")
         self._send_reply("Saved.")
-        self.set_server_status(ray.ServerStatus.READY)
+        self.set_server_status(nex.ServerStatus.READY)
 
-    def save_error(self, err_saving: ray.Err):
+    def save_error(self, err_saving: nex.Err):
         self.message("Failed")
         m = _translate('Load Error', "Unknown error")
 
-        if err_saving == ray.Err.CREATE_FAILED:
+        if err_saving == nex.Err.CREATE_FAILED:
             m = _translate(
                 'GUIMSG', "Can't save session, session file is unwriteable !")
 
         self.message(m)
         self.send_gui_message(m)
-        self._send_error(ray.Err.CREATE_FAILED, m)
+        self._send_error(nex.Err.CREATE_FAILED, m)
 
-        self.set_server_status(ray.ServerStatus.READY)
+        self.set_server_status(nex.ServerStatus.READY)
         self.steps_order.clear()
         self.steps_osp = None
 
     def snapshot(self, snapshot_name='', rewind_snapshot='',
                  force=False, outing=False):
         if not force:
-            if not (self.has_server_option(ray.Option.SNAPSHOTS)
+            if not (self.has_server_option(nex.Option.SNAPSHOTS)
                     and not self.snapshoter.is_auto_snapshot_prevented()
                     and self.snapshoter.has_changes()):
                 self.next_function()
                 return
 
         if outing:
-            self.set_server_status(ray.ServerStatus.OUT_SNAPSHOT)
+            self.set_server_status(nex.ServerStatus.OUT_SNAPSHOT)
         else:
-            self.set_server_status(ray.ServerStatus.SNAPSHOT)
+            self.set_server_status(nex.ServerStatus.SNAPSHOT)
 
         self.send_gui_message(_translate('GUIMSG', "snapshot started..."))
         self.snapshoter.save(snapshot_name, rewind_snapshot,
@@ -600,18 +600,18 @@ class OperatingSession(Session):
         self.next_function()
 
     def snapshot_done(self):
-        self.set_server_status(ray.ServerStatus.READY)
+        self.set_server_status(nex.ServerStatus.READY)
         self._send_reply("Snapshot taken.")
 
-    def snapshot_error(self, err_snapshot: ray.Err, info_str='', exit_code=0):
+    def snapshot_error(self, err_snapshot: nex.Err, info_str='', exit_code=0):
         m = _translate('Snapshot Error', "Unknown error")
-        if err_snapshot == ray.Err.SUBPROCESS_UNTERMINATED:
+        if err_snapshot == nex.Err.SUBPROCESS_UNTERMINATED:
             m = _translate('Snapshot Error',
                            "git didn't stop normally.\n%s") % info_str
-        elif err_snapshot == ray.Err.SUBPROCESS_CRASH:
+        elif err_snapshot == nex.Err.SUBPROCESS_CRASH:
             m = _translate('Snapshot Error',
                            "git crashes.\n%s") % info_str
-        elif err_snapshot == ray.Err.SUBPROCESS_EXITCODE:
+        elif err_snapshot == nex.Err.SUBPROCESS_EXITCODE:
             m = _translate('Snapshot Error',
                            "git exit with the error code %i.\n%s") \
                 % (exit_code, info_str)
@@ -620,7 +620,7 @@ class OperatingSession(Session):
 
         # quite dirty
         # minor error is not a fatal error
-        # it's important for ray_control to not stop
+        # it's important for nex_control to not stop
         # if operation is not snapshot (ex: close or save)
         if self.next_function.__name__ == 'snapshot_done':
             self._send_error(err_snapshot, m)
@@ -633,7 +633,7 @@ class OperatingSession(Session):
     def close_no_save_clients(self):
         self._clean_expected()
 
-        if self.has_server_option(ray.Option.HAS_WMCTRL):
+        if self.has_server_option(nex.Option.HAS_WMCTRL):
             has_nosave_clients = False
             for client in self.clients:
                 if client.is_running() and client.relevant_no_save_level() == 2:
@@ -655,7 +655,7 @@ class OperatingSession(Session):
 
         duration = int(1000 * math.sqrt(len(self.expected_clients)))
         self._wait_and_go_to(duration, self.close_no_save_clients_substep1,
-                             ray.WaitFor.QUIT)
+                             nex.WaitFor.QUIT)
 
     def close_no_save_clients_substep1(self):
         self._clean_expected()
@@ -667,14 +667,14 @@ class OperatingSession(Session):
                 has_nosave_clients = True
 
         if has_nosave_clients:
-            self.set_server_status(ray.ServerStatus.WAIT_USER)
+            self.set_server_status(nex.ServerStatus.WAIT_USER)
             self.timer_wu_progress_n = 0
             self.timer_waituser_progress.start()
             self.send_gui_message(_translate('GUIMSG',
                 'waiting you to close yourself unsaveable clients...'))
 
         # Timer (2mn) is restarted if an expected client has been closed
-        self._wait_and_go_to(120000, self.next_function, ray.WaitFor.QUIT, True)
+        self._wait_and_go_to(120000, self.next_function, nex.WaitFor.QUIT, True)
 
     def close(self, clear_all_clients=False):
         self.expected_clients.clear()
@@ -699,7 +699,7 @@ class OperatingSession(Session):
                         continue
 
                     if client.can_switch_with(future_client):
-                        client.switch_state = ray.SwitchState.RESERVED
+                        client.switch_state = nex.SwitchState.RESERVED
                         keep_client_list.append(client)
                         break
 
@@ -713,9 +713,9 @@ class OperatingSession(Session):
                     byebye_client_list.append(client)
 
         if keep_client_list:
-            self.set_server_status(ray.ServerStatus.CLEAR)
+            self.set_server_status(nex.ServerStatus.CLEAR)
         else:
-            self.set_server_status(ray.ServerStatus.CLOSE)
+            self.set_server_status(nex.ServerStatus.CLOSE)
 
         for client in byebye_client_list:
             if client in self.clients:
@@ -743,14 +743,14 @@ class OperatingSession(Session):
         self.send_gui(rg.trash.CLEAR)
 
         self._wait_and_go_to(
-            30000, (self.close_substep1, clear_all_clients), ray.WaitFor.QUIT)
+            30000, (self.close_substep1, clear_all_clients), nex.WaitFor.QUIT)
 
     def close_substep1(self, clear_all_clients=False):
         for client in self.expected_clients:
             client.kill()
 
         self._wait_and_go_to(1000, (self.close_substep2, clear_all_clients),
-                         ray.WaitFor.QUIT)
+                         nex.WaitFor.QUIT)
 
     def close_substep2(self, clear_all_clients=False):
         self._clean_expected()
@@ -777,7 +777,7 @@ class OperatingSession(Session):
         self._no_future()
         self._send_reply("Closed.")
         self.message("Done")
-        self.set_server_status(ray.ServerStatus.OFF)
+        self.set_server_status(nex.ServerStatus.OFF)
         self.steps_osp = None
 
     def abort_done(self):
@@ -790,7 +790,7 @@ class OperatingSession(Session):
         self._no_future()
         self._send_reply("Aborted.")
         self.message("Done")
-        self.set_server_status(ray.ServerStatus.OFF)
+        self.set_server_status(nex.ServerStatus.OFF)
         self.steps_osp = None
 
     def new(self, new_session_name: str):
@@ -801,7 +801,7 @@ class OperatingSession(Session):
 
         if self._is_path_in_a_session_dir(spath):
             self._send_error(
-                ray.Err.SESSION_IN_SESSION_DIR,
+                nex.Err.SESSION_IN_SESSION_DIR,
                 """Can't create session in a dir containing a session
 for better organization.""")
             return
@@ -809,11 +809,11 @@ for better organization.""")
         try:
             spath.mkdir(parents=True)
         except:
-            self._send_error(ray.Err.CREATE_FAILED,
+            self._send_error(nex.Err.CREATE_FAILED,
                              "Could not create the session directory")
             return
 
-        self.set_server_status(ray.ServerStatus.NEW)
+        self.set_server_status(nex.ServerStatus.NEW)
         self._set_path(spath)
         self.send_gui(rg.session.NAME,
                       self.name, str(self.path))
@@ -822,40 +822,40 @@ for better organization.""")
     def new_done(self):
         self.send_gui_message(_translate('GUIMSG', 'Session is ready'))
         self._send_reply("Created.")
-        self.set_server_status(ray.ServerStatus.READY)
+        self.set_server_status(nex.ServerStatus.READY)
         self.steps_osp = None
 
     def init_snapshot(self, spath: Path, snapshot: str):
-        self.set_server_status(ray.ServerStatus.REWIND)
+        self.set_server_status(nex.ServerStatus.REWIND)
         if self.snapshoter.load(spath, snapshot, self.init_snapshot_error):
             self.next_function()
 
-    def init_snapshot_error(self, err: ray.Err, info_str='', exit_code=0):
+    def init_snapshot_error(self, err: nex.Err, info_str='', exit_code=0):
         m = _translate('Snapshot Error', "Snapshot error")
-        if err == ray.Err.SUBPROCESS_UNTERMINATED:
+        if err == nex.Err.SUBPROCESS_UNTERMINATED:
             m = _translate('Snapshot Error',
                            "command didn't stop normally:\n%s") % info_str
-        elif err == ray.Err.SUBPROCESS_CRASH:
+        elif err == nex.Err.SUBPROCESS_CRASH:
             m = _translate('Snapshot Error',
                            "command crashes:\n%s") % info_str
-        elif err == ray.Err.SUBPROCESS_EXITCODE:
+        elif err == nex.Err.SUBPROCESS_EXITCODE:
             m = _translate('Snapshot Error',
                            "command exit with the error code %i:\n%s") \
                 % (exit_code, info_str)
-        elif err == ray.Err.NO_SUCH_FILE:
+        elif err == nex.Err.NO_SUCH_FILE:
             m = _translate('Snapshot Error',
                            "error reading file:\n%s") % info_str
         self.message(m)
         self.send_gui_message(m)
         self._send_error(err, m)
 
-        self.set_server_status(ray.ServerStatus.OFF)
+        self.set_server_status(nex.ServerStatus.OFF)
         self.steps_order.clear()
 
     def duplicate(self, new_session_full_name: str):
         if self._clients_have_errors():
             self._send_error(
-                ray.Err.GENERAL_ERROR,
+                nex.Err.GENERAL_ERROR,
                 _translate('error', "Some clients could not save"))
             return
 
@@ -866,15 +866,15 @@ for better organization.""")
                highlight_text(new_session_full_name)))
 
         for client in self.clients:
-            if client.is_ray_net:
-                client.ray_net.duplicate_state = -1
-                if (client.ray_net.daemon_url
-                        and is_valid_osc_url(client.ray_net.daemon_url)):
-                    self.send(Address(client.ray_net.daemon_url),
+            if client.is_nex_net:
+                client.nex_net.duplicate_state = -1
+                if (client.nex_net.daemon_url
+                        and is_valid_osc_url(client.nex_net.daemon_url)):
+                    self.send(Address(client.nex_net.daemon_url),
                               r.session.DUPLICATE_ONLY,
                               self.short_path_name,
                               new_session_full_name,
-                              client.ray_net.session_root)
+                              client.nex_net.session_root)
 
                 self.expected_clients.append(client)
 
@@ -886,14 +886,14 @@ for better organization.""")
         self._wait_and_go_to(
             2000,
             (self.duplicate_substep1, new_session_full_name),
-            ray.WaitFor.DUPLICATE_START)
+            nex.WaitFor.DUPLICATE_START)
 
     def duplicate_substep1(self, new_session_full_name: str):
         if self.path is None:
             raise NoSessionPath
         
         spath = self.root / new_session_full_name
-        self.set_server_status(ray.ServerStatus.COPY)
+        self.set_server_status(nex.ServerStatus.COPY)
         self.send_gui_message(_translate('GUIMSG', 'start session copy...'))
 
         # lock the directory of the new session created
@@ -909,8 +909,8 @@ for better organization.""")
         
         self.send_gui_message(_translate('GUIMSG', '...session copy finished.'))
         for client in self.clients:
-            if (client.is_ray_net
-                    and 0 <= client.ray_net.duplicate_state < 1):
+            if (client.is_nex_net
+                    and 0 <= client.nex_net.duplicate_state < 1):
                 self.expected_clients.append(client)
 
         if self.expected_clients:
@@ -921,10 +921,10 @@ for better organization.""")
         self._wait_and_go_to(
             3600000,  #1Hour
             (self.duplicate_substep3, new_session_full_name),
-            ray.WaitFor.DUPLICATE_FINISH)
+            nex.WaitFor.DUPLICATE_FINISH)
 
     def duplicate_substep3(self, new_session_full_name: str):
-        self.adjust_files_after_copy(new_session_full_name, ray.Template.NONE)
+        self.adjust_files_after_copy(new_session_full_name, nex.Template.NONE)
 
         # unlock the directory of the new session created
         multi_daemon_file.unlock_path(self.root / new_session_full_name)
@@ -942,11 +942,11 @@ for better organization.""")
                 # for nsm server control API compatibility
                 # abort duplication is not possible in Non/New NSM
                 # so, send the only known error
-                self._send_error(ray.Err.NO_SUCH_FILE, "No such file.")
+                self._send_error(nex.Err.NO_SUCH_FILE, "No such file.")
 
             self.send(self.steps_osp.src_addr, r.net_daemon.DUPLICATE_STATE, 1.0)
 
-        self.set_server_status(ray.ServerStatus.READY)
+        self.set_server_status(nex.ServerStatus.READY)
         self.steps_osp = None
 
     def save_session_template(self, template_name: str, net=False):
@@ -964,12 +964,12 @@ for better organization.""")
         if spath.is_dir():            
             if not os.access(spath, os.W_OK):
                 self._send_error(
-                    ray.Err.GENERAL_ERROR,
+                    nex.Err.GENERAL_ERROR,
                     _translate(
                         "error",
                         "Impossible to save template, unwriteable file !"))
 
-                self.set_server_status(ray.ServerStatus.READY)
+                self.set_server_status(nex.ServerStatus.READY)
                 return
 
             try:
@@ -979,13 +979,13 @@ for better organization.""")
                     f'Failed to remove {spath}, '
                     'impossible to copy session folder')
                 self._send_error(
-                    ray.Err.CREATE_FAILED,
+                    nex.Err.CREATE_FAILED,
                     _translate(
                         "error",
                         "Impossible to save template, "
                         "failed to remove existing folder"))
 
-                self.set_server_status(ray.ServerStatus.READY)
+                self.set_server_status(nex.ServerStatus.READY)
                 return
 
         if not template_root.exists():
@@ -1001,15 +1001,15 @@ for better organization.""")
         # on the machine where is the master daemon, for example).
 
         for client in self.clients:
-            if (client.is_ray_net
-                    and client.ray_net.daemon_url):
-                self.send(Address(client.ray_net.daemon_url),
+            if (client.is_nex_net
+                    and client.nex_net.daemon_url):
+                self.send(Address(client.nex_net.daemon_url),
                           r.server.SAVE_SESSION_TEMPLATE,
                           self.short_path_name,
                           template_name,
-                          client.ray_net.session_root)
+                          client.nex_net.session_root)
 
-        self.set_server_status(ray.ServerStatus.COPY)
+        self.set_server_status(nex.ServerStatus.COPY)
 
         self.send_gui_message(
             _translate('GUIMSG', 'start session copy to template...'))
@@ -1021,9 +1021,9 @@ for better organization.""")
             [template_name, net])
 
     def save_session_template_substep_1(self, template_name: str, net: bool):
-        tp_mode = ray.Template.SESSION_SAVE
+        tp_mode = nex.Template.SESSION_SAVE
         if net:
-            tp_mode = ray.Template.SESSION_SAVE_NET
+            tp_mode = nex.Template.SESSION_SAVE_NET
 
         for client in self.clients + self.trashed_clients:
             client.adjust_files_after_copy(template_name, tp_mode)
@@ -1034,12 +1034,12 @@ for better organization.""")
             % highlight_text(template_name))
 
         self._send_reply("Saved as template.")
-        self.set_server_status(ray.ServerStatus.READY)
+        self.set_server_status(nex.ServerStatus.READY)
 
     def save_session_template_aborted(self, template_name: str, net: bool):
         self.steps_order.clear()
         self._send_reply("Session template aborted")
-        self.set_server_status(ray.ServerStatus.READY)
+        self.set_server_status(nex.ServerStatus.READY)
 
     def prepare_template(self, new_session_full_name: str,
                          template_name: str, net=False):
@@ -1056,7 +1056,7 @@ for better organization.""")
             template_path = TemplateRoots.factory_sessions / template_name
 
         if not template_path.is_dir():
-            self._send_minor_error(ray.Err.GENERAL_ERROR,
+            self._send_minor_error(nex.Err.GENERAL_ERROR,
                                    _translate("error", "No template named %s")
                                    % template_name)
             self.next_function()
@@ -1066,23 +1066,23 @@ for better organization.""")
 
         if spath.exists():
             self._send_error(
-                ray.Err.CREATE_FAILED,
+                nex.Err.CREATE_FAILED,
                 _translate("error", "Folder\n%s\nalready exists")
                 % spath)
             return
 
         if self._is_path_in_a_session_dir(spath):
             self._send_error(
-                ray.Err.SESSION_IN_SESSION_DIR,
+                nex.Err.SESSION_IN_SESSION_DIR,
                 _translate("error",
                 "Can't create session in a dir containing a session" + '\n'
                 + "for better organization."))
             return
 
         if self.path:
-            self.set_server_status(ray.ServerStatus.COPY)
+            self.set_server_status(nex.ServerStatus.COPY)
         else:
-            self.set_server_status(ray.ServerStatus.PRECOPY)
+            self.set_server_status(nex.ServerStatus.PRECOPY)
 
         self.send_gui_message(
             _translate('GUIMSG',
@@ -1097,15 +1097,15 @@ for better organization.""")
 
     def prepare_template_substep1(self, new_session_full_name: str):
         self.adjust_files_after_copy(new_session_full_name,
-                                     ray.Template.SESSION_LOAD)
+                                     nex.Template.SESSION_LOAD)
         self.next_function()
 
     def prepare_template_aborted(self, new_session_full_name: str):
         self.steps_order.clear()
         if self.path:
-            self.set_server_status(ray.ServerStatus.READY)
+            self.set_server_status(nex.ServerStatus.READY)
         else:
-            self.set_server_status(ray.ServerStatus.OFF)
+            self.set_server_status(nex.ServerStatus.OFF)
 
             self._set_path(None)
             self.send_gui(rg.session.NAME, '', '')
@@ -1117,7 +1117,7 @@ for better organization.""")
         spath = self.path.parent / new_session_name
         if spath.exists():        
             self._send_error(
-                ray.Err.CREATE_FAILED,
+                nex.Err.CREATE_FAILED,
                 _translate('rename', "Folder %s already exists,")
                 % new_session_name
                 + '\n'
@@ -1128,7 +1128,7 @@ for better organization.""")
             subprocess.run(['mv', self.path, spath])
         except:
             self._send_error(
-                ray.Err.GENERAL_ERROR,
+                nex.Err.GENERAL_ERROR,
                 "failed to rename session")
             return
         
@@ -1140,7 +1140,7 @@ for better organization.""")
         
         for client in self.clients + self.trashed_clients:
             client.adjust_files_after_copy(
-                new_session_name, ray.Template.RENAME)
+                new_session_name, nex.Template.RENAME)
 
         self.next_function()
 
@@ -1164,15 +1164,15 @@ for better organization.""")
             spath = self.root / session_short_path
 
         if spath == self.path:
-            self.load_error(ray.Err.SESSION_LOCKED)
+            self.load_error(nex.Err.SESSION_LOCKED)
             return
 
-        session_ray_file = spath / 'raysession.xml'
+        session_nex_file = spath / 'nexsession.xml'
         session_nsm_file = spath / 'session.nsm'
 
         if spath.exists():
             # session directory exists
-            for sess_file in session_ray_file, session_nsm_file:
+            for sess_file in session_nex_file, session_nsm_file:
                 if sess_file.exists():
                     break
             else:
@@ -1189,14 +1189,14 @@ for better organization.""")
                         continue
 
                     for file_ in files:
-                        if file_ in ('raysession.xml', 'session.nsm'):
+                        if file_ in ('nexsession.xml', 'session.nsm'):
                             # dir contains a session inside,
                             # do not try to load it
-                            self.load_error(ray.Err.SESSION_IN_SESSION_DIR)
+                            self.load_error(nex.Err.SESSION_IN_SESSION_DIR)
                             return
         else:
             if not auto_create:
-                self.load_error(ray.Err.NO_SUCH_FILE)
+                self.load_error(nex.Err.NO_SUCH_FILE)
                 return
             
             # session directory doesn't exists,
@@ -1205,74 +1205,74 @@ for better organization.""")
             if self._is_path_in_a_session_dir(spath):
                 # prevent to create a session in a session directory
                 # for better user organization
-                self.load_error(ray.Err.SESSION_IN_SESSION_DIR)
+                self.load_error(nex.Err.SESSION_IN_SESSION_DIR)
                 return
 
             try:
                 spath.mkdir(parents=True)
             except:
-                self.load_error(ray.Err.CREATE_FAILED)
+                self.load_error(nex.Err.CREATE_FAILED)
                 return
 
         if not multi_daemon_file.is_free_for_session(spath):
             Terminal.warning(f"Session {spath} is used by another daemon")
-            self.load_error(ray.Err.SESSION_LOCKED)
+            self.load_error(nex.Err.SESSION_LOCKED)
             return
 
         self.message("Attempting to open %s" % spath)
 
-        # change session file only for raysession launched with NSM_URL env
+        # change session file only for nexsession launched with NSM_URL env
         # Not sure that this feature is really useful.
         # Any cases, It's important to rename it
         # because we want to prevent session creation in a session folder
         if self.is_nsm_locked() and os.getenv('NSM_URL'):
-            session_ray_file = spath / 'raysubsession.xml'
+            session_nex_file = spath / 'nexsubsession.xml'
 
         nsm_file: Optional[TextIOWrapper] = None
-        is_ray_file = True
+        is_nex_file = True
         
         try:
-            tree = ET.parse(session_ray_file)
+            tree = ET.parse(session_nex_file)
         except BaseException as e:
             _logger.info(str(e))
-            is_ray_file = False
+            is_nex_file = False
 
-        if not is_ray_file:
+        if not is_nex_file:
             try:
                 nsm_file = open(session_nsm_file, 'r')
             except BaseException as e:
                 _logger.info(str(e))
 
-                root = ET.Element('RAYSESSION')
-                root.attrib['VERSION'] = ray.VERSION
+                root = ET.Element('NEXSESSION')
+                root.attrib['VERSION'] = nex.VERSION
                 if self.is_nsm_locked():
                     root.attrib['name'] = spath.name.rpartition('.')[0]
                     
                 tree = ET.ElementTree(root)
 
                 try:
-                    tree.write(session_ray_file)                    
+                    tree.write(session_nex_file)
                 except BaseException as e:
                     _logger.error(str(e))
-                    self.load_error(ray.Err.CREATE_FAILED)
+                    self.load_error(nex.Err.CREATE_FAILED)
                     return
                 else:
-                    is_ray_file = True
+                    is_nex_file = True
 
         self._no_future()
         sess_name = ""
 
-        if is_ray_file:
+        if is_nex_file:
             try:
-                tree = ET.parse(session_ray_file)
+                tree = ET.parse(session_nex_file)
             except BaseException as e:
                 _logger.error(str(e))
-                self.load_error(ray.Err.BAD_PROJECT)
+                self.load_error(nex.Err.BAD_PROJECT)
                 return
             
             root = tree.getroot()
-            if root.tag != 'RAYSESSION':
-                self.load_error(ray.Err.BAD_PROJECT)
+            if root.tag != 'NEXSESSION':
+                self.load_error(nex.Err.BAD_PROJECT)
                 return
 
             xroot = XmlElement(root)
@@ -1293,7 +1293,7 @@ for better organization.""")
                         if not client.executable_path:
                             continue
 
-                        if client.executable_path == 'ray-proxy':
+                        if client.executable_path == 'nex-proxy':
                             client.transform_from_proxy_to_hack(spath, sess_name)
 
                         if client.client_id in client_ids:
@@ -1310,7 +1310,7 @@ for better organization.""")
                         client_ids.add(client.client_id)
 
                 elif child.tag == 'Windows':
-                    if self.has_server_option(ray.Option.DESKTOPS_MEMORY):
+                    if self.has_server_option(nex.Option.DESKTOPS_MEMORY):
                         self.desktops_memory.read_xml(XmlElement(child))
 
         else:
@@ -1318,7 +1318,7 @@ for better organization.""")
             lock_file = spath / '.lock'
             if lock_file.is_file():
                 Terminal.warning("Session %s is locked by another process")
-                self.load_error(ray.Err.SESSION_LOCKED)
+                self.load_error(nex.Err.SESSION_LOCKED)
                 return
 
             if nsm_file is not None:
@@ -1329,9 +1329,9 @@ for better organization.""")
                         client.name = elements[0]
                         client.executable_path = elements[1]
                         client.client_id = elements[2]
-                        client.prefix_mode = ray.PrefixMode.CLIENT_NAME
+                        client.prefix_mode = nex.PrefixMode.CLIENT_NAME
                         client.auto_start = True
-                        client.jack_naming = ray.JackNaming.LONG
+                        client.jack_naming = nex.JackNaming.LONG
 
                         self.future_clients.append(client)
 
@@ -1341,7 +1341,7 @@ for better organization.""")
         if not self.is_dummy:
             self.canvas_saver.load_json_session_canvas(spath)
 
-        full_notes_path = spath / ray.NOTES_PATH
+        full_notes_path = spath / nex.NOTES_PATH
 
         if (full_notes_path.is_file()
                 and os.access(full_notes_path, os.R_OK)): 
@@ -1367,7 +1367,7 @@ for better organization.""")
             # session folder has been renamed
             # so rename session to it
             for client in self.future_clients + self.future_trashed_clients:
-                client.adjust_files_after_copy(str(self.path), ray.Template.RENAME)
+                client.adjust_files_after_copy(str(self.path), nex.Template.RENAME)
             self._set_path(self.future_session_path)
             
             # session has been renamed and client files have been moved
@@ -1410,22 +1410,22 @@ for better organization.""")
             if (open_off
                     or not client.is_running()
                     or (client.is_reply_pending() and not client.is_dumb_client())
-                    or client.switch_state is not ray.SwitchState.RESERVED):
+                    or client.switch_state is not nex.SwitchState.RESERVED):
                 self.clients_to_quit.append(client)
                 self.expected_clients.append(client)
             else:
-                client.switch_state = ray.SwitchState.NEEDED
+                client.switch_state = nex.SwitchState.NEEDED
 
         self.timer_quit.start()
         self._wait_and_go_to(
-            5000, (self.load_substep2, open_off), ray.WaitFor.QUIT)
+            5000, (self.load_substep2, open_off), nex.WaitFor.QUIT)
 
     def load_substep2(self, open_off: bool):
         for client in self.expected_clients:
             client.kill()
 
         self._wait_and_go_to(
-            1000, (self.load_substep3, open_off), ray.WaitFor.QUIT)
+            1000, (self.load_substep3, open_off), nex.WaitFor.QUIT)
 
     def load_substep3(self, open_off: bool):
         self._clean_expected()
@@ -1458,7 +1458,7 @@ for better organization.""")
         # It prevents GUI to have 2 clients with the same client_id
         # in the same time
         for client in self.clients:
-            client.set_status(ray.ClientStatus.REMOVED)
+            client.set_status(nex.ClientStatus.REMOVED)
             client.sent_to_gui = False
 
         for future_client in self.future_clients:
@@ -1474,14 +1474,14 @@ for better organization.""")
 
             if future_client.auto_start:
                 for client in self.clients:
-                    if (client.switch_state is ray.SwitchState.NEEDED
+                    if (client.switch_state is nex.SwitchState.NEEDED
                             and client.client_id == future_client.client_id
                             and client.can_switch_with(future_client)):
                         # we found the good existing client
                         break
                 else:
                     for client in self.clients:
-                        if (client.switch_state is ray.SwitchState.NEEDED
+                        if (client.switch_state is nex.SwitchState.NEEDED
                                 and client.can_switch_with(future_client)):
                             # we found a switchable client
                             break
@@ -1489,7 +1489,7 @@ for better organization.""")
                         client = None
 
             if client:
-                client.switch_state = ray.SwitchState.DONE
+                client.switch_state = nex.SwitchState.DONE
                 self.send_monitor_event(
                     f"switched_to:{future_client.client_id}", client.client_id)
                 client.client_id = future_client.client_id
@@ -1509,7 +1509,7 @@ for better organization.""")
             new_client_id_list.append(future_client.client_id)
 
         for client in self.clients:
-            if client.switch_state is ray.SwitchState.DONE:
+            if client.switch_state is nex.SwitchState.DONE:
                 client.switch()
 
         self._re_order_clients(new_client_id_list)
@@ -1534,9 +1534,9 @@ for better organization.""")
         self._no_future()
 
         if has_switch:
-            self.set_server_status(ray.ServerStatus.SWITCH)
+            self.set_server_status(nex.ServerStatus.SWITCH)
         else:
-            self.set_server_status(ray.ServerStatus.LAUNCH)
+            self.set_server_status(nex.ServerStatus.LAUNCH)
 
         #* this part is a little tricky... the clients need some time to
         #* send their 'announce' messages before we can send them 'open'
@@ -1550,7 +1550,7 @@ for better organization.""")
 
         wait_time = 4000 + len(self.expected_clients) * 1000
 
-        self._wait_and_go_to(wait_time, self.load_substep4, ray.WaitFor.ANNOUNCE)
+        self._wait_and_go_to(wait_time, self.load_substep4, nex.WaitFor.ANNOUNCE)
 
     def load_substep4(self):
         for client in self.expected_clients:
@@ -1561,13 +1561,13 @@ for better organization.""")
 
         self._clean_expected()
 
-        self.set_server_status(ray.ServerStatus.OPEN)
+        self.set_server_status(nex.ServerStatus.OPEN)
 
         for client in self.clients:
             if client.nsm_active and client.is_reply_pending():
                 self.expected_clients.append(client)
             elif client.is_running() and client.is_dumb_client():
-                client.set_status(ray.ClientStatus.NOOP)
+                client.set_status(nex.ClientStatus.NOOP)
 
         if self.expected_clients:
             n_expected = len(self.expected_clients)
@@ -1586,12 +1586,12 @@ for better organization.""")
         for client in self.expected_clients:
             wait_time = int(max(2 * 1000 * client.last_open_duration, wait_time))
 
-        self._wait_and_go_to(wait_time, self.load_substep5, ray.WaitFor.REPLY)
+        self._wait_and_go_to(wait_time, self.load_substep5, nex.WaitFor.REPLY)
 
     def load_substep5(self):
         self._clean_expected()
 
-        if self.has_server_option(ray.Option.DESKTOPS_MEMORY):
+        if self.has_server_option(nex.Option.DESKTOPS_MEMORY):
             self.desktops_memory.replace()
 
         self.message("Telling all clients that session is loaded...")
@@ -1607,7 +1607,7 @@ for better organization.""")
         self.switching_session = False
 
         # display optional GUIs we want to be shown now
-        if self.has_server_option(ray.Option.GUI_STATES):
+        if self.has_server_option(nex.Option.GUI_STATES):
             for client in self.clients:
                 if (client.is_running()
                         and client.can_optional_gui
@@ -1620,22 +1620,22 @@ for better organization.""")
     def load_done(self):
         self._send_reply("Loaded.")
         self.message("Done")
-        self.set_server_status(ray.ServerStatus.READY)
+        self.set_server_status(nex.ServerStatus.READY)
         self.steps_osp = None
 
     def load_error(self, err_loading):
         self.message("Failed")
         m = _translate('Load Error', "Unknown error")
-        if err_loading == ray.Err.CREATE_FAILED:
+        if err_loading == nex.Err.CREATE_FAILED:
             m = _translate('Load Error', "Could not create session file!")
-        elif err_loading == ray.Err.SESSION_LOCKED:
+        elif err_loading == nex.Err.SESSION_LOCKED:
             m = _translate('Load Error',
                            "Session is locked by another process!")
-        elif err_loading == ray.Err.NO_SUCH_FILE:
+        elif err_loading == nex.Err.NO_SUCH_FILE:
             m = _translate('Load Error', "The named session does not exist.")
-        elif err_loading == ray.Err.BAD_PROJECT:
+        elif err_loading == nex.Err.BAD_PROJECT:
             m = _translate('Load Error', "Could not load session file.")
-        elif err_loading == ray.Err.SESSION_IN_SESSION_DIR:
+        elif err_loading == nex.Err.SESSION_IN_SESSION_DIR:
             m = _translate(
                 'Load Error',
                 "Can't create session in a dir containing a session\n"
@@ -1644,9 +1644,9 @@ for better organization.""")
         self._send_error(err_loading, m)
 
         if self.path:
-            self.set_server_status(ray.ServerStatus.READY)
+            self.set_server_status(nex.ServerStatus.READY)
         else:
-            self.set_server_status(ray.ServerStatus.OFF)
+            self.set_server_status(nex.ServerStatus.OFF)
 
         self.steps_order.clear()
 
@@ -1663,14 +1663,14 @@ for better organization.""")
     def duplicate_done(self):
         self.message("Done")
         self._send_reply("Duplicated.")
-        self.set_server_status(ray.ServerStatus.READY)
+        self.set_server_status(nex.ServerStatus.READY)
         self.steps_osp = None
 
     def exit_now(self):
-        self._wait_and_go_to(1000, self.exit_now_step_2, ray.WaitFor.PATCHBAY_QUIT)
+        self._wait_and_go_to(1000, self.exit_now_step_2, nex.WaitFor.PATCHBAY_QUIT)
         
     def exit_now_step_2(self):
-        self.set_server_status(ray.ServerStatus.OFF)
+        self.set_server_status(nex.ServerStatus.OFF)
         self._set_path(None)
         self.message("Bye Bye...")
         self._send_reply("Bye Bye...")
@@ -1703,8 +1703,8 @@ for better organization.""")
                 template_client = t.template_client
                 client = Client(self)
                 client.protocol = template_client.protocol
-                client.ray_hack = template_client.ray_hack
-                client.ray_net = template_client.ray_net
+                client.nex_hack = template_client.nex_hack
+                client.nex_net = template_client.nex_net
                 client.template_origin = template_name
                 if t.display_name:
                     client.template_origin = t.display_name
@@ -1714,7 +1714,7 @@ for better organization.""")
                 if unique_id:
                     client.client_id = unique_id
                     client.label = unique_id.replace('_', ' ')
-                    client.jack_naming = ray.JackNaming.LONG
+                    client.jack_naming = nex.JackNaming.LONG
                 else:
                     client.client_id = self.generate_client_id(
                         template_client.client_id)
@@ -1726,7 +1726,7 @@ for better organization.""")
                         ard_tp_name, client.executable_path)
                     if ard_tp_path is None:
                         self.answer(src_addr, src_path, "Failed to copy Ardour template",
-                                    ray.Err.BAD_PROJECT)
+                                    nex.Err.BAD_PROJECT)
                         return
                     
                     ard_tp_copyed = ardour_templates.copy_template_to_session(
@@ -1737,17 +1737,17 @@ for better organization.""")
                     )
                     if not ard_tp_copyed:
                         self.answer(src_addr, src_path, "Failed to copy Ardour template",
-                                    ray.Err.BAD_PROJECT)
+                                    nex.Err.BAD_PROJECT)
                         return
                 
                 if not self._add_client(client):
                     self.answer(src_addr, src_path,
                                 "Session does not accept any new client now",
-                                ray.Err.NOT_NOW)
+                                nex.Err.NOT_NOW)
                     return
                 
                 if file_paths:
-                    client.set_status(ray.ClientStatus.PRECOPY)
+                    client.set_status(nex.ClientStatus.PRECOPY)
                     self.file_copier.start_client_copy(
                         client.client_id, file_paths, self.path,
                         self.add_client_template_step_1,
@@ -1768,23 +1768,23 @@ for better organization.""")
                 RS.favorites.remove(favorite)
                 break
 
-        self.send(src_addr, osc_paths.ERROR, src_path, ray.Err.NO_SUCH_FILE,
+        self.send(src_addr, osc_paths.ERROR, src_path, nex.Err.NO_SUCH_FILE,
                   _translate('GUIMSG', "%s is not an existing template !")
                   % highlight_text(template_name))
 
     def add_client_template_step_1(self, src_addr, src_path, client: Client):
-        client.adjust_files_after_copy(self.name, ray.Template.CLIENT_LOAD)
+        client.adjust_files_after_copy(self.name, nex.Template.CLIENT_LOAD)
 
         if client.auto_start:
             client.start()
         else:
-            client.set_status(ray.ClientStatus.STOPPED)
+            client.set_status(nex.ClientStatus.STOPPED)
 
         self.answer(src_addr, src_path, client.client_id)
 
     def add_client_template_aborted(self, src_addr, src_path, client: Client):
         self._remove_client(client)
-        self.send(src_addr, osc_paths.ERROR, src_path, ray.Err.COPY_ABORTED,
+        self.send(src_addr, osc_paths.ERROR, src_path, nex.Err.COPY_ABORTED,
                   _translate('GUIMSG', 'Copy has been aborted !'))
 
     def save_client_and_patchers(self, client: Client):
@@ -1792,12 +1792,12 @@ for better organization.""")
             if (oth_client is client or 
                     (oth_client.is_running()
                         and oth_client.can_monitor
-                        and oth_client.executable_path.startswith('ray-')
+                        and oth_client.executable_path.startswith('nex-')
                         and oth_client.executable_path.endswith('patch'))):
                 self.expected_clients.append(oth_client)
                 oth_client.save()
         
-        self._wait_and_go_to(10000, self.next_function, ray.WaitFor.REPLY)
+        self._wait_and_go_to(10000, self.next_function, nex.WaitFor.REPLY)
 
     def rename_full_client(
             self, client: Client, new_name: str, new_client_id: str):
@@ -1808,9 +1808,9 @@ for better organization.""")
         tmp_client = Client(self)
         tmp_client.eat_attributes(client)
         tmp_client.client_id = new_client_id
-        tmp_client.jack_naming = ray.JackNaming.LONG
+        tmp_client.jack_naming = nex.JackNaming.LONG
         
-        client.set_status(ray.ClientStatus.REMOVED)
+        client.set_status(nex.ClientStatus.REMOVED)
         
         client._rename_files(
             self.path,
@@ -1824,7 +1824,7 @@ for better organization.""")
         new_jack_name = tmp_client.get_jack_client_name()
 
         client.client_id = new_client_id
-        client.jack_naming = ray.JackNaming.LONG
+        client.jack_naming = nex.JackNaming.LONG
         client.label = new_name
         self._update_forbidden_ids_set()
 
@@ -1851,15 +1851,15 @@ for better organization.""")
     def rename_full_client_done(self, client: Client):
         self.message("Done")
         self._send_reply("full client rename done.")
-        self.set_server_status(ray.ServerStatus.READY)
+        self.set_server_status(nex.ServerStatus.READY)
         self.steps_osp = None
 
     def restart_client(self, client: Client):
         client.start()
-        self._wait_and_go_to(0, (self.next_function, client), ray.WaitFor.NONE)
+        self._wait_and_go_to(0, (self.next_function, client), nex.WaitFor.NONE)
 
     def before_close_client_for_snapshot(self):
-        self.set_server_status(ray.ServerStatus.READY)
+        self.set_server_status(nex.ServerStatus.READY)
         self.next_function()
     
     def close_client(self, client: Client):
@@ -1868,42 +1868,42 @@ for better organization.""")
 
         self._wait_and_go_to(
             30000, (self.close_client_substep1, client),
-            ray.WaitFor.STOP_ONE)
+            nex.WaitFor.STOP_ONE)
 
     def close_client_substep1(self, client: Client):
         if client in self.expected_clients:
             client.kill()
 
-        self._wait_and_go_to(1000, self.next_function, ray.WaitFor.STOP_ONE)
+        self._wait_and_go_to(1000, self.next_function, nex.WaitFor.STOP_ONE)
 
     def switch_client(self, client: Client):
         client.switch()
         self.next_function()
 
     def load_client_snapshot(self, client_id, snapshot):
-        self.set_server_status(ray.ServerStatus.REWIND)
+        self.set_server_status(nex.ServerStatus.REWIND)
         if self.snapshoter.load_client_exclusive(
                 client_id, snapshot, self.load_client_snapshot_error):
-            self.set_server_status(ray.ServerStatus.READY)
+            self.set_server_status(nex.ServerStatus.READY)
             self.next_function()
 
     def load_client_snapshot_error(
-            self, err: ray.Err, info_str='', exit_code=0):
+            self, err: nex.Err, info_str='', exit_code=0):
         m = _translate('Snapshot Error', "Snapshot error")
         match err:
-            case ray.Err.SUBPROCESS_UNTERMINATED:
+            case nex.Err.SUBPROCESS_UNTERMINATED:
                 m = _translate(
                     'Snapshot Error',
                     "command didn't stop normally:\n%s") % info_str
-            case ray.Err.SUBPROCESS_CRASH:
+            case nex.Err.SUBPROCESS_CRASH:
                 m = _translate(
                     'Snapshot Error', "command crashes:\n%s") % info_str
-            case ray.Err.SUBPROCESS_EXITCODE:
+            case nex.Err.SUBPROCESS_EXITCODE:
                 m = _translate(
                     'Snapshot Error',
                     "command exit with the error code %i:\n%s") \
                         % (exit_code, info_str)
-            case ray.Err.NO_SUCH_FILE:
+            case nex.Err.NO_SUCH_FILE:
                 m = _translate(
                     'Snapshot Error', "error reading file:\n%s") % info_str
 
@@ -1911,7 +1911,7 @@ for better organization.""")
         self.send_gui_message(m)
         self._send_error(err, m)
 
-        self.set_server_status(ray.ServerStatus.OFF)
+        self.set_server_status(nex.ServerStatus.OFF)
         self.steps_order.clear()
 
     def load_client_snapshot_done(self):
@@ -1928,14 +1928,14 @@ for better organization.""")
             self.step_scripter.terminate()
 
         self._wait_and_go_to(5000, self.terminate_step_scripter_substep2,
-                             ray.WaitFor.SCRIPT_QUIT)
+                             nex.WaitFor.SCRIPT_QUIT)
 
     def terminate_step_scripter_substep2(self):
         if self.step_scripter.is_running():
             self.step_scripter.kill()
 
         self._wait_and_go_to(1000, self.terminate_step_scripter_substep3,
-                             ray.WaitFor.SCRIPT_QUIT)
+                             nex.WaitFor.SCRIPT_QUIT)
 
     def terminate_step_scripter_substep3(self):
         self.next_function()
@@ -1955,20 +1955,20 @@ for better organization.""")
         self._wait_and_go_to(
             5000,
             (self.clear_clients_substep2, osp),
-            ray.WaitFor.QUIT)
+            nex.WaitFor.QUIT)
 
     def clear_clients_substep2(self, osp: OscPack):
         for client in self.expected_clients:
             client.kill()
 
         self._wait_and_go_to(
-            1000, (self.clear_clients_substep3, osp), ray.WaitFor.QUIT)
+            1000, (self.clear_clients_substep3, osp), nex.WaitFor.QUIT)
 
     def clear_clients_substep3(self, osp: OscPack):
         self.send(*osp.reply(), 'Clients cleared')
         
     def send_preview(self, src_addr: Address, folder_sizes: list):
-        def send_state(preview_state: ray.PreviewState):
+        def send_state(preview_state: nex.PreviewState):
             self.send_even_dummy(
                 src_addr, rg.preview.STATE,
                 preview_state.value) 
@@ -1982,11 +1982,11 @@ for better organization.""")
             return
         
         self.send_even_dummy(src_addr, rg.preview.CLEAR)        
-        send_state(ray.PreviewState.STARTED)
+        send_state(nex.PreviewState.STARTED)
         
         self.send_even_dummy(
             src_addr, rg.preview.NOTES, self.notes)
-        send_state(ray.PreviewState.NOTES)
+        send_state(nex.PreviewState.NOTES)
 
         ms = MegaSend('session_preview')
 
@@ -1997,17 +1997,17 @@ for better organization.""")
             ms.add(rg.preview.client.IS_STARTED,
                    client.client_id, int(client.auto_start))
             
-            if client.is_ray_hack:
-                ms.add(rg.preview.client.RAY_HACK_UPDATE,
-                       client.client_id, *client.ray_hack.spread())
+            if client.is_nex_hack:
+                ms.add(rg.preview.client.NEX_HACK_UPDATE,
+                       client.client_id, *client.nex_hack.spread())
 
-            elif client.is_ray_net:
-                ms.add(rg.preview.client.RAY_NET_UPDATE,
-                       client.client_id, *client.ray_net.spread())
+            elif client.is_nex_net:
+                ms.add(rg.preview.client.NEX_NET_UPDATE,
+                       client.client_id, *client.nex_net.spread())
                 
         self.mega_send(src_addr, ms)
 
-        send_state(ray.PreviewState.CLIENTS)
+        send_state(nex.PreviewState.CLIENTS)
 
         mss = MegaSend('snapshots_preview')
 
@@ -2016,7 +2016,7 @@ for better organization.""")
         
         self.mega_send(src_addr, mss)
         
-        send_state(ray.PreviewState.SNAPSHOTS)
+        send_state(nex.PreviewState.SNAPSHOTS)
 
         # re check here if preview has not changed before calculate session size
         if server and server.session_to_preview != self.short_path_name:
@@ -2085,7 +2085,7 @@ for better organization.""")
         self.send_even_dummy(
             src_addr, rg.preview.SESSION_SIZE, total_size)
 
-        send_state(ray.PreviewState.FOLDER_SIZE)
+        send_state(nex.PreviewState.FOLDER_SIZE)
 
         self.send_even_dummy(
             src_addr, rg.preview.STATE, 2)

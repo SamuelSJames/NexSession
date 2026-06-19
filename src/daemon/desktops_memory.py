@@ -109,7 +109,7 @@ class DesktopsMemory:
                 # fltk based apps don't send their pids to wmctrl,
                 # so if win seems to be one of these apps
                 # and app is running in the session,
-                # assume that this window is child of this ray-daemon
+                # assume that this window is child of this nex-daemon
                 if pid == 0 and '.' in wclass:
                     class_name = wclass.split('.')[0]
 
@@ -202,7 +202,7 @@ class DesktopsMemory:
 
     def has_window(self, pid: int) -> bool:
         if not self._active_window_list:
-            # here fo ray_hack check window
+            # here fo nex_hack check window
             # if window manager doesn't supports wmctrl
             # lie saying there is a window
             return True

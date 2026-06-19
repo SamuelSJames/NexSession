@@ -4,10 +4,10 @@ import logging
 from typing import TYPE_CHECKING, Optional
 
 # Imports from src/shared
-import ray
+import nex
 from osclib import MegaSend
 import osc_paths
-import osc_paths.ray.gui as rg
+import osc_paths.nex.gui as rg
 
 # Local imports
 from osc_server_thread import OscServerThread
@@ -94,7 +94,7 @@ class ServerSender:
         if server:
             server.send_controller_message(message)
 
-    def set_server_status(self, server_status:ray.ServerStatus):
+    def set_server_status(self, server_status:nex.ServerStatus):
         if self.is_dummy:
             return
 
@@ -104,13 +104,13 @@ class ServerSender:
 
         server.set_server_status(server_status)
 
-    def get_server_status(self) -> ray.ServerStatus:
+    def get_server_status(self) -> nex.ServerStatus:
         if self.is_dummy:
-            return ray.ServerStatus.OFF
+            return nex.ServerStatus.OFF
 
         server = OscServerThread.get_instance()
         if not server:
-            return ray.ServerStatus.OFF
+            return nex.ServerStatus.OFF
 
         return server.server_status
 
@@ -147,13 +147,13 @@ class ServerSender:
 
         return 0
 
-    def answer(self, src_addr, src_path, message, err=ray.Err.OK):
-        if err == ray.Err.OK:
+    def answer(self, src_addr, src_path, message, err=nex.Err.OK):
+        if err == nex.Err.OK:
             self.send(src_addr, osc_paths.REPLY, src_path, message)
         else:
             self.send(src_addr, osc_paths.ERROR, src_path, err, message)
 
-    def has_server_option(self, option: ray.Option) -> bool:
+    def has_server_option(self, option: nex.Option) -> bool:
         server = self.get_server()
         if not server:
             return False

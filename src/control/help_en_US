@@ -1,7 +1,4 @@
-from osc_paths.ray.server import EXPORT_CUSTOM_NAMES
-
-
-control RaySession daemons
+control NexSession daemons
     --help
         Prints short help message
     --help-all
@@ -17,7 +14,7 @@ control RaySession daemons
     --port
         Specify daemon OSC port.
         This port can also be specified
-        with RAY_CONTROL_PORT environment variable.
+        with NEX_CONTROL_PORT environment variable.
     --detach
         Only send OSC message and do not wait for an answer
 
@@ -28,7 +25,7 @@ control RaySession daemons
         starts a new daemon, returns its OSC port number
     start_new_hidden
         starts a new daemon, returns its OSC port number.
-        This daemon will not be seen by ray_control
+        This daemon will not be seen by nex_control
         unless its port is specified.
         This new daemon will be started without any option,
         and options states won't be saved when it ends.
@@ -90,15 +87,15 @@ control RaySession daemons
             session_scripts
             gui_states
         precede the option with 'not_' to disable this option
-        example: ray_control set_options bookmark_session_folder not_snapshots
+        example: nex_control set_options bookmark_session_folder not_snapshots
     has_option OPTION
         Returns an error code if OPTION is not currently used
     script_info TEXT
-        Displays an info dialog on RaySession's GUI.
+        Displays an info dialog on NexSession's GUI.
     hide_script_info
-        Hides the script info dialog on RaySession's GUI.
+        Hides the script info dialog on NexSession's GUI.
     script_user_action TEXT
-        Displays a question dialog on RaySession's GUI.
+        Displays a question dialog on NexSession's GUI.
         Returns when user accepted or rejected it.
     auto_export_custom_names YESNO
         Export and auto-export custom names to JACK pretty-name metadatas.
@@ -118,7 +115,7 @@ control RaySession daemons
     
     save
         Saves the current session.
-        TIP: affect 'ray_control save' command to a global keyboard shortcut
+        TIP: affect 'nex_control save' command to a global keyboard shortcut
     save_as_template SESSION_TEMPLATE_NAME
         Saves the current session as template
     take_snapshot SNAPSHOT_NAME
@@ -139,7 +136,7 @@ control RaySession daemons
     add_exec EXECUTABLE [OPTION1] [OPTION2]...
         Adds a client to the current session
         Available options are 
-            ray_hack    runs the executable with Ray-Hack protocol (not NSM)
+            nex_hack    runs the executable with Nex-Hack protocol (not NSM)
             not_start   prepare the client but not start it
             prefix_mode:client_name
                         Set the prefix mode to client_name
@@ -169,7 +166,7 @@ control RaySession daemons
             auto_start
             no_save_level
         precede the filter with 'not_' to revert the filter
-        example: ray_control list_clients auto_start not_started
+        example: nex_control list_clients auto_start not_started
         will display all stopped clients that should be started at session open
     clear_clients [CLIENT_ID1] [CLIENT_ID2]...
         Usable only in the load.sh session script, before the run_step.
@@ -185,8 +182,8 @@ control RaySession daemons
 
 * CLIENT_COMMANDS:
     all client commands have to be written this way:
-    ray_control client CLIENT_ID command [*ARGUMENTS]
-    example: ray_control client carla stop
+    nex_control client CLIENT_ID command [*ARGUMENTS]
+    example: nex_control client carla stop
 
     stop
         Stops the client
@@ -216,7 +213,7 @@ control RaySession daemons
     set_properties PROPERTY1 [PROPERTY2] [PROPERTY3]...
         Set client properties.
         PROPERTY must contains property:value
-        example: ray_control client carla set_properties icon:carla "label:My Carla Rack"
+        example: nex_control client carla set_properties icon:carla "label:My Carla Rack"
     set_custom_data PROPERTY VALUE
         set a custom data to the client.
         This will not be used by the daemon.
@@ -242,8 +239,8 @@ control RaySession daemons
         
 * TRASHED_CLIENT_OPTIONS:
     trashed client commands have to be written this way:
-    ray_control trashed_client CLIENT_ID command [*ARGUMENTS]
-    example: ray_control trashed_client carla restore
+    nex_control trashed_client CLIENT_ID command [*ARGUMENTS]
+    example: nex_control trashed_client carla restore
 
     restore
         restore the client in the session.

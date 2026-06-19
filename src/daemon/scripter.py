@@ -9,7 +9,7 @@ from qtpy.QtCore import QProcess, QProcessEnvironment, QCoreApplication
 
 # Imports from src/shared
 from osclib import OscPack
-import ray
+import nex
 import osc_paths
 
 # Local imports
@@ -98,7 +98,7 @@ class Scripter(ServerSender):
 
 class StepScripter(Scripter):
     '''Scripts manager for sessions operations.
-    Scripts are executable shell scripts in ray-scripts/
+    Scripts are executable shell scripts in nex-scripts/
     (load.sh, save.sh, close.sh).'''
     
     def __init__(self, session: 'OperatingSession'):
@@ -114,7 +114,7 @@ class StepScripter(Scripter):
         parent_scripts_dir = Path()
 
         while base_path.name:
-            tmp_scripts_dir = base_path / ray.SCRIPTS_DIR
+            tmp_scripts_dir = base_path / nex.SCRIPTS_DIR
             if tmp_scripts_dir.is_dir():
                 if not scripts_dir.name:
                     scripts_dir = tmp_scripts_dir
@@ -162,15 +162,15 @@ class StepScripter(Scripter):
             % highlight_text(script_path))
 
         process_env = QProcessEnvironment.systemEnvironment()
-        process_env.insert('RAY_CONTROL_PORT', str(self.get_server_port()))
-        process_env.insert('RAY_SCRIPTS_DIR', str(scripts_dir))
-        process_env.insert('RAY_PARENT_SCRIPTS_DIR', str(parent_scripts_dir))
-        process_env.insert('RAY_FUTURE_SESSION_PATH',
+        process_env.insert('NEX_CONTROL_PORT', str(self.get_server_port()))
+        process_env.insert('NEX_SCRIPTS_DIR', str(scripts_dir))
+        process_env.insert('NEX_PARENT_SCRIPTS_DIR', str(parent_scripts_dir))
+        process_env.insert('NEX_FUTURE_SESSION_PATH',
                            str(self.session.future_session_path))
-        process_env.insert('RAY_FUTURE_SCRIPTS_DIR', str(future_scripts_dir))
-        process_env.insert('RAY_SWITCHING_SESSION',
+        process_env.insert('NEX_FUTURE_SCRIPTS_DIR', str(future_scripts_dir))
+        process_env.insert('NEX_SWITCHING_SESSION',
                            str(self.session.switching_session).lower())
-        process_env.insert('RAY_SESSION_PATH', str(self.session.path))
+        process_env.insert('NEX_SESSION_PATH', str(self.session.path))
 
         self._process.setProcessEnvironment(process_env)
         self._process.start(str(script_path), [str(a) for a in arguments])
@@ -189,23 +189,23 @@ class StepScripter(Scripter):
 
 class ClientScripter(Scripter):
     '''Scripts manager for client operations.
-    Scripts are executable shell scripts in ray-scripts.CLIENT_ID/
+    Scripts are executable shell scripts in nex-scripts.CLIENT_ID/
     (start.sh, save.sh, close.sh).'''
     
     def __init__(self, client: 'Client'):
         Scripter.__init__(self)
         self._client = client
-        self._pending_command = ray.Command.NONE
+        self._pending_command = nex.Command.NONE
         self._initial_caller: Optional[OscPack] = None
 
     def _process_finished(self, exit_code, exit_status):
         Scripter._process_finished(self, exit_code, exit_status)
         self._client.script_finished(exit_code)
-        self._pending_command = ray.Command.NONE
+        self._pending_command = nex.Command.NONE
         self._initial_caller = None
         self._src_addr = None
 
-    def start(self, command: ray.Command, osp: Optional[OscPack]=None,
+    def start(self, command: nex.Command, osp: Optional[OscPack]=None,
               previous_slot: Optional[OscPack]=None):
         if self.is_running():
             return False
@@ -214,11 +214,11 @@ class ClientScripter(Scripter):
             return False
 
         if not command in (
-                ray.Command.START, ray.Command.SAVE, ray.Command.STOP):
+                nex.Command.START, nex.Command.SAVE, nex.Command.STOP):
             return False
         
         scripts_dir = (self._client.session.path
-                       / f'{ray.SCRIPTS_DIR}.{self._client.client_id}')
+                       / f'{nex.SCRIPTS_DIR}.{self._client.client_id}')
         script_path = scripts_dir / f'{command.name.lower()}.sh'
 
         if not os.access(script_path, os.X_OK):
@@ -236,12 +236,12 @@ class ClientScripter(Scripter):
             self._src_addr = None
 
         process_env = QProcessEnvironment.systemEnvironment()
-        process_env.insert('RAY_CONTROL_PORT', str(self.get_server_port()))
-        process_env.insert('RAY_CLIENT_SCRIPTS_DIR', str(scripts_dir))
-        process_env.insert('RAY_CLIENT_ID', self._client.client_id)
-        process_env.insert('RAY_CLIENT_EXECUTABLE',
+        process_env.insert('NEX_CONTROL_PORT', str(self.get_server_port()))
+        process_env.insert('NEX_CLIENT_SCRIPTS_DIR', str(scripts_dir))
+        process_env.insert('NEX_CLIENT_ID', self._client.client_id)
+        process_env.insert('NEX_CLIENT_EXECUTABLE',
                            self._client.executable_path)
-        process_env.insert('RAY_CLIENT_ARGUMENTS', self._client.arguments)
+        process_env.insert('NEX_CLIENT_ARGUMENTS', self._client.arguments)
         self._process.setProcessEnvironment(process_env)
 
         self.send_gui_message(

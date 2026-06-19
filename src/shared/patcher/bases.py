@@ -41,8 +41,8 @@ class JackPort:
     
     
 class ProtoEngine:
-    XML_TAG = 'RAY-PATCH'
-    EXECUTABLE = 'ray-patch'
+    XML_TAG = 'NEX-PATCH'
+    EXECUTABLE = 'nex-patch'
     NSM_NAME = 'Connections'
 
     def __init__(self, event_handler: 'EventHandler'):

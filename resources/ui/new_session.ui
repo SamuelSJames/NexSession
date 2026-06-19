@@ -45,7 +45,7 @@
             <string notr="true">font-style :  italic</string>
            </property>
            <property name="text">
-            <string>/home/user/Ray Sessions</string>
+            <string>/home/user/NexSessions</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>

@@ -27,7 +27,7 @@ class InternalClient:
         if self.name == 'sooperlooper_nsm':
             module_name = 'sooperlooper'
         else:
-            module_name = self.name.replace('ray-', '')
+            module_name = self.name.replace('nex-', '')
 
         # import the client module
         try:

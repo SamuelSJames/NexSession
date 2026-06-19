@@ -10,8 +10,8 @@ else:
 
 
 class Engine(JackEngine): # type:ignore
-    XML_TAG = 'RAY-JACKPATCH'
-    EXECUTABLE = 'ray-jackpatch'
+    XML_TAG = 'NEX-JACKPATCH'
+    EXECUTABLE = 'nex-jackpatch'
     NSM_NAME = 'JACK Connections'
 
     def __init__(self, event_handler: EventHandler):

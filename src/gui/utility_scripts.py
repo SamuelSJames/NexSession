@@ -11,7 +11,7 @@ from qtpy.QtGui import QIcon
 from qtpy.QtCore import QProcess, QProcessEnvironment
 
 # Imports from src/shared
-import ray
+import nex
 
 # Local imports
 from gui_tools import CommandLineArgs, RS
@@ -21,7 +21,7 @@ from child_dialogs import ChildDialog
 # Import UIs made with Qt-Designer
 import ui.ardour_convert
 import ui.hydro_rh_nsm
-import ui.ray_to_nsm
+import ui.nex_to_nsm
 
 if TYPE_CHECKING:
     from gui_session import Session
@@ -55,7 +55,7 @@ class HydrogenRhNsmDialog(ChildDialog):
         for check_box in self._check_boxes:
             check_box.stateChanged.connect(self._one_state_changed)
 
-        if self.session.server_status is not ray.ServerStatus.READY:
+        if self.session.server_status is not nex.ServerStatus.READY:
             self.ui.checkBoxCurrentSession.setEnabled(False)
 
     def _current_session_check(self, state:bool):
@@ -90,7 +90,7 @@ class HydrogenRhNsmDialog(ChildDialog):
 class RayToNsmDialog(ChildDialog):
     def __init__(self, parent):
         ChildDialog.__init__(self, parent)
-        self.ui = ui.ray_to_nsm.Ui_Dialog()
+        self.ui = ui.nex_to_nsm.Ui_Dialog()
         self.ui.setupUi(self)
         
         self.choose_current_session = False
@@ -210,7 +210,7 @@ class UtilityScriptLauncher:
 
         process_env = QProcessEnvironment.systemEnvironment()
         process_env.insert(
-            'RAY_CONTROL_PORT', str(self.daemon_manager.get_port()))
+            'NEX_CONTROL_PORT', str(self.daemon_manager.get_port()))
         self._process.setProcessEnvironment(process_env)
 
         terminal_args = self._which_terminal(terminal_title)
@@ -229,7 +229,7 @@ class UtilityScriptLauncher:
 
     def convert_ardour_to_session(self):
         script_name = 'ardour_from_external_to_session.sh'
-        terminal_title = _translate('utilities', 'Convert Ardour session to Ray')
+        terminal_title = _translate('utilities', 'Convert Ardour session to Nex')
 
         if not RS.is_hidden(RS.HD_ArdourConversion):
             dialog = ArdourConversionDialog(self.main_win)
@@ -263,9 +263,9 @@ class UtilityScriptLauncher:
 
         self._start_process(script_name, terminal_title, *args)
 
-    def convert_ray_hack_to_nsm_hydrogen(self):
-        script_name = 'all_ray_hack_to_nsm_hydrogen.sh'
-        terminal_title = _translate('utilities', 'Hydrogen Ray-Hack->NSM')
+    def convert_nex_hack_to_nsm_hydrogen(self):
+        script_name = 'all_nex_hack_to_nsm_hydrogen.sh'
+        terminal_title = _translate('utilities', 'Hydrogen Nex-Hack->NSM')
 
         dialog = HydrogenRhNsmDialog(self.main_win)
         dialog.exec()
@@ -275,9 +275,9 @@ class UtilityScriptLauncher:
         args = dialog.get_check_arguments()
         self._start_process(script_name, terminal_title, *args)
 
-    def convert_ray_hack_to_nsm_jack_mixer(self):
-        script_name = 'all_ray_hack_to_nsm_jack_mixer.sh'
-        terminal_title = _translate('utilities', 'Jack Mixer Ray-Hack->NSM')
+    def convert_nex_hack_to_nsm_jack_mixer(self):
+        script_name = 'all_nex_hack_to_nsm_jack_mixer.sh'
+        terminal_title = _translate('utilities', 'Jack Mixer Nex-Hack->NSM')
 
         dialog = HydrogenRhNsmDialog(self.main_win)
         dialog.rename_for_other_app('Jack Mixer')
@@ -289,7 +289,7 @@ class UtilityScriptLauncher:
         self._start_process(script_name, terminal_title, *args)
         
     def convert_to_nsm_file_format(self):
-        script_name = 'session_ray_to_nsm.sh'
+        script_name = 'session_nex_to_nsm.sh'
         terminal_title = _translate('utilities', 'Session to NSM file format')
         
         dialog = RayToNsmDialog(self.main_win)

@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Quit RaySession</string>
+   <string>Quit NexSession</string>
   </property>
   <property name="modal">
    <bool>false</bool>
@@ -23,7 +23,7 @@
    <item>
     <widget class="QLabel" name="labelMainText">
      <property name="text">
-      <string>&lt;p&gt;Session &lt;bold&gt;%s&lt;/bold&gt; is running.&lt;/p&gt;&lt;p&gt;RaySession will be closed.&lt;/p&gt;&lt;p&gt;Do you want to save session ?</string>
+      <string>&lt;p&gt;Session &lt;bold&gt;%s&lt;/bold&gt; is running.&lt;/p&gt;&lt;p&gt;NexSession will be closed.&lt;/p&gt;&lt;p&gt;Do you want to save session ?</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>

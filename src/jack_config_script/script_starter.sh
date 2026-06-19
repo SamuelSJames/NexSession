@@ -13,17 +13,17 @@ true_or_false(){
 operation="$1"
 shift
 
-if [ -z "$RAY_SESSION_PATH" ];then
+if [ -z "$NEX_SESSION_PATH" ];then
     possible_sesspath="$1"
     if [ -n "$possible_sesspath" ];then
-        RAY_SESSION_PATH="$possible_sesspath"
+        NEX_SESSION_PATH="$possible_sesspath"
     fi
 fi
 
-if [ -z "$RAY_SESSION_PATH" ];then
+if [ -z "$NEX_SESSION_PATH" ];then
     case "$operation" in
         load|save)
-            echo "this script has to be used by ray session scripts or this way :
+            echo "this script has to be used by nex session scripts or this way :
 $0 operation [SESSION_PATH]
 where operation can be 'load', 'save', 'putback','get_diff' or 'set_jack_parameters'" >/dev/stderr
             exit 1
@@ -31,11 +31,11 @@ where operation can be 'load', 'save', 'putback','get_diff' or 'set_jack_paramet
     esac
 fi
 
-[ -z "$RAY_SWITCHING_SESSION" ] && RAY_SWITCHING_SESSION=false
+[ -z "$NEX_SWITCHING_SESSION" ] && NEX_SWITCHING_SESSION=false
 
-RAY_MANAGE_PULSEAUDIO=$(true_or_false "$RAY_MANAGE_PULSEAUDIO" true)
-RAY_JACK_RELIABILITY_CHECK=$(true_or_false "$RAY_JACK_RELIABILITY_CHECK" true)
-RAY_HOSTNAME_SENSIBLE=$(true_or_false "$RAY_HOSTNAME_SENSIBLE" true)
+NEX_MANAGE_PULSEAUDIO=$(true_or_false "$NEX_MANAGE_PULSEAUDIO" true)
+NEX_JACK_RELIABILITY_CHECK=$(true_or_false "$NEX_JACK_RELIABILITY_CHECK" true)
+NEX_HOSTNAME_SENSIBLE=$(true_or_false "$NEX_HOSTNAME_SENSIBLE" true)
 
 cd "$(dirname "`readlink -f "$(realpath "$0")"`")"
 

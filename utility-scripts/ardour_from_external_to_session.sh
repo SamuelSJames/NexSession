@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # pass as argument to this script a *.ardour session file or an ardour session dir
-# if it has been made with ardour not launched from RaySession.
-# It will create (or load) a RaySession session with the same name
-# and move (or copy) the ardour session files to the new RaySession session
+# if it has been made with ardour not launched from NexSession.
+# It will create (or load) a NexSession session with the same name
+# and move (or copy) the ardour session files to the new NexSession session
 
 executable=ardour
 
@@ -17,9 +17,9 @@ current_session=false
 if [[ "$1" == "--current-session" ]];then
     shift
     current_session=true
-    session_path=$(ray_control get_session_path)
+    session_path=$(nex_control get_session_path)
     if [ -z "$session_path" ];then
-        echo "option --current-session without running Ray session, abort."
+        echo "option --current-session without running Nex session, abort."
         exit 7
     fi
 fi
@@ -50,26 +50,26 @@ else
 fi
 
 if ! $current_session;then
-    if ! ray_control start;then
-        echo "can not start ray_control. abort."
+    if ! nex_control start;then
+        echo "can not start nex_control. abort."
         exit 2
     fi
         
-    ray_root=`ray_control get_root`
+    nex_root=`nex_control get_root`
 
-    if ! ray_control open_session_off "$ardour_session_name";then
-        echo "impossible to load $ardour_session_name with RaySession. abort."
+    if ! nex_control open_session_off "$ardour_session_name";then
+        echo "impossible to load $ardour_session_name with NexSession. abort."
         exit 3
     fi
 
-    ray_control add_factory_client_template "JACK Connections"
-    session_path="$ray_root/$ardour_session_name"
+    nex_control add_factory_client_template "JACK Connections"
+    session_path="$nex_root/$ardour_session_name"
 fi
 
 if $current_session;then
-    client_id=`ray_control add_executable $executable "prefix:$ardour_session_name" not_start`
+    client_id=`nex_control add_executable $executable "prefix:$ardour_session_name" not_start`
 else
-    client_id=`ray_control add_executable $executable not_start`
+    client_id=`nex_control add_executable $executable not_start`
 fi
     
 if [ -z "$client_id" ];then
@@ -80,9 +80,9 @@ fi
 echo "client_id:$client_id"
 
 # check if we move or copy the ardour session folder
-# if session is on the same partition than RaySession root folder -> move, else copy
+# if session is on the same partition than NexSession root folder -> move, else copy
 move_or_copy=mv
-[[ `stat -c '%d' "$ardour_session_dir"` == `stat -c '%d' "$ray_root"` ]] || move_or_copy="cp -R -v"
+[[ `stat -c '%d' "$ardour_session_dir"` == `stat -c '%d' "$nex_root"` ]] || move_or_copy="cp -R -v"
 
 new_ardour_session_dir="$session_path/$ardour_session_name.$client_id"
 
@@ -99,10 +99,10 @@ $move_or_copy "$ardour_session_dir" "$new_ardour_session_dir"
 if ! mv "$new_ardour_session_dir/interchange/$ardour_session_name" \
         "$new_ardour_session_dir/interchange/$ardour_session_name.$client_id";then
     # file copy/move failed. abort
-    ray_control client $client_id trash
+    nex_control client $client_id trash
     exit 5
 fi
 
 
-echo "Done. Open RaySession if not done and start the ardour client to start the ardour session."
+echo "Done. Open NexSession if not done and start the ardour client to start the ardour session."
 exit 0

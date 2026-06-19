@@ -10,9 +10,9 @@ from qtpy.QtGui import QShowEvent
 from qtpy.QtWidgets import QFileDialog, QFrame
 
 # Imports from src/shared
-import ray
+import nex
 from osclib import is_valid_osc_url
-import osc_paths.ray as r
+import osc_paths.nex as r
 
 # Local imports
 from gui_tools import _translate, client_status_string, get_app_icon
@@ -20,20 +20,20 @@ from child_dialogs import ChildDialog
 from client_prop_adv_dialog import AdvancedPropertiesDialog
 
 # Import UIs made with Qt-Designer
-import ui.ray_hack_copy
+import ui.nex_hack_copy
 import ui.client_properties
 import ui.nsm_properties
-import ui.ray_hack_properties
-import ui.ray_net_properties
+import ui.nex_hack_properties
+import ui.nex_net_properties
 
 if TYPE_CHECKING:
     from gui_client import Client
 
 
-class RayHackCopyDialog(ChildDialog):
+class NexHackCopyDialog(ChildDialog):
     def __init__(self, parent):
         ChildDialog.__init__(self, parent)
-        self.ui = ui.ray_hack_copy.Ui_Dialog()
+        self.ui = ui.nex_hack_copy.Ui_Dialog()
         self.ui.setupUi(self)
 
         self.rename_file = False
@@ -51,7 +51,7 @@ class RayHackCopyDialog(ChildDialog):
 
 
 class ClientPropertiesDialog(ChildDialog):
-    def __init__(self, parent, client: ray.ClientData):
+    def __init__(self, parent, client: nex.ClientData):
         ChildDialog.__init__(self, parent)
         self.ui = ui.client_properties.Ui_Dialog()
         self.ui.setupUi(self)
@@ -63,7 +63,7 @@ class ClientPropertiesDialog(ChildDialog):
             % client.client_id)
 
         self._acceptable_arguments = True
-        self._current_status = ray.ClientStatus.STOPPED
+        self._current_status = nex.ClientStatus.STOPPED
 
         self.ui.pushButtonAdvancedProperties.clicked.connect(
             self._show_advanced_properties)
@@ -115,14 +115,14 @@ class ClientPropertiesDialog(ChildDialog):
         self._advanced_dialog.show()
 
     @staticmethod
-    def create(window, client: ray.ClientData) -> 'ClientPropertiesDialog':
+    def create(window, client: nex.ClientData) -> 'ClientPropertiesDialog':
         match client.protocol:
-            case ray.Protocol.NSM | ray.Protocol.INTERNAL:
+            case nex.Protocol.NSM | nex.Protocol.INTERNAL:
                 return NsmClientPropertiesDialog(window, client)
-            case ray.Protocol.RAY_HACK:
-                return RayHackClientPropertiesDialog(window, client)
-            case ray.Protocol.RAY_NET:
-                return RayNetClientPropertiesDialog(window, client)
+            case nex.Protocol.NEX_HACK:
+                return NexHackClientPropertiesDialog(window, client)
+            case nex.Protocol.NEX_NET:
+                return NexNetClientPropertiesDialog(window, client)
 
         return ClientPropertiesDialog(window, client)
 
@@ -143,7 +143,7 @@ class ClientPropertiesDialog(ChildDialog):
     def set_on_second_tab(self):
         self.ui.tabWidget.setCurrentIndex(1)
 
-    def update_status(self, status: ray.ClientStatus):
+    def update_status(self, status: nex.ClientStatus):
         ...
 
     def enable_test_zone(self, yesno: bool):
@@ -174,7 +174,7 @@ class NsmClientPropertiesDialog(ClientPropertiesDialog):
         self.ui.verticalLayoutProtocol.addWidget(
             self.nsmui_frame) # type:ignore
 
-        if self.client.protocol is ray.Protocol.INTERNAL:
+        if self.client.protocol is nex.Protocol.INTERNAL:
             self.ui.tabWidget.setTabText(1, 'Internal')
             self.nsmui.groupBoxEnv.setVisible(False)
             self.nsmui.checkBoxTerminal.setVisible(False)
@@ -215,20 +215,20 @@ class NsmClientPropertiesDialog(ClientPropertiesDialog):
         self.nsmui.checkBoxTerminal.setChecked(self.client.in_terminal)
 
 
-class RayHackClientPropertiesDialog(ClientPropertiesDialog):
+class NexHackClientPropertiesDialog(ClientPropertiesDialog):
     def __init__(self, parent, client):
         ClientPropertiesDialog.__init__(self, parent, client)
 
-        self.ray_hack_frame = QFrame()
-        self.rhack = ui.ray_hack_properties.Ui_Frame()
-        self.rhack.setupUi(self.ray_hack_frame)
+        self.nex_hack_frame = QFrame()
+        self.rhack = ui.nex_hack_properties.Ui_Frame()
+        self.rhack.setupUi(self.nex_hack_frame)
 
         self.config_file = ""
 
         self.ui.verticalLayoutProtocol.addWidget(
-            self.ray_hack_frame) # type:ignore
+            self.nex_hack_frame) # type:ignore
 
-        self.ui.tabWidget.setTabText(1, 'Ray-Hack')
+        self.ui.tabWidget.setTabText(1, 'Nex-Hack')
         self.rhack.labelWorkingDir.setText(self._get_work_dir_base())
         self.rhack.toolButtonBrowse.setEnabled(self.daemon_manager.is_local)
 
@@ -242,7 +242,7 @@ class RayHackClientPropertiesDialog(ClientPropertiesDialog):
         self.rhack.pushButtonStop.clicked.connect(self._stop_client)
         self.rhack.pushButtonSave.clicked.connect(self._save_client)
 
-        self.rhack.comboSaveSig.addItem(_translate('ray_hack', 'None'), 0)
+        self.rhack.comboSaveSig.addItem(_translate('nex_hack', 'None'), 0)
         self.rhack.comboSaveSig.addItem('SIGUSR1', 10)
         self.rhack.comboSaveSig.addItem('SIGUSR2', 12)
         self.rhack.comboSaveSig.currentIndexChanged.connect(
@@ -279,13 +279,13 @@ class RayHackClientPropertiesDialog(ClientPropertiesDialog):
         self.rhack.toolButtonIcon.setIcon(icon)
 
     def _save_changes(self):
-        if self.client.ray_hack is None:
+        if self.client.nex_hack is None:
             return
 
-        self.client.ray_hack.config_file = self.rhack.lineEditConfigFile.text()
-        self.client.ray_hack.save_sig = self.rhack.comboSaveSig.currentData()
-        self.client.ray_hack.stop_sig = self.rhack.comboStopSig.currentData()
-        self.client.ray_hack.wait_win = \
+        self.client.nex_hack.config_file = self.rhack.lineEditConfigFile.text()
+        self.client.nex_hack.save_sig = self.rhack.comboSaveSig.currentData()
+        self.client.nex_hack.stop_sig = self.rhack.comboStopSig.currentData()
+        self.client.nex_hack.wait_win = \
             self.rhack.checkBoxWaitWindow.isChecked()
 
         no_save_level = 0
@@ -294,10 +294,10 @@ class RayHackClientPropertiesDialog(ClientPropertiesDialog):
             if self.rhack.checkBoxCloseGracefully.isChecked():
                 no_save_level = 2
 
-        self.client.ray_hack.no_save_level = no_save_level
+        self.client.nex_hack.no_save_level = no_save_level
         if TYPE_CHECKING:
             assert isinstance(self.client, Client)
-        self.client.send_ray_hack()
+        self.client.send_nex_hack()
 
         self.client.executable_path = self.rhack.lineEditExecutable.text()
         self.client.arguments = self.rhack.lineEditArguments.text()
@@ -306,9 +306,9 @@ class RayHackClientPropertiesDialog(ClientPropertiesDialog):
 
     def _get_work_dir_base(self) -> str:
         prefix = self.session.name
-        if self.client.prefix_mode is ray.PrefixMode.CLIENT_NAME:
+        if self.client.prefix_mode is nex.PrefixMode.CLIENT_NAME:
             prefix = self.client.name
-        elif self.client.prefix_mode is ray.PrefixMode.CUSTOM:
+        elif self.client.prefix_mode is nex.PrefixMode.CUSTOM:
             prefix = self.client.custom_prefix
         
         return f"{prefix}.{self.client.client_id}"
@@ -328,7 +328,7 @@ class RayHackClientPropertiesDialog(ClientPropertiesDialog):
         if not config_file.startswith(work_dir + '/'):
             qfile = QFile(config_file)
             if qfile.size() < 20971520:  # if file < 20Mb
-                copy_dialog = RayHackCopyDialog(self)
+                copy_dialog = NexHackCopyDialog(self)
                 copy_dialog.set_file(config_file)
                 copy_dialog.exec()
 
@@ -351,14 +351,14 @@ class RayHackClientPropertiesDialog(ClientPropertiesDialog):
                 and (self.config_file == self.session.name
                      or self.config_file.startswith(f'{self.session.name}.'))):
             self.config_file = self.config_file.replace(
-                self.session.name, "$RAY_SESSION_NAME")
+                self.session.name, "$NEX_SESSION_NAME")
         self.rhack.lineEditConfigFile.setText(self.config_file)
 
     def _is_allowed(self):
         return self._acceptable_arguments
 
     def _line_edit_arguments_changed(self, text: str):
-        if ray.shell_line_to_args(text) is not None:
+        if nex.shell_line_to_args(text) is not None:
             self._acceptable_arguments = True
             self.rhack.lineEditArguments.setStyleSheet('')
         else:
@@ -368,7 +368,7 @@ class RayHackClientPropertiesDialog(ClientPropertiesDialog):
 
         self.rhack.pushButtonStart.setEnabled(
             bool(self._acceptable_arguments
-                 and self._current_status is ray.ClientStatus.STOPPED))
+                 and self._current_status is nex.ClientStatus.STOPPED))
         self.ui.pushButtonSaveChanges.setEnabled(self._is_allowed())
 
     def _line_edit_config_file_changed(self, text):
@@ -382,16 +382,16 @@ class RayHackClientPropertiesDialog(ClientPropertiesDialog):
             bool(text and self.rhack.comboSaveSig.currentData() == 0))
 
     def _start_client(self):
-        if self.client.ray_hack is None:
+        if self.client.nex_hack is None:
             return
         
         executable = self.client.executable_path
         arguments = self.client.arguments
-        config_file = self.client.ray_hack.config_file
+        config_file = self.client.nex_hack.config_file
 
         self.client.executable_path = self.rhack.lineEditExecutable.text()
         self.client.arguments = self.rhack.lineEditArguments.text()
-        self.client.ray_hack.config_file = self.rhack.lineEditConfigFile.text()
+        self.client.nex_hack.config_file = self.rhack.lineEditConfigFile.text()
 
         if TYPE_CHECKING:
             assert isinstance(self.client, Client)
@@ -425,42 +425,42 @@ class RayHackClientPropertiesDialog(ClientPropertiesDialog):
         self.rhack.labelWorkingDirTitle.setVisible(False)
         self.rhack.labelWorkingDir.setVisible(False)
 
-    def update_status(self, status: ray.ClientStatus):
+    def update_status(self, status: nex.ClientStatus):
         self._current_status = status
         self.rhack.lineEditClientStatus.setText(client_status_string(status))
 
         match status:
-            case ray.ClientStatus.LAUNCH | ray.ClientStatus.OPEN \
-                    | ray.ClientStatus.SWITCH | ray.ClientStatus.NOOP:
+            case nex.ClientStatus.LAUNCH | nex.ClientStatus.OPEN \
+                    | nex.ClientStatus.SWITCH | nex.ClientStatus.NOOP:
                 self.rhack.pushButtonStart.setEnabled(False)
                 self.rhack.pushButtonStop.setEnabled(True)
                 self.rhack.pushButtonSave.setEnabled(False)
-            case ray.ClientStatus.READY:
+            case nex.ClientStatus.READY:
                 self.rhack.pushButtonStart.setEnabled(False)
                 self.rhack.pushButtonStop.setEnabled(True)
                 self.rhack.pushButtonSave.setEnabled(
                     bool(self.rhack.comboSaveSig.currentData() != 0))
-            case ray.ClientStatus.STOPPED:
+            case nex.ClientStatus.STOPPED:
                 self.rhack.pushButtonStart.setEnabled(self._is_allowed())
                 self.rhack.pushButtonStop.setEnabled(False)
                 self.rhack.pushButtonSave.setEnabled(False)
-            case ray.ClientStatus.PRECOPY:
+            case nex.ClientStatus.PRECOPY:
                 self.rhack.pushButtonStart.setEnabled(False)
                 self.rhack.pushButtonStart.setEnabled(False)
                 self.rhack.pushButtonSave.setEnabled(False)
 
     def update_contents(self):
         ClientPropertiesDialog.update_contents(self)
-        if self.client.ray_hack is None:
+        if self.client.nex_hack is None:
             return
         
         self.rhack.lineEditExecutable.setText(self.client.executable_path)
         self.rhack.lineEditArguments.setText(self.client.arguments)
         self.rhack.lineEditEnviron.setText(self.client.pre_env)
         self.rhack.lineEditConfigFile.setText(
-            self.client.ray_hack.config_file)
+            self.client.nex_hack.config_file)
 
-        save_sig = self.client.ray_hack.save_sig
+        save_sig = self.client.nex_hack.save_sig
 
         i = 0
         for i in range(self.rhack.comboSaveSig.count()):
@@ -476,7 +476,7 @@ class RayHackClientPropertiesDialog(ClientPropertiesDialog):
             except:
                 self.rhack.comboSaveSig.setCurrentIndex(0)
 
-        stop_sig = self.client.ray_hack.stop_sig
+        stop_sig = self.client.nex_hack.stop_sig
 
         for i in range(self.rhack.comboStopSig.count()):
             if self.rhack.comboStopSig.itemData(i) == stop_sig:
@@ -492,11 +492,11 @@ class RayHackClientPropertiesDialog(ClientPropertiesDialog):
                 self.rhack.comboStopSig.setCurrentIndex(0)
 
         self.rhack.checkBoxWaitWindow.setChecked(
-            bool(self.client.ray_hack.wait_win))
+            bool(self.client.nex_hack.wait_win))
         self.rhack.checkBoxTellUser.setChecked(
-            bool(self.client.ray_hack.no_save_level >= 1))
+            bool(self.client.nex_hack.no_save_level >= 1))
         self.rhack.checkBoxCloseGracefully.setChecked(
-            bool(self.client.ray_hack.no_save_level == 2))
+            bool(self.client.nex_hack.no_save_level == 2))
 
     def enable_test_zone(self, yesno: bool):
         self.rhack.groupBoxTestZone.setChecked(yesno)
@@ -512,19 +512,19 @@ class RayHackClientPropertiesDialog(ClientPropertiesDialog):
             self.client.client_id, True)
 
 
-class RayNetClientPropertiesDialog(ClientPropertiesDialog):
+class NexNetClientPropertiesDialog(ClientPropertiesDialog):
     def __init__(self, parent, client):
         ClientPropertiesDialog.__init__(self, parent, client)
 
-        self.ray_net_frame = QFrame()
-        self.rnet = ui.ray_net_properties.Ui_Frame()
-        self.rnet.setupUi(self.ray_net_frame)
+        self.nex_net_frame = QFrame()
+        self.rnet = ui.nex_net_properties.Ui_Frame()
+        self.rnet.setupUi(self.nex_net_frame)
 
         self.ui.groupBoxSnapshots.setVisible(False)
 
         self.ui.verticalLayoutProtocol.addWidget(
-            self.ray_net_frame) # type:ignore
-        self.ui.tabWidget.setTabText(1, 'Ray-Net')
+            self.nex_net_frame) # type:ignore
+        self.ui.tabWidget.setTabText(1, 'Nex-Net')
 
     def lock_widgets(self):
         ClientPropertiesDialog.lock_widgets(self)
@@ -533,18 +533,18 @@ class RayNetClientPropertiesDialog(ClientPropertiesDialog):
         self.rnet.lineEditTemplate.setReadOnly(True)
 
     def update_contents(self):
-        if self.client.ray_net is None:
+        if self.client.nex_net is None:
             return
         
         ClientPropertiesDialog.update_contents(self)
         self.rnet.labelClientName.setText(self.client.name)
         self.rnet.labelCapabilities.setText(self._get_capacities_line())
-        self.rnet.lineEditDaemonUrl.setText(self.client.ray_net.daemon_url)
-        self.rnet.lineEditSessionRoot.setText(self.client.ray_net.session_root)
-        self.rnet.lineEditTemplate.setText(self.client.ray_net.session_template)
+        self.rnet.lineEditDaemonUrl.setText(self.client.nex_net.daemon_url)
+        self.rnet.lineEditSessionRoot.setText(self.client.nex_net.session_root)
+        self.rnet.lineEditTemplate.setText(self.client.nex_net.session_template)
 
     def _save_changes(self):
-        if self.client.ray_net is None:
+        if self.client.nex_net is None:
             return
         
         new_url = self.rnet.lineEditDaemonUrl.text()
@@ -552,15 +552,15 @@ class RayNetClientPropertiesDialog(ClientPropertiesDialog):
         new_template = self.rnet.lineEditTemplate.text()
 
         if is_valid_osc_url(new_url):
-            self.client.ray_net.daemon_url = new_url
-        if ray.is_valid_full_path(new_root):
-            self.client.ray_net.session_root = new_root
+            self.client.nex_net.daemon_url = new_url
+        if nex.is_valid_full_path(new_root):
+            self.client.nex_net.session_root = new_root
         if '/' not in new_template:
-            self.client.ray_net.session_template = new_template
+            self.client.nex_net.session_template = new_template
 
         if TYPE_CHECKING:
             assert isinstance(self.client, Client)
-        self.client.send_ray_net()
+        self.client.send_nex_net()
         ClientPropertiesDialog._save_changes(self)
 
     def _change_icon_with_text(self, text: str):

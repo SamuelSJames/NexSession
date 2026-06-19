@@ -14,7 +14,7 @@ from .engine import Engine
 from .check_internal import IS_INTERNAL
 
 
-is_internal = not Path(sys.argv[0]).name == 'ray-alsapatch'
+is_internal = not Path(sys.argv[0]).name == 'nex-alsapatch'
 if is_internal:
     _logger = logging.getLogger(__name__)
 else:

@@ -15,7 +15,7 @@ from patch_engine import PatchEngine
 
 # local imports
 from osc_server import PatchbayDaemonServer
-from ray_patch_engine_outer import RayPatchEngineOuter
+from nex_patch_engine_outer import NexPatchEngineOuter
 
 
 IS_INTERNAL = not Path(sys.path[0]).name == __name__
@@ -34,7 +34,7 @@ def main_loop(args):
     osc_server: PatchbayDaemonServer
     pe, osc_server = args
 
-    pe.start(RayPatchEngineOuter(osc_server))
+    pe.start(NexPatchEngineOuter(osc_server))
     if osc_server._tmp_gui_url:
         osc_server.add_gui(osc_server._tmp_gui_url)
 
@@ -84,7 +84,7 @@ def main_loop(args):
 
 def start():
     '''launch the process when it is a process (not internal).'''
-    set_proc_name('ray-patch_dmn')
+    set_proc_name('nex-patch_dmn')
     
     # prevent deprecation warnings python messages
     warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -138,10 +138,10 @@ def start():
             f'daemon port must be an integer, not "{daemon_port_str}"')
         return
     
-    pretty_tmp_path = (Path('/tmp/RaySession/')
+    pretty_tmp_path = (Path('/tmp/NexSession/')
                        / f'pretty_names.{daemon_port}.json')
 
-    patch_engine = PatchEngine('ray-patch_dmn', pretty_tmp_path,
+    patch_engine = PatchEngine('nex-patch_dmn', pretty_tmp_path,
                                auto_export_pretty_names)
     patch_engine.mdata_locker_value = daemon_port_str
     patch_engine.one_shot_act = one_shot_act
@@ -152,11 +152,11 @@ def start():
 def internal_prepare(
         daemon_port: str, gui_url: str, pretty_names_active: str,
         one_shot_act: str, nsm_url=''):
-    pretty_tmp_path = (Path('/tmp/RaySession/')
+    pretty_tmp_path = (Path('/tmp/NexSession/')
                        / f'pretty_names.{daemon_port}.json')
     auto_export_pretty_names = not bool(
         pretty_names_active.lower() in ('0', 'false'))
-    patch_engine = PatchEngine('ray-patch_dmn', pretty_tmp_path,
+    patch_engine = PatchEngine('nex-patch_dmn', pretty_tmp_path,
                                auto_export_pretty_names)
     patch_engine.mdata_locker_value = daemon_port
     patch_engine.one_shot_act = one_shot_act
