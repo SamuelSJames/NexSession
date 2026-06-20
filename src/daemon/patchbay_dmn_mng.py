@@ -162,6 +162,9 @@ def start(gui_url='', one_shot_act=''):
     if not naming & Naming.CUSTOM:
         pretty_names_active = False
 
+    engine_type = RS.settings.value(
+        'daemon/audio_engine', 'jack', type=str)
+
     _MainObj.ready = False
     _MainObj.port = 0
 
@@ -177,9 +180,10 @@ def start(gui_url='', one_shot_act=''):
                 (str(_MainObj.daemon_server.port),
                  gui_url,
                  str(pretty_names_active),
-                 one_shot_act),
+                 one_shot_act,
+                 engine_type),
                 ''
-            ) 
+            )
             _MainObj.internal_client.start()
             
             _logger.info('Patchbay daemon started internal')
@@ -207,7 +211,8 @@ def start(gui_url='', one_shot_act=''):
                         str(pretty_names_active),
                         '',
                         '--info', CommandLineArgs.info,
-                        '--dbg', CommandLineArgs.dbg])
+                        '--dbg', CommandLineArgs.dbg,
+                        '--engine', engine_type])
             else:
                 _MainObj.process.setProgram('nex-patch_dmn')
                 _MainObj.process.setArguments(
@@ -216,7 +221,8 @@ def start(gui_url='', one_shot_act=''):
                         str(pretty_names_active),
                         '',
                         '--info', CommandLineArgs.info,
-                        '--dbg', CommandLineArgs.dbg])
+                        '--dbg', CommandLineArgs.dbg,
+                        '--engine', engine_type])
 
             _MainObj.process.start()            
             _logger.info('nex-patch_dmn process started')

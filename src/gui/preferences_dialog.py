@@ -95,6 +95,19 @@ class PreferencesDialog(ChildDialog):
                           self.ui.checkBoxShutdown):
             check_box.stateChanged.connect(self._systray_changed)
 
+        # audio engine
+        self.ui.comboBoxAudioEngine.addItem(
+            _translate('preferences', 'JACK (PipeWire compat)'), 'jack')
+        self.ui.comboBoxAudioEngine.addItem(
+            _translate('preferences', 'PipeWire (native) — experimental'),
+            'pipewire')
+        current_engine = RS.settings.value(
+            'daemon/audio_engine', 'jack', type=str)
+        self.ui.comboBoxAudioEngine.setCurrentIndex(
+            max(0, self.ui.comboBoxAudioEngine.findData(current_engine)))
+        self.ui.comboBoxAudioEngine.currentIndexChanged.connect(
+            self._audio_engine_changed)
+
         # terminal command
         self.ui.pushButtonResetTerminal.clicked.connect(
             self._reset_terminal_command)
@@ -123,6 +136,11 @@ class PreferencesDialog(ChildDialog):
                 checkbox.setChecked(action.isChecked())
                 break
     
+    @Slot()
+    def _audio_engine_changed(self):
+        engine_type = self.ui.comboBoxAudioEngine.currentData()
+        RS.settings.setValue('daemon/audio_engine', engine_type)
+
     @Slot()
     def _systray_changed(self):
         self._main_win.change_systray_options(

@@ -151,6 +151,52 @@
         </widget>
        </item>
        <item>
+        <widget class="QGroupBox" name="groupBoxAudioEngine">
+         <property name="title">
+          <string>Audio Engine</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_8">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_6">
+            <item>
+             <widget class="QLabel" name="labelAudioEngine">
+              <property name="text">
+               <string>Engine :</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="comboBoxAudioEngine"/>
+            </item>
+            <item>
+             <spacer name="horizontalSpacerAudioEngine">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="labelAudioEngineInfo">
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>PipeWire (native) is an early, reduced-feature engine: it polls the PipeWire graph instead of using the JACK client API. Restart the patchbay daemon after changing this.</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>

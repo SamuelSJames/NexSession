@@ -6,13 +6,13 @@ This file is the operational starting point for another developer or AI agent. R
 
 ## Current state
 
-NexSession is a Fedora/PipeWire-focused modernization of RaySession. The rebrand, application icon, Qt 6 build, `/usr/local` installation, GUI startup repair, patchbay theme repair, session-script symlink repair, and staged-install cleanup are complete in the source tree.
+NexSession is a Fedora/PipeWire-focused modernization of RaySession. The rebrand, application icon, Qt 6 build, `/usr/local` installation, GUI startup repair, patchbay theme repair, session-script symlink repair, staged-install cleanup, GitHub Actions CI, and a first-cut PipeWire-native engine are complete in the source tree.
 
-The next engineering task is automated CI coverage. Complete CI and a real-client acceptance test before starting the PipeWire-native engine described in `NEXSESSION_ROADMAP.md`.
+The next engineering task is the real-client acceptance test (Ardour or Carla, JACK engine first) that CI cannot exercise, followed by live Carla testing of the new PipeWire engine and closing its reduced-feature gaps. See "PipeWire-native engine (first cut)" below.
 
 Important repository state:
 
-- The worktree was clean at the end of 2026-06-19. `master` was four commits ahead of `origin/master`; those commits had not yet been pushed.
+- As of 2026-06-19, `master` is up to date with `origin/master`, but the worktree has uncommitted PipeWire-engine work in both the main repo and the `HoustonPatchbay` submodule. The submodule needs its own commit (and a push to NexPatchbay) before the main repo's submodule pointer is bumped and committed.
 - The `HoustonPatchbay` directory remains the submodule path for build compatibility, but its remote is now the independently maintained `NexPatchbay` repository.
 - NexPatchbay `main` contains the preserved HoustonPatchbay history, NexSession adaptations, GPLv2 license, and explicit upstream attribution. The pinned commit is `b522e897`.
 - No credential file is required or expected. Never put passwords, tokens, or other credentials in this repository or its documentation.
@@ -92,6 +92,21 @@ The current `/usr/local` launcher is warning-free because the repaired setting i
 - NexSession `.gitmodules` now fetches NexPatchbay over public HTTPS.
 - A fresh public clone and detached checkout of pinned commit `b522e897` succeeded.
 
+### Continuous integration
+
+- `.github/workflows/ci.yml` builds and tests inside a `fedora:44` container on every push/PR to `master`.
+- Checks: submodule checkout, Qt 6 build, non-empty generated resources, Python compilation, every tracked symlink resolves, staged install/uninstall with `desktop-file-validate`, package-exclusion checks (no tests, debug launchers, bytecode), and an offscreen GUI startup smoke test.
+- Verified locally end-to-end with `podman run fedora:44` before being committed; this also caught two real gaps fixed in the workflow: the minimal Fedora image lacks the `which` binary the Makefile shells out to, and CI containers have no `/dev/snd/seq`, so a harmless background-thread `alsaseq.SequencerError` is expected and not treated as a smoke-test failure.
+
+### PipeWire-native engine (first cut)
+
+A real, working alternative to the JACK-compatibility engine, selectable from Settings → Daemon → Audio Engine (persisted as `daemon/audio_engine` = `jack` or `pipewire` in `NexSession.conf`; default remains `jack`).
+
+- `HoustonPatchbay/source/patch_engine/pipewire_engine.py`: `PipeWireEngine` subclasses the existing `PatchEngine` and overrides only what must differ — it polls `pw-dump` for the node/port/link graph (1s interval) instead of using the JACK client API, and uses `pw-link` for connect/disconnect. `self.client` is intentionally kept `None` for this engine's whole lifetime: every inherited `PatchEngine` method that touches JACK already no-ops safely when `self.client is None`, which is what keeps not-yet-implemented features (pretty-name export, transport position, DSP load, ALSA bridge) quiet instead of crashing, without reimplementing each of them.
+- Engine selection is threaded through `src/gui/preferences_dialog.py` → `RS.settings` → `src/daemon/patchbay_dmn_mng.py` (`start()`, both the internal-thread and external-process launch paths) → `src/patchbay_daemon/patchbay_daemon.py` (`start()` and `internal_prepare()`, both now accept an `engine_type` and log which engine class they constructed).
+- Verified directly against the live PipeWire server on the Fedora 44 test host: discovered all real ports with correct types/flags, and a connect → re-poll → disconnect → re-poll cycle correctly produced `CONNECTION_ADDED`/`CONNECTION_REMOVED` with no stray state. Verified end-to-end through the full offscreen-launched app with the setting forced to `pipewire` (log confirms `PipeWireEngine` selected, clean GUI connect/disconnect, no traceback) and with the default setting (confirms zero regression to the JACK path).
+- Not yet done: live GUI testing with a real client (Carla is installed on the test host for this), and the reduced-feature gaps below.
+
 ## Build and install
 
 Fedora's translation executable is named `lrelease-qt6`:
@@ -163,20 +178,21 @@ Additional repository checks passed on 2026-06-19:
 
 ## Not yet verified
 
-- No complete end-to-end session was exercised with Ardour or Carla after these repairs.
+- No complete end-to-end session was exercised with Ardour or Carla after these repairs, on either engine.
 - JACK/PipeWire connection save and restore was not revalidated with a real client.
-- The PipeWire-native engine does not exist yet; current audio routing still uses the JACK compatibility path.
+- The PipeWire-native engine has not been exercised against a real client GUI (e.g. Carla) yet, only the live PipeWire server's existing graph.
+- The CI workflow has been verified locally with `podman run fedora:44`, but has not yet been confirmed on an actual GitHub-hosted runner.
 - Systemd socket activation, udev device handling, COPR/RPM packaging, and Flatpak packaging remain roadmap work.
 - The brand wordmark/banner has not been integrated into the About dialog.
 
 ## Recommended next steps
 
-1. Add GitHub Actions CI for submodule checkout, Qt 6 build, Python compilation, tracked symlinks, staged install/uninstall, package exclusions, desktop-file validation, and offscreen startup.
-2. Commit the CI workflow, push the local commits to `origin/master`, and confirm the workflow passes from a fresh GitHub runner.
-3. Run the real-client acceptance test: create a session, launch Ardour or Carla, make connections, save, close, reopen, and confirm client state and routing restoration.
-4. Add formal dependency metadata and begin an RPM/COPR package only after the staged-install checks run in CI.
-5. Decide and document migration behavior for existing RaySession configuration and session directories.
-6. Write a PipeWire backend design that maps the current JACK responsibilities to PipeWire nodes, ports, links, metadata, and registry events while preserving JACK as a fallback.
+1. Push the pending commits (main repo and the `HoustonPatchbay`/NexPatchbay submodule, which needs its own commit plus a pointer bump in the main repo) and confirm the CI workflow passes from a fresh GitHub runner.
+2. Run the real-client acceptance test on the JACK engine first: create a session, launch Ardour or Carla, make connections, save, close, reopen, and confirm client state and routing restoration.
+3. Repeat the acceptance test with the PipeWire engine selected (Settings → Daemon → Audio Engine) and Carla as the client; this is the first live test of the new engine with a real client GUI rather than the bare PipeWire graph.
+4. Close PipeWire-engine reduced-feature gaps as needed: live registry-event streaming instead of polling, JACK-metadata-equivalent pretty-name export via PipeWire props, transport position and DSP load reporting.
+5. Add formal dependency metadata and begin an RPM/COPR package only after the staged-install checks run in CI.
+6. Decide and document migration behavior for existing RaySession configuration and session directories.
 
 ## Useful files
 
@@ -184,6 +200,9 @@ Additional repository checks passed on 2026-06-19:
 - `INSTALL.md` — dependencies, build, install, and troubleshooting
 - `NEXSESSION_ROADMAP.md` — prioritized product direction
 - `docs/fedora-pipewire.md` — Fedora PipeWire environment checks
+- `.github/workflows/ci.yml` — CI workflow (Fedora 44 container)
 - `src/clients/jackpatch/jack_engine.py` — existing engine pattern
 - `src/gui/nex_patchbay_manager.py` — application patchbay initialization and `Yellow Boards` fallback
 - `HoustonPatchbay/source/patchbay/patchcanvas/patchcanvas.py` — resolved theme selection
+- `HoustonPatchbay/source/patch_engine/pipewire_engine.py` — first-cut native PipeWire engine
+- `src/gui/preferences_dialog.py` — Audio Engine setting (Settings → Daemon tab)

@@ -11,7 +11,7 @@ import logging
 from proc_name import set_proc_name
 
 # imports from HoustonPatchbay
-from patch_engine import PatchEngine
+from patch_engine import PatchEngine, PipeWireEngine
 
 # local imports
 from osc_server import PatchbayDaemonServer
@@ -118,7 +118,13 @@ def start():
     if args[0] == '--dbg':
         args.pop(0)
         dbg = args.pop(0)
-    
+
+    engine_type = 'jack'
+    if '--engine' in args:
+        idx = args.index('--engine')
+        if idx + 1 < len(args):
+            engine_type = args[idx + 1]
+
     level = logging.INFO
     for lv_info in (log, dbg):
         for module_name in lv_info.split(':'):
@@ -141,7 +147,9 @@ def start():
     pretty_tmp_path = (Path('/tmp/NexSession/')
                        / f'pretty_names.{daemon_port}.json')
 
-    patch_engine = PatchEngine('nex-patch_dmn', pretty_tmp_path,
+    engine_cls = PipeWireEngine if engine_type == 'pipewire' else PatchEngine
+    _logger.info(f'starting patch engine: {engine_cls.__name__}')
+    patch_engine = engine_cls('nex-patch_dmn', pretty_tmp_path,
                                auto_export_pretty_names)
     patch_engine.mdata_locker_value = daemon_port_str
     patch_engine.one_shot_act = one_shot_act
@@ -151,12 +159,14 @@ def start():
 
 def internal_prepare(
         daemon_port: str, gui_url: str, pretty_names_active: str,
-        one_shot_act: str, nsm_url=''):
+        one_shot_act: str, engine_type: str = 'jack', nsm_url=''):
     pretty_tmp_path = (Path('/tmp/NexSession/')
                        / f'pretty_names.{daemon_port}.json')
     auto_export_pretty_names = not bool(
         pretty_names_active.lower() in ('0', 'false'))
-    patch_engine = PatchEngine('nex-patch_dmn', pretty_tmp_path,
+    engine_cls = PipeWireEngine if engine_type == 'pipewire' else PatchEngine
+    _logger.info(f'starting patch engine: {engine_cls.__name__}')
+    patch_engine = engine_cls('nex-patch_dmn', pretty_tmp_path,
                                auto_export_pretty_names)
     patch_engine.mdata_locker_value = daemon_port
     patch_engine.one_shot_act = one_shot_act

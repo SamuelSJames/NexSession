@@ -13,8 +13,10 @@
 - [x] GUI startup repair with safe bundled-font fallback
 - [x] Empty patchbay-theme normalization and persistence
 - [x] Source and installed startup smoke tests on Fedora 44 GNOME Wayland
+- [x] GitHub Actions CI (Fedora 44 container), verified locally with `podman` before commit
+- [x] PipeWire-native engine, first cut (see Phase 1 below) — selectable but reduced-feature; not yet tested with a real client GUI
 
-Before beginning the PipeWire-native engine, complete the outstanding real-client acceptance test documented in `HANDOFF.md`.
+The outstanding real-client acceptance test documented in `HANDOFF.md` (Ardour/Carla, both engines) is the next gate before closing out Phase 1.
 
 ---
 
@@ -82,10 +84,16 @@ Before beginning the PipeWire-native engine, complete the outstanding real-clien
 ### Phase 1 — Fix the Foundation (PipeWire + systemd)
 **Priority: highest. Fixes the loudest community complaint.**
 
-- [ ] **PipeWire native API** — replace JACK compat layer dependency with direct `libpipewire` integration
-  - Survive quantum/sample-rate changes without dropping connections
-  - See PW-native apps (browsers, Bluetooth, HDMI) not visible in JACK mode
-  - Use PipeWire link objects directly for faster, more reliable routing
+- [x] **PipeWire native engine, first cut** — `PipeWireEngine` (`HoustonPatchbay/source/patch_engine/pipewire_engine.py`), selectable in Settings → Daemon → Audio Engine
+  - Polls `pw-dump` for the node/port/link graph and uses `pw-link` to connect/disconnect, instead of going through the JACK client API
+  - Already sees PW-native nodes/ports the same way regardless of JACK-client visibility, since it never goes through `pw-jack`
+  - Verified against the live PipeWire graph and through a full app launch; not yet verified with a real client GUI (Carla) or under quantum/sample-rate changes
+- [ ] **PipeWire native engine, close the gaps** — bring it to parity with the JACK engine
+  - Live registry-event streaming instead of 1s polling
+  - Survive quantum/sample-rate changes without dropping connections (this was the original loudest complaint motivating this item)
+  - JACK-metadata-equivalent pretty-name export via PipeWire props
+  - Transport position and DSP load reporting
+  - Direct `libpipewire` integration if polling proves insufficient, instead of shelling out to `pw-dump`/`pw-link`
 - [ ] **systemd user service** — ship `nexsession-daemon.socket` unit
   - Zero startup latency via socket activation
   - Auto-start daemon on first GUI connection
